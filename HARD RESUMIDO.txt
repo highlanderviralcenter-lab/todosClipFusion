@@ -1,0 +1,94 @@
+nao ia desabilitar totalmetne a nvidea?
+
+🧠 CPU & RAM
+Processador: Intel Core i5‑6200U (Skylake‑U/Y) – 2 núcleos / 4 threads – 2.69 GHz – L1 32 kB, L2 256 kB, L3 3 MB – SSE até SSE4.2, AVX/AVX2, AES, FMA3, VT‑x, SGX – TDP 15 W – ~51 °C.
+
+RAM: 7.91 GB DDR4‑2133 (~1066 MHz) – 4 GB onboard + 1 slot com Teikon 4 GB (SK Hynix, 2016) – CL15‑15‑15‑36, 2T – uso atual ~55%.
+
+💾 Armazenamento
+HDD SATA (sda): WDC WD10JPCX‑24U – 1 TB – D: 488 GB NTFS (20 GB livres), F: 423 GB NTFS (90 GB livres), + 20.5 GB FAT32 livre, + 3 GB não alocado.
+
+SSD SATA (sdb): SanDisk SSD PLUS – 480 GB – C: 244 GB NTFS (38 GB livres), E: 50 MB NTFS, partição inicializável + 202 GB não alocado.
+
+USB (sdc): DISK 2.0 – 15.5 GB FAT32 – partição única.
+
+🎮 GPU
+Dedicada: NVIDIA GeForce 920MX – GM108, 2 GB DDR3, 64 bits – Core 135 MHz, Memória 405 MHz – PCIe 3.0 x4 (2.5 GT/s) – DirectX 12.0, WDDM 2.2.
+
+Integrada: Intel HD Graphics 520 – Skylake GT2, 128 MB compartilhada – PCIe integrada – DirectX 12.0, WDDM 2.1.
+
+🧩 PCI/AGP
+SATA AHCI: Intel Sunrise Point‑LP
+
+Rede: Realtek RTL8111/8168/8411 – PCIe 1.1 x1
+
+Áudio: Intel HD Audio
+
+Gerenciamento: Intel PMC (Power/Memória)
+
+Ponte CPU–DRAM: Intel Host Bridge/DRAM Registers
+
+🖥️ Monitores
+Interno: 15.3" – 1366×768 – DisplayPort
+
+Externo: LG TV 7.2" – 1920×1080 – digital
+
+VGA: 1600×900 – analógica
+
+⌨️ Periféricos
+Teclado PS/2
+
+Mouse Logitech Nano Receiver (USB)
+
+TouchPad Synaptics PS/2
+
+USB: Syntek Webcam, Realtek Card Reader
+
+🛠️ Drivers com Problemas
+Logitech Nano Receiver – conflito HID
+
+Intel Thermal Subsystem – erro 28 (driver ausente)
+
+System Timer (ACPI) – conflito IRQ 0
+
+Motherboard Resources – múltiplos conflitos ACPI
+
+Microsoft Print to PDF – erro de recurso
+
+
+🔧 Ponte / Host Bridge
+Intel Host Bridge/DRAM Registers  
+• Função: conecta CPU ↔ DRAM ↔ Chipset.
+• Classe PCI: 0x06 (Pontes), Subclasse Host Bridge 0x00.
+• Essencial para inicialização de memória e comunicação com controladores.
+• No seu caso: Xeon E3‑1200 v5/E3‑1500 v5/6th Gen Core Processor Host Bridge (Skylake).
+
+🔌 Controladores principais
+Intel Sunrise Point‑LP SATA Controller (AHCI) – controla HDD/SSD via protocolo AHCI.
+
+Intel PMC (Power Management Controller) – gerenciamento de energia/memória.
+
+Intel HD Audio – áudio integrado.
+
+Realtek PCIe Gigabit Ethernet (RTL8111/8168/8411) – rede cabeada.
+
+Intel HD Graphics 520 – GPU integrada.
+
+NVIDIA GeForce 920MX – GPU dedicada (PCIe 3.0 x4).
+
+📎 Conectores físicos (placa-mãe Lenovo Toronto 5A2)
+PS/2 teclado
+
+PS/2 mouse
+
+Mini‑DIN TV OUT
+
+DB‑15 CRT (VGA)
+
+DB‑9 COM
+
+USB (x2)
+
+Intel Skylake-U Host Bridge/DRAM Registers	8086:1904 (variante Skylake-U)	intel_uncore, suporte genérico já no kernel
+
+Intel Sunrise Point-LP SATA Controller (AHCI)	8086:9D03	ahci

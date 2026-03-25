@@ -1,0 +1,123 @@
+Especificação Técnica e de Requisitos do ClipFusion Viral Pro
+
+Versão: 2.0
+Data: 15 de março de 2026
+Autor: Highlander (com suporte de engenharia)
+Propósito: Este documento define os requisitos, regras de negócio, arquitetura e pontos de função do sistema ClipFusion Viral Pro, servindo como baseline para versionamento, desenvolvimento e manutenção futura.
+1. Visão Geral do Produto
+
+O ClipFusion Viral Pro é uma plataforma de engenharia de conteúdo viral que transforma vídeos longos em cortes curtos otimizados para TikTok, Instagram Reels e YouTube Shorts. O sistema opera de forma híbrida, combinando processamento local de alta eficiência (otimizado para hardware Intel i5‑6200U, 8GB RAM, Intel HD 520) com inteligência artificial externa (Claude, ChatGPT) para refinar a seleção de cortes e gerar metadados de postagem.
+1.1 Objetivos de Negócio
+
+    Democratizar a criação de conteúdo viral, permitindo que usuários com hardware modesto produzam cortes de alta qualidade.
+
+    Reduzir o tempo de edição manual por meio de automação inteligente.
+
+    Proteger o conteúdo contra detecção de copyright através de técnicas de evasão algorítmica.
+
+    Aprender continuamente com os resultados reais para melhorar a assertividade dos cortes.
+
+2. Requisitos do Sistema
+2.1 Requisitos Funcionais (por módulo)
+Módulo de Ingestão e Transcrição
+ID	Requisito	Prioridade
+RF01	O sistema deve permitir ao usuário selecionar um arquivo de vídeo local.	Alta
+RF02	O sistema deve criar uma estrutura de pastas única para cada projeto (source/, work/, output/, state/).	Alta
+RF03	O sistema deve extrair o áudio do vídeo e transcrevê‑lo usando faster-whisper, gerando timestamps precisos.	Alta
+RF04	O sistema deve calcular um score de qualidade da transcrição (baseado em densidade de palavras) e descartar segmentos com qualidade inferior a 0,75.	Média
+Módulo de Geração de Candidatos
+ID	Requisito	Prioridade
+RF05	O sistema deve segmentar a transcrição em micro‑candidatos de 18 a 35 segundos baseados em pausas naturais da fala (gap > 0,5s).	Alta
+RF06	O sistema deve calcular, para cada candidato, as seguintes subnotas locais: hook_strength, retention_score, moment_strength, shareability, platform_fit_tiktok, platform_fit_reels, platform_fit_shorts.	Alta
+RF07	O sistema deve armazenar os candidatos e suas notas no banco de dados SQLite.	Alta
+Módulo de Integração com IA Externa
+ID	Requisito	Prioridade
+RF08	O sistema deve gerar um prompt estruturado contendo os melhores candidatos (até 12) e contexto do projeto.	Alta
+RF09	O sistema deve permitir que o usuário copie o prompt e cole a resposta JSON da IA externa.	Alta
+RF10	O sistema deve validar a estrutura do JSON retornado e extrair os cortes refinados.	Alta
+Módulo de Decisão e Veredito
+ID	Requisito	Prioridade
+RF11	O sistema deve combinar a nota local de cada candidato com a nota da IA externa usando a fórmula: (local * 0.5) + (externa * 0.3) + (platform_fit * 0.1) + (duration_fit * 0.05) + (transcription_quality * 0.05).	Alta
+RF12	O sistema deve classificar cada corte como Aprovado (score ≥ 9,0), Revisar (7,0 ≤ score < 9,0) ou Descartado (score < 7,0).	Alta
+Módulo de Proteção e Render
+ID	Requisito	Prioridade
+RF13	O sistema deve oferecer 4 níveis de proteção anti‑copyright: Nenhum, Básico (zoom, cor, metadados, áudio), Anti‑IA (+ ruído, croma), Máximo (+ flip, jitter).	Alta
+RF14	O sistema deve renderizar cada corte aprovado utilizando um pipeline de duas passagens: (1) VA‑API para filtros de proteção, (2) libx264 para legendas e elementos gráficos.	Alta
+RF15	O sistema deve organizar os arquivos gerados em pastas por projeto e plataforma (output/plataforma/).	Alta
+Módulo de Aprendizado e Analytics
+ID	Requisito	Prioridade
+RF16	O sistema deve permitir o registro manual de desempenho de cada corte postado (views, likes, shares, comments).	Média
+RF17	O sistema deve, periodicamente, recalcular os pesos dos arquétipos com base na performance real e atualizar a configuração.	Baixa
+2.2 Requisitos Não Funcionais
+ID	Requisito	Métrica
+RNF01	O sistema deve operar em hardware com Intel i5‑6200U, 8GB RAM, Intel HD 520, SSD 480GB.	–
+RNF02	O consumo de memória RAM não deve exceder 6 GB durante a transcrição (com modelo base).	< 6 GB
+RNF03	O tempo de renderização de um corte de 60 segundos (nível Básico) deve ser inferior a 50 segundos.	< 50 s
+RNF04	A interface gráfica deve responder a cliques em menos de 200 ms.	< 200 ms
+RNF05	O sistema deve ser compatível com Debian 12 (bookworm) e utilizar drivers VA‑API para aceleração de vídeo.	–
+RNF06	O código deve ser modular, permitindo a substituição de componentes (ex.: trocar o motor de transcrição) sem impacto no resto do sistema.	–
+3. Regras de Negócio
+ID	Regra	Descrição
+RN01	Regra de Ouro	Um corte só é aprovado se sua nota combinada for ≥ 9,0.
+RN02	Despriorização de trechos ruidosos	Segmentos com qualidade de transcrição < 0,75 são descartados antes da geração de candidatos.
+RN03	Limite de candidatos por projeto	O prompt para IA externa não deve conter mais de 12 candidatos para evitar estouro de tokens.
+RN04	Jitter anti‑padrão	Horários de postagem sugeridos devem incluir variação aleatória de minutos/segundos para evitar padronização.
+RN05	Proteção progressiva	O nível de proteção anti‑copyright é cumulativo; níveis superiores incluem todas as técnicas dos níveis inferiores.
+RN06	Aprendizado por reforço	A cada 20 cortes postados, o sistema recalcula os pesos dos arquétipos baseado nas views médias.
+4. Pontos de Função (Estimativa Inicial)
+Tipo	Descrição	Quantidade	Complexidade
+Entrada	Seleção de arquivo de vídeo	1	Baixa
+Entrada	Configuração de projeto (nome, idioma, modelo Whisper)	1	Baixa
+Entrada	Colagem de JSON da IA	1	Baixa
+Entrada	Registro manual de performance	1	Baixa
+Saída	Exibição de transcrição com timestamps	1	Média
+Saída	Exibição de lista de cortes com scores	1	Média
+Saída	Geração de prompt para IA	1	Média
+Saída	Renderização de cortes (arquivos de vídeo)	1	Alta
+Saída	Agenda de postagens (texto/CSV)	1	Baixa
+Consulta	Histórico de projetos	1	Baixa
+Consulta	Relatórios de analytics	1	Média
+Armazenamento	Banco de dados SQLite com todas as tabelas	1	Alta
+
+Total estimado de pontos de função: ~12 a 15 PF (ajustar conforme detalhamento).
+5. Arquitetura de Módulos
+
+O sistema é dividido em três camadas lógicas:
+5.1 Camada de Fundação (Alicerces)
+Módulo	Responsabilidade
+ingest.py	Criação da estrutura de pastas e registro do projeto.
+transcribe.py	Transcrição com faster-whisper.
+transcription_quality.py	Filtro de qualidade da transcrição.
+scoring_engine.py	Cálculo de subnotas locais (hook, retenção, momento, compartilhamento).
+5.2 Camada de Seleção e Decisão (Coração)
+Módulo	Responsabilidade
+candidate_engine.py	Micro‑segmentação baseada em pausas naturais.
+hybrid_prompt.py	Geração de prompt estruturado para IA externa.
+hybrid_parser.py	Validação e parsing do JSON retornado pela IA.
+decision_engine.py	Combinação de scores e aplicação da Regra de Ouro.
+platform_engine.py	Cálculo de adequação a cada plataforma.
+5.3 Camada de Proteção e Entrega (Músculos)
+Módulo	Responsabilidade
+protection_factory.py	Aplicação de filtros anti‑copyright via VA‑API.
+post_pack.py	Geração de título, hooks, descrição e hashtags.
+output_manager.py	Organização de arquivos por projeto/plataforma.
+posting_schedule.py	Geração de agenda com jitter anti‑padrão.
+learning_engine.py	Coleta de performance real e reajuste de pesos.
+6. Considerações de Hardware e Otimizações
+
+    Kernel: i915.enable_guc=3 obrigatório para ativar GuC/HuC e offload de vídeo.
+
+    Memória: Uso de zRAM (4GB, zstd, prioridade 100) + swapfile (2GB, prioridade 50) para estender memória efetiva a ~14GB.
+
+    Garbage Collection: Chamadas explícitas de gc.collect() entre etapas para evitar OOM.
+
+    Lazy Loading: Módulos pesados (Whisper, bibliotecas de IA) são carregados apenas quando necessário.
+
+7. Versionamento e Evolução
+
+Este documento será versionado juntamente com o código no repositório GitHub. Cada alteração significativa na arquitetura ou nas regras de negócio deve ser refletida aqui, com incremento do número de versão e registro no histórico de alterações.
+
+Histórico de Versões
+Versão	Data	Descrição
+1.0	10/03/2026	Versão inicial (Debian Tunado 3.0)
+2.0	15/03/2026	Arquitetura híbrida, schema unificado, regra de ouro, módulos refinados

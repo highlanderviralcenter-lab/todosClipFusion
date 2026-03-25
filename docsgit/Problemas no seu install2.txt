@@ -1,0 +1,10 @@
+❌ Problemas no seu install2.txt:
+
+    base em vez de small → Você repetiu o erro que fazia cortes ruins
+    Sem locales/ → Sistema fica preso ao português
+    Schema permite NULL → Risco de "notas zeradas" retornar
+    Segmentação por gap fixo (500ms) → Perde pausas naturais de 300ms
+    Sem unload() do modelo → Vazamento de RAM em 8GB
+    Sem contexto em candidatos → IA recebe menos informação
+    Learning engine vazio → Não aprende com performance real
+    DB sem WAL mode → Performance degradada com concorrência

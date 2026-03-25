@@ -1,0 +1,12 @@
+# Ver o que está usando memória
+ps aux --sort=-%mem | head -10
+
+# Matar processos pesados (navegador, etc)
+pkill -f firefox
+pkill -f chrome
+pkill -f discord
+
+# Ou reiniciar o sistema se possível
+sudo reboot
+
+

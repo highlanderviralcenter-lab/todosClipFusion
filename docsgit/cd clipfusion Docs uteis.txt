@@ -1,0 +1,2 @@
+cd ~/clipfusion/Docs_uteis
+sudo ./clipfusion-check-final.sh

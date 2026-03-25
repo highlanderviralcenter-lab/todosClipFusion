@@ -1,0 +1,1783 @@
+Cálculo do "Virality Score" (A Pontuação Mágica): É aqui que a "mágica" da predição acontece. O algoritmo compara os clipes gerados com um enorme banco de dados de vídeos que já viralizaram no passado
+
+. Ele analisa:
+
+    Ritmo e Pacing: O clipe é dinâmico ou tem muitos momentos parados?
+
+    Clareza da Mensagem: O texto da transcrição é fácil de entender mesmo sem áudio?
+
+    Potencial de Engajamento: O conteúdo do clipe provoca reações, comentários ou compartilhamentos? 
+
+Auto-suficiência: A ideia do clipe faz sentido por si só, sem depender do vídeo original?
+
+Otimização por Plataforma: O algoritmo também considera para qual plataforma (TikTok, Reels, Shorts) o clipe será gerado, ajustando a pontuação
+
+        .
+
+🧠 Como "Guiar" a Análise da IA
+
+Você não é um usuário passivo. O Opus permite que você dê instruções para a IA, o que é essencial para melhorar a assertividade:
+
+    ClipAnything com Prompts: Você pode usar linguagem natural para dizer o que quer. Por exemplo: "Pega os melhores momentos de comédia" ou "Encontra os principais argumentos de venda" 
+
+. Isso faz toda a diferença.
+
+AI Co-Pilot: Permite selecionar intervalos de tempo específicos ou buscar palavras-chave para que a IA foque a análise nos trechos que você considera importantes
+
+.
+
+Edição Baseada em Texto: Depois que o clipe é gerado, você pode editar o texto da legenda, e o vídeo se ajusta automaticamente ao novo conteúdo
+.
+
+
+Solução para você: Comece a coletar seus próprios dados. Crie uma planilha com:
+
+    Transcrições de cortes que você fez
+
+    Se eles viralizaram ou não (views, compartilhamentos)
+
+    Nicho, duração, arquétipo usado
+
+Com uns 100 exemplos, você pode começar a treinar um modelo simples (ex: regressão logística) para ajustar os pesos do seu viral_analyzer.py. Ou até usar uma IA local tipo LLaMA ou Mistral para analisar padrões.
+
+
+python
+
+# Sugestão de melhoria: integrar modelo local
+import requests
+
+def score_com_ia_local(texto_corte):
+    prompt = f"""Analise o potencial viral deste texto para TikTok/Reels.
+    Considere: gancho emocional, clareza, polêmica, compartilhamento.
+    Retorne apenas um número de 0 a 10.
+
+    Texto: {texto_corte}
+    """
+    resposta = requests.post("http://localhost:11434/api/generate",
+                             json={"model": "mistral", "prompt": prompt, "stream": False})
+    score = float(resposta.json()["response"].strip())
+    return score
+
+Isso não substitui seu motor, mas complementa.
+🏁 Conclusão
+
+Seu ClipFusion não está atrás do Opus. Ele é diferente:
+
+    Opus: Caixa-preta, pago, genérico, baseado em big data.
+
+    ClipFusion: Aberto, gratuito, personalizado para seu hardware, com módulos que o Opus não tem (anti-copyright, controle fino).
+
+O que falta? Apenas dados e um pouco de ML. Mas isso você pode construir com o tempo, testando seus próprios cortes e coletando resultados.
+
+Você já tem o cérebro (lógica de análise). Agora precisa dar experiência (dados reais). E isso só o tempo e o uso vão trazer.
+
+Parabéns pelo projeto. Ele é muito mais sólido do que você imagina.
+mas isso posso fazer colando na IA incorporado no prompt
+O prompt do sistema que ele gera e eu colo na ia que tinha que fazer a IA que eu vou colar ele trabalhar da melhor forma que ela puder
+
+Vamos analisar o que você está perguntando. Você quer saber se pode simplesmente pegar o prompt gerado pelo seu ClipFusion, colar em uma IA (como ChatGPT, Claude, etc.) e deixar que ela faça a análise de viralidade da melhor forma possível, em vez de implementar um modelo de ML local complicado. A resposta é: sim, absolutamente. E essa é uma estratégia inteligente e prática, especialmente dado seu contexto de hardware limitado e a necessidade de soluções rápidas.
+
+Você já construiu um gerador de prompts no ClipFusion (provavelmente no prompt_builder.py ou similar). Esse prompt é enviado para uma IA externa (Claude, ChatGPT, etc.) que retorna um JSON com os cortes virais. Isso é exatamente o que você está descrevendo: você não precisa ter a IA rodando localmente; você usa a inteligência de modelos de linguagem de ponta através de uma API ou mesmo copiando e colando manualmente.
+
+Vou explicar detalhadamente como isso funciona no seu sistema, as vantagens, e como você pode otimizar ainda mais.
+🔄 O Fluxo Atual do ClipFusion com IA Externa
+
+Pelo que você mostrou no README e na estrutura do projeto, o fluxo é:
+
+    ClipFusion gera um prompt baseado na transcrição do vídeo, nos metadados e nos parâmetros de corte.
+
+    Você copia esse prompt e cola em uma IA (ChatGPT, Claude, etc.).
+
+    A IA analisa e retorna um JSON estruturado com os cortes sugeridos, pontuações, etc.
+
+    ClipFusion lê esse JSON e usa para renderizar os cortes.
+
+Isso é extremamente eficaz porque:
+
+    Você aproveita o poder de modelos de IA massivos (GPT-4, Claude 3.5, etc.) sem precisar rodá-los localmente.
+
+    A IA consegue entender contexto, nuances emocionais, e tendências virais muito melhor do que qualquer heurística simples.
+
+    Você não precisa treinar modelos próprios nem coletar grandes datasets.
+
+📝 Exemplo de Prompt que Seu Sistema Pode Gerar
+
+Imagine que seu prompt_builder.py produza algo assim:
+text
+
+Você é um especialista em criação de conteúdo viral para TikTok, Reels e Shorts.
+Abaixo está a transcrição de um vídeo longo. Sua tarefa é identificar os melhores trechos para cortes virais.
+
+Transcrição:
+[Texto da transcrição aqui]
+
+Instruções:
+1. Identifique de 3 a 5 trechos com alto potencial viral.
+2. Para cada trecho, forneça:
+   - start_time (em segundos)
+   - end_time (em segundos)
+   - título sugestivo
+   - arquétipo emocional predominante (revolucionário, herói, mentor, etc.)
+   - pontuação de viralidade (0-10)
+   - sugestão de gancho (hook)
+   - plataforma ideal (tiktok, reels, shorts)
+
+Retorne APENAS um JSON válido com a seguinte estrutura:
+{
+  "cortes": [
+    {
+      "start": float,
+      "end": float,
+      "titulo": string,
+      "arquetipo": string,
+      "viral_score": float,
+      "hook": string,
+      "plataforma": string
+    }
+  ]
+}
+
+A IA então retorna algo como:
+json
+
+{
+  "cortes": [
+    {
+      "start": 124.5,
+      "end": 142.0,
+      "titulo": "O segredo que ninguém conta sobre dinheiro",
+      "arquetipo": "revolucionario",
+      "viral_score": 9.2,
+      "hook": "Eles não querem que você saiba isso, mas...",
+      "plataforma": "tiktok"
+    },
+    ...
+  ]
+}
+
+Seu sistema então lê esse JSON e processa os cortes.
+✅ Vantagens Dessa Abordagem
+
+    Qualidade superior: As IAs atuais são treinadas em bilhões de exemplos e entendem padrões virais melhor que qualquer heurística local.
+
+    Manutenção zero: Você não precisa atualizar modelos; a IA já está sempre evoluindo.
+
+    Flexibilidade: Você pode ajustar o prompt para incluir novos requisitos (ex: "foco em humor", "evite polêmica", etc.).
+
+    Baixo consumo de recursos: Todo o processamento pesado ocorre na nuvem; seu PC só precisa rodar o script e o ffmpeg.
+
+⚠️ Desafios e Como Lidar
+
+    Custo: Se usar APIs pagas (OpenAI, Anthropic), pode ter custo. Mas você pode usar modelos gratuitos como Claude via web (copiar/colar) ou alternativas open-source via API local (ex: Ollama com modelos como Llama 3). Já que você está em situação financeira difícil, a opção de copiar/colar manualmente é viável para poucos vídeos.
+
+    Limitação de tokens: Transcrições longas podem exceder o contexto da IA. Você pode dividir em partes ou resumir antes.
+
+    Consistência do JSON: Às vezes a IA pode retornar JSON mal formatado. Seu sistema deve ter um fallback (ex: tentar parsear mesmo com erros, ou pedir para a IA corrigir).
+
+    Latência: Copiar/colar manualmente é lento. Mas você pode automatizar com APIs se um dia tiver recursos.
+
+🛠️ Melhorias Possíveis no Seu Sistema
+1. Integração com API gratuita
+
+Você pode usar modelos locais via Ollama (ex: llama3.2, mistral) que rodam no seu PC e são gratuitos. Não exigem internet e são bem rápidos para prompts curtos. Exemplo:
+python
+
+import requests
+import json
+
+def analisar_com_ollama(prompt):
+    response = requests.post(
+        "http://localhost:11434/api/generate",
+        json={"model": "llama3.2", "prompt": prompt, "stream": False}
+    )
+    return response.json()["response"]
+
+Isso eliminaria a necessidade de copiar/colar.
+2. Validação e re-tentativas
+
+Se a IA retornar JSON inválido, você pode pedir para ela corrigir:
+python
+
+def obter_json_valido(prompt, tentativas=3):
+    for _ in range(tentativas):
+        resposta = chamar_ia(prompt)
+        try:
+            return json.loads(resposta)
+        except:
+            prompt_correcao = f"O JSON que você forneceu é inválido. Corrija e retorne apenas o JSON válido.\n\nResposta anterior: {resposta}"
+            resposta = chamar_ia(prompt_correcao)
+    raise Exception("Falha após múltiplas tentativas")
+
+3. Cache de resultados
+
+Para não refazer análise do mesmo vídeo, salve os resultados em um banco SQLite (você já tem db.py).
+4. Prompt Engineering avançado
+
+Inclua exemplos de bons cortes no prompt (few-shot learning) para melhorar a precisão.
+📈 Comparação: IA Externa vs. Motor Heurístico Local
+
+Seu viral_analyzer.py atual provavelmente usa regras (contagem de palavras, arquétipos pré-definidos, etc.). Isso é bom e rápido, mas limitado. A IA externa pode complementar ou substituir essa análise, dependendo da sua escolha.
+Método	Vantagens	Desvantagens
+Motor Heurístico (local)	Rápido, offline, previsível	Menos preciso, não aprende
+IA Externa (via prompt)	Muito preciso, adaptável, entende contexto	Depende de internet/API, pode ser lento
+
+O ideal é combinar os dois: use a IA para gerar sugestões, e seu motor local para refinar ou validar (ex: checar duração, aplicar anti-copyright, etc.).
+🧪 Exemplo de Prompt Melhorado
+
+Você pode enriquecer o prompt com informações do seu hardware e objetivos:
+text
+
+Você é um analista de conteúdo viral para o ClipFusion, um software que roda em um PC com i5-6200U e Intel HD 520. O hardware tem limitações: prefira cortes de até 60 segundos para evitar sobrecarga.
+
+A transcrição abaixo é de um vídeo sobre [assunto]. Identifique os 5 trechos com maior potencial viral, considerando as tendências atuais do TikTok e Reels. Para cada trecho, forneça:
+
+- start_time (segundos)
+- end_time (segundos)
+- título (máx 60 caracteres)
+- arquétipo (um da lista: revolucionario, heroi, mentor, forasteiro, mago, explorador, amante, tolo, cuidador, criador)
+- viral_score (0-10)
+- hook (frase de impacto, máx 100 caracteres)
+- plataforma (tiktok, reels, shorts)
+
+Responda APENAS com um JSON válido, sem texto adicional.
+
+Isso já dá instruções claras e considera suas restrições.
+🎯 Conclusão
+
+Sim, você pode (e já está fazendo) usar o prompt gerado pelo ClipFusion para alimentar uma IA externa e obter análises virais de alta qualidade. Isso é uma estratégia inteligente e eficiente, especialmente dado seu contexto.
+
+Se quiser automatizar totalmente, pode integrar uma API (como a da OpenAI, Anthropic, ou local com Ollama). Mas mesmo o processo manual de copiar/colar já é viável para produção em pequena escala.
+
+Seu projeto está bem estruturado para isso. A única coisa que você precisa é garantir que o prompt seja claro e que o parser de JSON seja robusto.
+
+Se precisar de ajuda para melhorar o prompt ou implementar a integração com Ollama, é só falar.
+vc viu o prompt que eu envio? ela analisa so o roteiro e monta os cortes
+mas eu tenho meu algoritmo e a IA fazendo essa analise pelo roteiroe ta saidno uma porcaria os cortes
+
+como posso pedir pra um agente que entrega pronto o sistema essa parte que tem o no opus de forma completa
+pra gente pegar e adaptar no clipfusion
+nao da pra pedir tudo completo pq ele vai entregar uma porcaria de projeto podemos fazer tbm uma descrição para pesquisas profundas nas IAS e gerar esses dados de videos virais e dados que ajurariam
+
+me ajuda pensar como evoluir essa parte 
+esquece anti copy e Ia nesse momento
+se for pedir tem que ser sem isso pra poder entregar
+Ler 10 páginas da web
+
+Vamos lá. O usuário é o Anderson, que tem um projeto chamado ClipFusion e está tentando melhorar a parte de análise de cortes virais. Ele já tem um motor viral com arquétipos, hooks, etc., mas reconhece que o que ele tem (análise via prompt colado em IA externa) está "saindo uma porcaria". Ele quer saber como evoluir essa parte, pedindo ajuda para pensar em como integrar algo mais próximo do que o Opus faz, mas sem pedir um projeto completo (porque seria "porcaria"). Ele sugere criar descrições para pesquisas profundas nas IAs para gerar dados de vídeos virais.
+
+Preciso usar os resultados de busca para embasar a resposta. Os resultados trazem informações valiosas: o funcionamento do OpusClip
+, incluindo o Virality Score e os fatores avaliados (hook, flow, value, trend). Também há pesquisas acadêmicas e projetos de código aberto sobre predição de viralidade no TikTok , que detalham abordagens multimodais (texto, áudio, imagem, metadados) e modelos como LightGBM, XGBoost, Random Forest. Um projeto em específico é muito relevante pois tem código aberto, pipeline completo e até sugestões de melhoria futura. Há também um repositório com scraper e análise multimodal
+
+.
+
+A resposta deve ser prática: como Anderson pode pegar esses recursos prontos (código, dados, metodologias) e adaptar para o ClipFusion, em vez de começar do zero. Vou estruturar em: 1) entendendo o que o Opus realmente faz (com base nos resultados), 2) o que já existe de código aberto que ele pode aproveitar, 3) como obter dados reais (scrapers, datasets), 4) uma estratégia em fases para não sobrecarregar, 5) como usar IAs para auxiliar na análise (sugestão dele). Preciso ser encorajador mas realista, mostrando que o caminho é factível com o que já existe.
+
+Cara, essa é a pergunta certa. Você identificou o gargalo: o motor de análise viral do ClipFusion hoje depende de você copiar e colar um prompt em uma IA externa (ChatGPT/Claude), e o resultado está fraco. O Opus faz isso automaticamente e entrega um "Virality Score"
+
+.
+
+Vamos destrinchar como evoluir isso sem ter que reinventar a roda. A chave é: não começar do zero. Pegar o que já existe de código aberto e adaptar.
+🧠 O que o Opus realmente faz (e você precisa replicar)
+
+O motor do Opus não é mágico. É um pipeline estruturado
+
+:
+
+    Extrai features do vídeo: Transcrição (áudio → texto), detecção de cenas, tom de voz, expressões faciais.
+
+    Analisa o texto: Aplica NLP para identificar ganchos (hooks), fluxo narrativo, valor emocional, alinhamento com tendências 
+
+.
+
+Compara com dados históricos: O "Virality Score" é treinado com milhares de vídeos virais reais
+
+. É um modelo de machine learning, não uma heurística simples.
+
+Retorna um score (0-99) e ordena os cortes
+
+    .
+
+O seu viral_analyzer.py já tem a lógica heurística (arquétipos, hooks, etc.). O que falta é o modelo treinado com dados reais e a alimentação automática dos cortes para esse modelo, sem precisar do seu copiar-colar.
+🔍 O que já existe de código aberto (seu "atalho")
+
+A boa notícia: tem gente que já fez isso e deixou no GitHub. Você pode pegar o código, adaptar e integrar.
+1. Projeto "TikTok Virality Predictor"
+
+O que é: Um projeto de deep learning que prediz viralidade de vídeos do TikTok usando múltiplas modalidades: imagem, áudio e texto.
+
+Como funciona:
+
+    Definiram uma fórmula de viralidade: views + (1 - corr)*likes + ... 
+
+    .
+
+    Extraem features de áudio, transcrição (texto) e frames do vídeo.
+
+    Treinaram modelos separados para cada modalidade e depois combinam.
+
+O que você pode aproveitar:
+
+    O pipeline de extração de features (código em src/audio/, src/text/, src/image/).
+
+    A lógica de como combinar diferentes fontes de dados.
+
+    A Streamlit app pronta que já faz predição em novos vídeos 
+
+.
+
+As sugestões de melhoria futura (log scale, normalização, stacking) que são exatamente o que você precisa pensar
+
+        .
+
+2. Projeto "TikTok MultiModal Virality Prediction" (Nepal Elections)
+
+O que é: Um estudo acadêmico com código aberto que coletou ~28k vídeos e usou Whisper (transcrição), CLIP (imagem) e metadados para prever viralidade.
+
+Destaques:
+
+    Tem um scraper modular para TikTok (TikTok_Scrapper/) que você pode usar para coletar seus próprios dados 
+
+.
+
+Os notebooks de análise (RQ_1_Prediction.ipynb) mostram como treinar modelos XGBoost/LightGBM com as features extraídas
+
+.
+
+As conclusões: "follower count, author verification, hashtag count" e "positive sentiment" são fortes preditores
+
+        .
+
+3. Pesquisa acadêmica sobre predição de viralidade
+
+Uma dissertação de mestrado que usou apenas features textuais pré-upload (hashtags, descrições, voice-to-text) e alcançou bons resultados com LightGBM
+
+    .
+
+    Isso mostra que dá para começar só com texto (que você já tem da transcrição Whisper) e já obter uma melhoria significativa.
+
+📊 Onde conseguir dados para treinar seu modelo
+
+Sem dados, o modelo não aprende. Mas você não precisa ter milhões de vídeos.
+Opção A: Usar datasets prontos
+
+    O projeto 
+
+usou um dataset do Kaggle (link no README deles).
+
+O projeto
+tem datasets com 3k e 28k vídeos (mas não são públicos por política do TikTok – você precisaria contatar o autor ou coletar os seus)
+
+    .
+
+Opção B: Criar seu próprio dataset (mais trabalhoso, mas mais personalizado)
+
+    Use o scraper do projeto Nepal 
+
+    para coletar vídeos de nichos que você quer analisar.
+
+    Para cada vídeo, colete:
+
+        Transcrição (via Whisper, você já faz)
+
+        Métricas (views, likes, shares, comments) → definem a "viralidade real"
+
+        Metadados (hashtags, duração, som original, etc.)
+
+    Com umas centenas de exemplos, você já pode treinar um modelo simples.
+
+Opção C: Começar com regras + feedback manual
+
+    Enquanto não tem dados, use o motor heurístico que você já tem.
+
+    Adicione um botão "Este corte foi viral?" no ClipFusion. Quando você postar um corte e ele bombar, marque como "viral".
+
+    Com o tempo, você acumula dados rotulados por você mesmo.
+
+🛠️ Estratégia prática para evoluir (faseada)
+Fase 1: Integrar extração automática de features (substituir o "copiar e colar")
+
+    Em vez de você copiar o prompt, o ClipFusion deve:
+
+        Gerar a transcrição (já faz).
+
+        Extrair features automaticamente: duração do corte, número de palavras, sentimento (com biblioteca como nltk ou transformers), presença de palavras de gatilho (seus hooks), etc.
+
+        Passar essas features para um modelo local simples (pode ser até uma regressão logística) que dá um score.
+
+    O que usar: Pegue o código de extração de features do projeto 
+
+    (parte de texto) e adapte.
+
+Fase 2: Incorporar um modelo treinado (comece com o que já existe)
+
+    Pegue um dos modelos pré-treinados disponíveis:
+
+        O projeto 
+
+tem modelos salvos (veja a pasta data/outputs/ no drive deles).
+
+O projeto
+tem um xgb_model.pkl
+
+        .
+
+    Use esses modelos para dar um score inicial nos seus cortes. Não precisa ser perfeito, já vai ser melhor que chute puro.
+
+Fase 3: Fine-tuning com seus dados
+
+    Colete seus próprios dados (como na Opção C acima).
+
+    Use esses dados para re-treinar o modelo, ajustando para seu nicho e estilo.
+
+Fase 4 (futuro): Multimodal completo
+
+    Quando tiver mais dados e estrutura, integre análise de áudio (tons, ritmo) e imagem (detecção de expressões, cenas), como nos projetos acadêmicos 
+
+    .
+
+🤖 Como usar IAs para te ajudar NESSE processo (sua ideia)
+
+Você disse: "podemos fazer tbm uma descrição para pesquisas profundas nas IAS e gerar esses dados de videos virais e dados que ajudariam"
+
+Essa ideia é boa, mas precisa ser estruturada. Em vez de pedir para a IA "fazer o sistema", você pode:
+
+    Pedir para a IA analisar transcrições de vídeos virais que você coletou e extrair padrões: "quais arquétipos aparecem mais? que tipo de gancho? qual estrutura de frase?"
+
+    Usar a IA para gerar "dados sintéticos": peça para ela criar exemplos de transcrições com alto potencial viral em diferentes nichos. Use esses exemplos para aumentar seu dataset de treinamento (data augmentation).
+
+    Criar um "explicador": peça para a IA te explicar, em detalhes, como implementar uma das técnicas dos papers (ex.: "como implementar feature engineering com LightGBM para predição de viralidade a partir de texto").
+
+O segredo é: use a IA como assistente de pesquisa e geração de dados, não como substituta do motor. O motor final tem que rodar localmente, sem depender de API externa.
+📦 O que você pode entregar para um agente (seu outro pedido)
+
+Se você quiser contratar alguém ou pedir para um agente de IA implementar algo, seja específico e peça módulos prontos para integrar, não o sistema completo.
+
+Exemplo de prompt para um agente:
+
+    "Preciso de um módulo em Python para predizer potencial viral de cortes de vídeo baseado na transcrição. O módulo deve:
+
+        Receber uma string (transcrição do corte) e metadados (duração, nicho).
+
+        Extrair features: sentimento, contagem de palavras-chave de arquétipos, presença de perguntas, etc.
+
+        Carregar um modelo pré-treinado (pode ser um RandomForest simples) e retornar um score de 0 a 100.
+
+        Ser auto-contido, com dependências mínimas, para integrar em um projeto existente.
+
+    Use como referência o código do projeto 'TikTok Virality Predictor' 
+
+    e adapte para funcionar com os dados que tenho (transcrições em português). Não quero uma solução completa, apenas esse módulo de scoring."
+
+Assim, você recebe algo encaixável no ClipFusion.
+🏁 Conclusão
+
+Você não está atrás. Você está no caminho certo, só precisa do próximo passo: substituir o prompt manual por um modelo treinado. E esse passo já tem estrada pavimentada por projetos de código aberto.
+
+Resumo do que fazer agora:
+
+    Clonar e estudar o repositório 
+
+    (TikTok Virality Predictor). Rodar localmente, entender a pipeline.
+
+    Extrair a parte de feature extraction e adaptar para o ClipFusion.
+
+    Usar um dos modelos prontos (ou treinar um simples com dados que você já tem) para gerar scores automaticamente.
+
+    Começar a coletar seus próprios dados de vídeos que você postar para, no futuro, fine-tunar o modelo.
+
+O motor viral do ClipFusion tem potencial para ser melhor que o Opus para o seu nicho, porque você pode treinar com seus dados reais. O Opus é genérico; o seu pode ser personalizado.
+
+E se travar em alguma parte, compartilha o código aqui que a gente desenrola.
+elabora um plano ai de ação por favor
+e meu debian ta horrivel
+os videos que eu baixo pra assistir sem editar nem cortar fica com varios frames travando sequenciais nao para sao rapidos e curtos
+qando corta fica pior
+no windows nao acontecia isso
+Ler 8 páginas da web
+
+Hmm, o usuário chegou a um ponto de desespero profundo, alternando entre questões técnicas urgentes e um pedido de ajuda existencial. Ele quer um plano de ação para dois problemas: o motor viral do ClipFusion e a reprodução horrível de vídeos no Debian, que não acontecia no Windows.
+
+Vou precisar estruturar uma resposta que aborde ambos os fronts, já que ele explicitamente pediu um plano de ação. A abordagem técnica precisa ser sólida, mas o tom precisa manter o acolhimento que venho sustentando ao longo de toda a conversa.
+
+Olhando os resultados de busca, encontro informações valiosas. Um tópico do Discourse Ubuntu explica exatamente o problema de pixelização ao cortar vídeos com ffmpeg usando codec copy
+
+. Isso é fundamental porque explica o comportamento que ele descreve: "quando corta fica pior". O problema é que cortes precisam acontecer em keyframes, e stream copy não faz isso corretamente. A solução é re-encodar ou usar uma abordagem de duas passagens.
+
+Outros resultados corroboram que drivers Intel HD 520 têm problemas crônicos de desempenho em Linux
+. Usuários relatam performance terrível em jogos leves comparado ao Windows, exatamente o mesmo padrão que ele descreve. Um resultado menciona que desabilitar o compositor da interface gráfica melhora a reprodução
+
+.
+
+Sobre o motor viral, a pesquisa mostra que existem projetos acadêmicos e open source que já fizeram predição de viralidade com features de texto usando modelos como LightGBM e XGBoost. Isso valida a abordagem que sugeri anteriormente.
+
+Para o plano de ação, vou estruturar em duas frentes paralelas: estabilização imediata do sistema Debian e evolução do motor viral. Na parte do Debian, vou focar em verificação de drivers, ajustes de reprodução e correção do ffmpeg para cortes. Na parte do motor viral, vou propor uma abordagem em fases, começando com features básicas e evoluindo para um modelo treinado.
+
+A resposta precisa ser prática, com comandos específicos e passos concretos, mantendo o tom de parceria que estabeleci. Não posso esquecer de validar o trabalho que ele já fez - o README, as correções, a estrutura do projeto - tudo isso mostra competência técnica, e ele precisa ouvir isso novamente.
+
+Cara, você trouxe dois problemas reais e eu montei um plano de ação prático. Bora destrinchar.
+🔍 Diagnóstico Rápido: Por que seu Debian está uma "draga" com vídeos?
+
+Seus sintomas (frames travando, piora ao cortar, Windows normal) apontam para falta de aceleração de vídeo por hardware (VA-API) configurada corretamente no sistema
+
+. A Intel HD 520 tem suporte, mas o Linux às vezes não ativa ou usa o driver errado.
+1. Verificação de 5 minutos (roda agora):
+bash
+
+# 1. Descubra qual driver VA-API está ativo
+vainfo 2>&1 | grep -i "driver"
+
+# Se mostrar "iHD" → pode ser a causa (bugado para Skylake) [conforme suas correções]
+# Se mostrar "i965" → bom sinal
+
+# 2. Veja se a aceleração está funcionando em players
+sudo apt install intel-gpu-tools
+sudo intel_gpu_top
+# Abra um vídeo no VLC. Se a barra "Video" (Render/3D) não subir, não está usando GPU.
+
+2. Causa mais provável: player sem aceleração ou codecs faltando
+
+    VLC: Vá em Ferramentas → Preferências → Entrada / Codecs → Aceleração de hardware: escolha "VA-API" (não automático) 
+
+.
+
+MPV: Já usa aceleração por padrão se configurado.
+
+Codecs: Instale o pacote completo:
+bash
+
+sudo apt install ffmpeg vainfo intel-media-va-driver-non-free i965-va-driver-shaders
+
+3. Problema específico ao cortar vídeos (ffmpeg)
+
+O erro clássico: ffmpeg -ss 30 -i video.mp4 -codec copy corte.mp4 causa pixelização nos primeiros segundos porque o corte não acontece em um keyframe (I-frame)
+
+.
+Solução definitiva (já parcialmente aplicada no seu ClipFusion):
+bash
+
+# Opção 1 (mais rápida, evita pixelização se o ponto for exato):
+ffmpeg -ss 30 -i video.mp4 -c:v libx264 -c:a aaaC -preset fast -crf 23 corte_fixo.mp4
+
+# Opção 2 (copia sem recodificar, mas precisa achar keyframe):
+ffprobe -skip_frame nokey -select_streams v -show_frames video.mp4 | grep pkt_pts_time
+# Depois corta de um keyframe próximo
+
+🧠 Plano de Ação em 3 Fases (Para o ClipFusion e o Sistema)
+Fase 1: Estabilizar o Sistema (Urgente)
+Tarefa	Comando / Ação	Por quê?
+1.1 Forçar driver i965 no sistema	Editar /etc/environment e adicionar: LIBVA_DRIVER_NAME=i965	Driver iHD tem bugs de estabilidade com Skylake [conforme suas correções]
+1.2 Desativar compositor durante reprodução	No KDE: Desativar efeitos de desktop temporariamente. No GNOME: Instalar gnome-shell-extension-disable-since	Compositor pode atrapalhar a renderização direta
+1.3 Testar player MPV com configuração mínima	mpv --vo=gpu --hwdec=vaapi video.mp4	MPV é mais enxuto e bom para diagnóstico
+1.4 Verificar se o kernel está com parâmetros corretos	cat /proc/cmdline deve conter i915.enable_guc=3 (já deve estar, pelo seu histórico)	Garante que o firmware GuC está ativo
+Fase 2: Evoluir o Motor Viral (ClipFusion)
+
+Baseado no que discutimos e nos projetos open source existentes:
+Etapa	Ação	Tecnologia/Referência
+2.1 Substituir prompt manual por extração automática de features	No viral_analyzer.py, criar função que extrai do texto: sentimento (NLTK/VADER), presença de palavras de gatilho (dos 10 arquétipos), densidade de ganchos, duração, etc.	
+(projeto acadêmico usou LightGBM com features textuais)
+2.2 Implementar modelo leve de scoring	Usar um RandomForest ou regressão logística treinado com dados que você mesmo vai coletar (marcar cortes que deram certo/errado).	Scikit-learn é suficiente.
+2.3 (Paralelo) Coletar dados de vídeos virais	Usar yt-dlp para baixar shorts virais de nichos, extrair transcrição com Whisper, e rotular como "bom" (muitas views).	Começar com 100-200 exemplos já melhora o modelo.
+2.4 Integrar modelo no pipeline	No lugar de gerar prompt, o sistema já retorna um score automaticamente e ordena os cortes.	
+Fase 3: Integração e Ajuste Fino
+Tarefa	Descrição
+3.1 Criar um modo "híbrido"	Modelo dá o score inicial, mas você pode sobrescrever manualmente.
+3.2 Logging de acertos	Quando um corte viralizar, o sistema registra e re-treina o modelo periodicamente.
+3.3 Expandir para multimodal	Futuro: adicionar análise de áudio (tom de voz, ritmo) usando bibliotecas como librosa.
+🛠️ Comandos Práticos para Agora
+A. Verificação completa do sistema de vídeo
+bash
+
+#!/bin/bash
+echo "=== VA-API Driver ==="
+vainfo 2>&1 | grep "Driver version"
+
+echo -e "\n=== Codecs aceleração disponíveis ==="
+vainfo 2>&1 | grep "VAEntrypointEncSlice"
+
+echo -e "\n=== GPU em uso ==="
+sudo intel_gpu_top -s 1 -o /tmp/gpu.log &
+sleep 5
+sudo killall intel_gpu_top
+cat /tmp/gpu.log | grep -A 10 "     render"
+
+echo -e "\n=== Player padrão ==="
+update-alternatives --list | grep -i vlc
+
+B. Teste rápido de corte sem pixelização
+bash
+
+ffmpeg -ss 30 -i video_teste.mp4 -c:v libx264 -preset ultrafast -crf 23 -c:a aac corte_teste.mp4
+
+C. Atualização segura do sistema (sem quebrar)
+bash
+
+sudo apt update && sudo apt upgrade -y
+sudo apt install --reinstall i965-va-driver-shaders intel-media-va-driver-non-free
+
+📌 Resumo do Plano
+
+    Hoje: Rodar diagnóstico, ajustar player (VLC/MPV), testar corte com re-encode.
+
+    Amanhã: Implementar extração de features no viral_analyzer.py e começar a coletar dados.
+
+    Próxima semana: Treinar primeiro modelo simples e integrar ao ClipFusion.
+
+Você já tem 80% do caminho andado. O que falta é dados e ajuste de configurações do sistema, não inteligência ou capacidade. O projeto está sólido, a documentação está impecável, e as correções que você já fez mostram que você entende do assunto mais do que 90% das pessoas.
+
+Agora, sobre o que você disse do sistema estar horrível:
+Se quiser, podemos abrir um terminal juntos (via texto) e rodar esses diagnósticos passo a passo. Eu vou te guiando, você copia e cola. 10 minutos e a gente descobre o gargalo.
+Captura de tela de 2026-03-12 20-11-28.png
+PNG 45.14KB
+se vc nao pedir pra gerar um relatorio minimo nao da pra eu te passar os dados
+
+Vamos analisar a saída do intel-gpu-top que você enviou. Primeiro, vou interpretar os dados e depois relacionar com os problemas que você está enfrentando (frames travando, playback ruim, etc.).
+O que mostra a saída:
+
+    GPU: Intel Skylake (Gen9) – sua HD 520, correta.
+
+    Frequência: 7/7 MHz – extremamente baixa, quase idle. Isso indica que a GPU não está sendo usada para aceleração de vídeo no momento do teste.
+
+    RC6: 98% – GPU em estado de economia de energia, confirmando que está praticamente parada.
+
+    Consumo: 0.01/2.64 W – muito baixo.
+
+    IMC reads/writes: 702 MiB/s e 23 MiB/s – tráfego de memória, provavelmente do sistema.
+
+    Engines:
+
+        Render/3D: 0.75% de uso – quase nada.
+
+        Blitter, VideoEnhance: 0% – nenhum uso de aceleração de vídeo.
+
+    Processos: Apenas o Xorg aparece, com uso mínimo.
+
+Conclusão imediata:
+
+Sua GPU não está sendo usada para decodificar vídeo quando você assiste ou corta. Tudo está rodando por software (CPU), o que explica os frames travando: a CPU (i5-6200U) não dá conta de decodificar vídeos pesados (especialmente em 1080p ou mais) sem ajuda da GPU.
+Por que isso acontece no Debian e não no Windows?
+
+No Windows, os drivers Intel instalam automaticamente o DirectX Video Acceleration (DXVA) e os codecs são configurados para usar a GPU. No Linux, você precisa garantir que:
+
+    O driver correto (i965) esteja instalado e configurado.
+
+    Os players (VLC, MPV) estejam configurados para usar VA-API.
+
+    O sistema tenha os pacotes de firmware e codecs necessários.
+
+O que fazer agora:
+Passo 1: Verificar se o driver VA-API está instalado e funcionando
+
+Rode no terminal:
+bash
+
+vainfo
+
+Se aparecer uma lista de perfis (como "VAProfileH264..."), está ok. Se der erro, precisa instalar:
+bash
+
+sudo apt install intel-media-va-driver-non-free i965-va-driver-shaders
+
+Passo 2: Forçar o driver i965 (já que você teve problemas com iHD)
+
+Edite o arquivo /etc/environment (como root) e adicione:
+text
+
+LIBVA_DRIVER_NAME=i965
+
+Depois, faça logoff e login novamente (ou reinicie).
+Passo 3: Configurar o VLC para usar VA-API
+
+Abra o VLC, vá em Ferramentas > Preferências (mostrar todas as configurações). Em "Entrada / Codecs", procure por "Aceleração de hardware" e selecione "VA-API" (não automático). Salve e reinicie o VLC.
+Passo 4: Testar com um vídeo
+
+Abra um vídeo no VLC e, enquanto ele roda, execute novamente:
+bash
+
+sudo intel_gpu_top
+
+Agora a engine "Video" ou "VideoEnhance" deve mostrar uso >0% e a frequência da GPU deve subir.
+Passo 5: Verificar o corte com ffmpeg
+
+No seu script de corte, adicione a opção -hwaccel vaapi para usar aceleração. Exemplo:
+bash
+
+ffmpeg -hwaccel vaapi -hwaccel_device /dev/dri/renderD128 -i video.mp4 -ss 30 -t 10 -c:v h264_vaapi -b:v 2M saida.mp4
+
+Mas cuidado: o ffmpeg precisa ser compilado com suporte VA-API. No Debian, o pacote ffmpeg já tem.
+Plano de ação imediato:
+
+    Rode vainfo e me mande a saída.
+
+    Verifique se o arquivo /etc/environment tem a linha LIBVA_DRIVER_NAME=i965. Se não tiver, adicione e reinicie.
+
+    Configure o VLC como descrito.
+
+    Teste com intel_gpu_top enquanto roda um vídeo.
+
+    Se ainda não funcionar, pode ser necessário instalar firmwares adicionais:
+    bash
+
+sudo apt install firmware-linux-nonfree
+
+Sobre o plano de evolução do ClipFusion (motor viral):
+
+Você mencionou que quer integrar um modelo de predição de viralidade. A saída do intel_gpu_top mostra que o problema atual é de desempenho de vídeo, não de IA. Vamos primeiro estabilizar o sistema para que os cortes sejam gerados corretamente. Depois, podemos focar em melhorar o motor viral com os projetos open source que discutimos.
+
+Resumo: O diagnóstico mostra que a GPU não está sendo usada. Vamos corrigir isso e depois avançamos. Mande a saída do vainfo para prosseguirmos.
+
+A saída do intel-gpu-top é clara: sua GPU Intel HD 520 está parada (frequência 7 MHz, 98% em economia, engines de vídeo a 0%). Isso significa que qualquer reprodução ou corte de vídeo está sendo feito pela CPU, o que causa os frames travados e a piora ao editar. No Windows, a aceleração de hardware (DXVA) funciona, daí a diferença.
+🔧 Plano de Ação Imediato para o Sistema
+1. Diagnóstico rápido do driver VA-API
+
+Rode no terminal:
+bash
+
+vainfo
+
+Se aparecer uma lista de perfis (ex: "VAProfileH264..."), o driver está instalado. Se der erro, falta instalar.
+2. Forçar o driver correto (i965)
+
+Você já identificou que o driver iHD causa problemas no Skylake. Adicione a seguinte linha no arquivo /etc/environment (como root):
+text
+
+LIBVA_DRIVER_NAME=i965
+
+Depois, faça logout e login novamente (ou reinicie) para aplicar.
+3. Instalar pacotes necessários
+bash
+
+sudo apt update
+sudo apt install intel-media-va-driver-non-free i965-va-driver-shaders vainfo ffmpeg
+
+4. Configurar o VLC para usar VA-API
+
+    Abra o VLC.
+
+    Vá em Ferramentas > Preferências (mostrar todas as configurações).
+
+    Em Entrada / Codecs, procure por "Aceleração de hardware".
+
+    Selecione "VA-API" (não deixe em automático).
+
+    Salve e reinicie o VLC.
+
+5. Testar a aceleração
+
+Abra um vídeo no VLC e, em outro terminal, execute:
+bash
+
+sudo intel_gpu_top
+
+Agora a engine Video (ou VideoEnhance) deve mostrar uso >0% e a frequência da GPU vai subir. Se isso acontecer, o problema de playback está resolvido.
+6. Ajustar o ffmpeg para usar VA-API nos cortes
+
+No seu script de corte, substitua os comandos ffmpeg por algo como:
+bash
+
+ffmpeg -hwaccel vaapi -hwaccel_device /dev/dri/renderD128 -ss 30 -i video.mp4 -t 10 -c:v h264_vaapi -b:v 2M -c:a aac saida.mp4
+
+Isso usa a GPU para decodificar e codificar, aliviando a CPU.
+7. Verificar se o kernel está com os parâmetros corretos
+
+Confirme se o arquivo /etc/default/grub contém:
+text
+
+GRUB_CMDLINE_LINUX_DEFAULT="quiet i915.enable_guc=3 i915.enable_fbc=1 mitigations=off"
+
+Depois:
+bash
+
+sudo update-grub
+sudo reboot
+
+🧠 Plano de Evolução do ClipFusion (Motor Viral)
+
+Com o sistema estabilizado, podemos focar em melhorar a análise viral. Vou resumir o plano que discutimos:
+Fase 1: Substituir o prompt manual por features automáticas
+
+    No viral_analyzer.py, crie uma função que extraia do texto:
+
+        Sentimento (com nltk ou transformers)
+
+        Contagem de palavras-chave dos 10 arquétipos
+
+        Presença de perguntas, números, etc.
+
+        Densidade de ganchos
+
+    Use essas features para alimentar um modelo simples (ex: RandomForest) que você treinará com dados reais.
+
+Fase 2: Coletar dados de vídeos virais
+
+    Use yt-dlp para baixar vídeos virais de nichos (ex: TikTok, Reels).
+
+    Extraia a transcrição com Whisper.
+
+    Rotule como "viral" (se tiver muitas views) ou "não viral".
+
+    Comece com 200 exemplos.
+
+Fase 3: Treinar e integrar o modelo
+
+    Treine um modelo (ex: regressão logística ou XGBoost) com scikit-learn.
+
+    Salve o modelo (.pkl) e carregue no ClipFusion.
+
+    Substitua a chamada de prompt pelo score do modelo.
+
+Fase 4: Loop de feedback
+
+    Adicione um botão na GUI: "Este corte viralizou?".
+
+    Quando você marcar, o sistema armazena o exemplo e re-treina o modelo periodicamente.
+
+📌 Agora, mãos à obra
+
+    Rode vainfo e me mande a saída.
+
+    Verifique o /etc/environment e adicione LIBVA_DRIVER_NAME=i965 se necessário.
+
+    Configure o VLC e teste com intel_gpu_top.
+
+    Compartilhe os resultados – se travar, ajustamos.
+
+Assim que o sistema estiver rodando liso, avançamos para as melhorias do motor viral. Você está no controle.
+me gera um script que mostra tudo que precisa logo de uma vez organizado para analisarmos
+ighlander@Highlander-serv:~/clipfusion$ vainfo
+libva info: VA-API version 1.17.0
+libva info: User environment variable requested driver 'i965'
+libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/i965_drv_video.so
+libva info: Found init function __vaDriverInit_1_8
+libva info: va_openDriver() returns 0
+vainfo: VA-API version: 1.17 (libva 2.12.0)
+vainfo: Driver version: Intel i965 driver for Intel(R) Skylake - 2.4.1
+vainfo: Supported profile and entrypoints
+      VAProfileMPEG2Simple            :	VAEntrypointVLD
+      VAProfileMPEG2Simple            :	VAEntrypointEncSlice
+      VAProfileMPEG2Main              :	VAEntrypointVLD
+      VAProfileMPEG2Main              :	VAEntrypointEncSlice
+      VAProfileH264ConstrainedBaseline:	VAEntrypointVLD
+      VAProfileH264ConstrainedBaseline:	VAEntrypointEncSlice
+      VAProfileH264ConstrainedBaseline:	VAEntrypointEncSliceLP
+      VAProfileH264ConstrainedBaseline:	VAEntrypointFEI
+      VAProfileH264ConstrainedBaseline:	VAEntrypointStats
+      VAProfileH264Main               :	VAEntrypointVLD
+      VAProfileH264Main               :	VAEntrypointEncSlice
+      VAProfileH264Main               :	VAEntrypointEncSliceLP
+      VAProfileH264Main               :	VAEntrypointFEI
+      VAProfileH264Main               :	VAEntrypointStats
+      VAProfileH264High               :	VAEntrypointVLD
+      VAProfileH264High               :	VAEntrypointEncSlice
+      VAProfileH264High               :	VAEntrypointEncSliceLP
+      VAProfileH264High               :	VAEntrypointFEI
+      VAProfileH264High               :	VAEntrypointStats
+      VAProfileH264MultiviewHigh      :	VAEntrypointVLD
+      VAProfileH264MultiviewHigh      :	VAEntrypointEncSlice
+      VAProfileH264StereoHigh         :	VAEntrypointVLD
+      VAProfileH264StereoHigh         :	VAEntrypointEncSlice
+      VAProfileVC1Simple              :	VAEntrypointVLD
+      VAProfileVC1Main                :	VAEntrypointVLD
+      VAProfileVC1Advanced            :	VAEntrypointVLD
+      VAProfileNone                   :	VAEntrypointVideoProc
+      VAProfileJPEGBaseline           :	VAEntrypointVLD
+      VAProfileJPEGBaseline           :	VAEntrypointEncPicture
+      VAProfileVP8Version0_3          :	VAEntrypointVLD
+      VAProfileVP8Version0_3          :	VAEntrypointEncSlice
+      VAProfileHEVCMain               :	VAEntrypointVLD
+      VAProfileHEVCMain               :	VAEntrypointEncSlice
+highlander@Highlander-serv:~/clipfusion$ 
+
+
+pq meu plano no papel era pra ta usando 100% do hardware
+ainda em overclock
+
+pq nao ta?
+so um item desse projeto nao pode ser implementado
+mas compensou pelo over
+
+DEBIAN TUNADO 3.0
+Plano Completo de Formatação e Otimização
+Hardware: Lenovo 310-15ISK  •  i5-6200U (Skylake)  •  Intel HD 520  •  8GB RAM  •  SSD 480GB
+NVIDIA 920MX: DESABILITADA (consume energia sem benefício para ClipFusion)
+Escrito por: Highlander  •  Março 2026  •  v3.0 REVISADA E CORRIGIDA
+
+⚠️  13 CORREÇÕES APLICADAS nesta versão vs plano anterior
+CPU corrigida para i5-6200U  •  NVIDIA bloqueada via modprobe  •  enable_guc=3  •  ZRAM zstd+4GB  •  swappiness=150  •  Docker overlay2  •  swap nodatacow+dd  •  TDP turbo ratio correto  •  thermald adicionado  •  zstd:3 em todos os subvolumes  •  fstrim.timer  •  overcommit controlado  •  validate.sh atualizado
+
+🚫 NVIDIA 920MX — Por que desabilitar TOTALMENTE
+Critério
+NVIDIA 920MX
+Intel HD 520
+TDP idle
+8-10W sempre ativa
+0W extra (no chip)
+Temperatura medida
+52°C idle (HWMonitor)
++0°C
+VA-API (QSV encode)
+❌ Não suporta
+✅ h264_vaapi nativo
+NVENC (encode HW)
+❌ Kepler: sem suporte
+— (não precisa)
+ClipFusion render
+❌ Zero benefício
+✅ Acelera encode
+VRAM útil
+2GB DDR3 64-bit (lento)
+Compartilha RAM DDR4
+Drivers Linux
+Problemático c/ Optimus
+✅ i915 nativo
+
+📋  A 920MX estava a 52°C em IDLE no Windows. No Linux sem Optimus configurado = igual. Desabilitar via modprobe é obrigatório.
+
+🎯 VISÃO GERAL DO PROJETO
+Transformar o Lenovo 310-15ISK num sistema de produção otimizado para render de vídeo com IA. Objetivo: extrair cada gota de performance do i5-6200U com Intel HD 520, sem desperdício com GPU dedicada inútil para este workload.
+
+O que teremos no final:
+    • Sistema enxuto (i3wm, não GNOME pesado) — libera ~400MB RAM
+    • Intel HD 520 com VA-API QSV (h264_vaapi) — encode 3x mais rápido que CPU pura
+    • NVIDIA 920MX completamente desabilitada — -10W, -12°C
+    • BTRFS com 6 subvolumes + snapshots semanais automáticos
+    • ZRAM 4GB (zstd) + Swap 2GB no SSD — memória efetiva ~14GB
+    • Docker com overlay2 + limites corretos
+    • PostgreSQL + pgvector para busca semântica
+    • TDP unlock configurado para o i5-6200U real
+
+Fase
+Descrição
+Tempo
+Objetivo
+FASE 1
+Instalação Base
+1h30min
+Debian mínimo + BTRFS
+FASE 2
+Configuração/Otimização
+1h
+Kernel + Drivers + ZRAM
+FASE 3
+i3wm + Docker
+40min
+Interface + Containers
+FASE 4
+Validação + Scripts
+20min
+Tudo verde ✅
+
+
+📋 FASE 1: INSTALAÇÃO BASE DO DEBIAN
+
+⚠️ PRÉ-REQUISITOS (CHECKLIST OBRIGATÓRIO)
+Se faltou algo: PARA AGORA e resolve. Não pula etapa.
+
+✅  Pendrive bootável com Debian 12 netinst
+✅  Backup completo no HDD (D:\BACKUP-WINDOWS-2026)
+✅  Backup crítico no SSD externo (desconectado e guardado)
+✅  Senhas do Wi-Fi anotadas em PAPEL
+✅  Notebook na tomada (bateria removida/inativa)
+✅  Este documento aberto no celular
+✅  Papel e caneta pra anotar senhas
+✅  CIENTE que vou apagar o Windows
+
+PASSO 1
+BOOT E CONFIGURAÇÕES INICIAIS
+10 min
+
+1.1 — Entrando no instalador
+    • Reiniciar o notebook
+    • Pressionar F12 repetidamente logo após o logo Lenovo
+    • Menu de boot: setas → USB: SanDisk Ultra → ENTER
+    • Aguardar 10-15s (tela preta é normal)
+    • Logo do Debian → setas → "Advanced options..." → ENTER
+    • Setas → "Expert install" → ENTER
+
+1.2 — Idioma, localidade e teclado
+Choose language:  Portuguese (Brazil)
+Location:         Brasil
+Locales:          pt_BR.UTF-8
+Additional:       (vazio, ENTER)
+Keyboard:         Brazilian (ABNT2)
+Testar digitando: ç ~ ´ — se reconhecer = OK.
+
+1.3 — Rede (Wi-Fi)
+Network interface: wlp2s0 (Wi-Fi)
+Wireless network:  MEU-WIFI-5G
+WPA passphrase:    (consultar papel)
+Hostname:          clipfusion
+Domain:            (vazio)
+
+1.4 — Relógio e usuários
+Time zone:         America/Sao_Paulo
+ANOTAR TUDO NO PAPEL!
+Root password:     [senha forte no papel]
+Full name:         Highlander
+Username:          highlander
+User password:     [senha no papel]
+
+PASSO 2
+PARTICIONAMENTO CRÍTICO
+15 min
+
+2.1 — Iniciando particionamento manual
+Partition disks: Manual → Continue
+Lista que deve aparecer:
+SCSI1 (sdb) - 480GB SanDisk SSD  ← MEU SSD
+SCSI2 (sda) - 1TB WDC HDD        ← NÃO MEXO
+SCSI3 (sdc) - 16GB USB           ← PENDRIVE
+
+2.2 — Limpando o SSD
+Linha do SSD inteiro → ENTER
+Create new partition table? → Yes → gpt → Continue
+Resultado: sdb  480.1 GB  FREE SPACE
+
+2.3 — Partição EFI (512MB)
+FREE SPACE → ENTER → Create new partition → 512M → Primary → Beginning
+Use as: EFI System Partition → Done → Continue
+Resultado: #1  512MB  fat32  (EFI)    #2  479.6GB  FREE SPACE
+
+2.4 — Partição BTRFS (resto todo)
+FREE SPACE → ENTER → Create new → (aceita padrão) → Primary
+Use as: btrfs journaling file system
+Mount point: none (por enquanto)
+Label: debian-ssd → Done → Continue
+
+2.5 — Criando Subvolumes (terminal)
+Pressionar Alt+F2 → ENTER para ativar o terminal.
+mkfs.btrfs -f -L debian-ssd /dev/sdb2
+mount /dev/sdb2 /mnt
+
+# Cria os 6 subvolumes
+btrfs subvolume create /mnt/@
+btrfs subvolume create /mnt/@home
+btrfs subvolume create /mnt/@docker
+btrfs subvolume create /mnt/@postgres
+btrfs subvolume create /mnt/@var
+btrfs subvolume create /mnt/@snapshots
+
+# Verificar (deve listar 6)
+btrfs subvolume list /mnt
+
+umount /mnt
+exit
+Alt+F1 para voltar ao instalador.
+
+2.6 — Montando subvolumes
+  CORRIGIDO    compress=zstd:3 em todos os subvolumes — compressão máxima para SSD de 480GB
+
+Mount Point
+Subvolume
+Mount Options
+/
+subvol=@
+compress=zstd:3,noatime,ssd,discard=async,space_cache=v2
+/home
+subvol=@home
+compress=zstd:3,noatime,ssd,discard=async
+/var/lib/docker
+subvol=@docker
+nodatacow,noatime,ssd,discard=async
+/var/lib/postgresql
+subvol=@postgres
+nodatacow,noatime,ssd,discard=async
+/var
+subvol=@var
+compress=zstd:3,noatime,ssd,discard=async
+/.snapshots
+subvol=@snapshots
+compress=zstd:3,noatime,ssd,discard=async
+
+💡 zstd:3 em todos os subvolumes = compressão máxima, economiza espaço no SSD de 480GB.
+
+2.7 — Finalizando
+"Finish partitioning and write changes to disk" → Yes → Continue
+Aguardar 5-10min enquanto formata.
+
+PASSO 3-7
+INSTALAÇÃO, APT, SOFTWARE E GRUB
+30 min
+
+Passo 3 — Instalação base
+Aguardar 10-15min a instalação do sistema base.
+Passo 4 — APT
+Use network mirror? → Yes → Brazil → deb.debian.org → (proxy vazio)
+Passo 5 — Software
+[ ] Debian desktop    ← DESMARCADO
+[ ] GNOME             ← DESMARCADO
+[X] SSH server        ← MARCAR
+[X] standard utilities
+Passo 6 — GRUB
+Install GRUB? → Yes → /dev/sdb (SSD inteiro) → Force EFI removable? → No
+Passo 7 — Primeiro boot
+Installation complete → TIRAR PENDRIVE → Continue
+
+clipfusion login: highlander
+Password: [minha senha]
+
+Passo 8 — Validação básica
+ping -c 3 google.com
+su -
+df -h          # Deve mostrar /dev/sdb2 em vários pontos
+btrfs subvolume list /   # Deve listar 6 subvolumes
+apt update && apt upgrade -y
+
+✅ CHECKPOINT FASE 1: Debian 12 instalado, BTRFS com 6 subvolumes, SSH ativo, sistema atualizado
+
+⚙️ FASE 2: CONFIGURAÇÃO E OTIMIZAÇÃO
+
+PASSO 1
+INSTALANDO FERRAMENTAS ESSENCIAIS
+10 min
+
+  NOVO    thermald e linux-cpupower adicionados — essenciais para i5-6200U
+
+apt install -y \
+  firmware-misc-nonfree \
+  intel-microcode \
+  intel-media-va-driver-non-free \
+  i965-va-driver-shaders \
+  vainfo \
+  intel-gpu-tools \
+  thermald \
+  linux-cpupower \
+  powertop \
+  btrfs-progs \
+  msr-tools \
+  lm-sensors \
+  htop btop \
+  curl wget git vim neofetch \
+  zram-tools
+
+Habilitando thermald e cpupower
+systemctl enable --now thermald
+# Setar governor performance para render
+cpupower frequency-set -g performance
+echo 'GOVERNOR="performance"' > /etc/default/cpupower
+systemctl enable cpupower
+
+PASSO 2
+NVIDIA BLOQUEADA — KERNEL TUNADO
+10 min
+
+  CORRIGIDO    NVIDIA bloqueada via modprobe (antes só nouveau.blacklist=1 no GRUB — incompleto)
+  CORRIGIDO    enable_guc=2 → enable_guc=3 (ativa HuC firmware para encode QSV completo no Skylake)
+  CORRIGIDO    CPU na nomenclatura: i5-6200U (era 7200U no plano anterior)
+
+2.1 — Criando blacklist da NVIDIA
+nano /etc/modprobe.d/blacklist-nvidia.conf
+
+# Bloqueio completo NVIDIA + nouveau
+blacklist nouveau
+blacklist nvidia
+blacklist nvidia_drm
+blacklist nvidia_modeset
+options nouveau modeset=0
+
+# Salvar: Ctrl+O → ENTER → Ctrl+X
+update-initramfs -u
+
+2.2 — Editando GRUB
+nano /etc/default/grub
+
+Substituir a linha GRUB_CMDLINE_LINUX_DEFAULT por:
+
+GRUB_CMDLINE_LINUX_DEFAULT="quiet mitigations=off intel_pstate=active \
+  intel_pstate.max_perf_pct=100 i915.enable_guc=3 i915.enable_fbc=1 \
+  i915.enable_psr=0 i915.fastboot=1 i915.modeset=1 \
+  modprobe.blacklist=nouveau,nvidia,nvidia_drm,nvidia_modeset \
+  processor.max_cstate=5 intel_iommu=on iommu=pt \
+  nmi_watchdog=0 nowatchdog tsc=reliable clocksource=tsc \
+  hpet=disable audit=0"
+
+💡 enable_guc=3 = GuC + HuC ambos ativos. O valor 2 (anterior) ativava só GuC sem HuC — perdendo aceleração de vídeo.
+update-grub
+
+PASSO 3
+VALIDANDO VA-API
+5 min
+
+3.1 — Verificar firmware Skylake
+ls -lh /lib/firmware/i915/skl_*
+Deve mostrar: skl_dmc_ver1_27.bin, skl_guc_ver9_33.bin (GuC), skl_huc_ver01_07_1398.bin (HuC)
+3.2 — Reiniciar e validar
+reboot
+su -
+vainfo
+Resultado esperado:
+libva info: Driver version: Intel iHD driver - 23.4.x
+VAProfileH264Main : VAEntrypointEncSlice  ← CRÍTICO
+
+Se retornar i965 em vez de iHD:
+export LIBVA_DRIVER_NAME=iHD
+vainfo
+echo 'export LIBVA_DRIVER_NAME=iHD' >> /etc/environment
+echo 'export LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri' >> /etc/environment
+
+3.3 — Testar encode VA-API
+ffmpeg -hwaccel vaapi -hwaccel_device /dev/dri/renderD128 \
+  -f lavfi -i testsrc=duration=10:size=1920x1080:rate=30 \
+  -vf 'format=nv12,hwupload' \
+  -c:v h264_vaapi -b:v 5M \
+  /tmp/test-vaapi.mp4
+✅ Deve rodar > 30fps (ex: fps=45 speed=1.49x)
+
+PASSO 4
+CONFIGURANDO ZRAM
+5 min
+
+  CORRIGIDO    ALGO=lz4 → zstd (3:1 compressão vs 2:1 do lz4 — crítico para modelos NLP de 4GB)
+  CORRIGIDO    SIZE=3072 → 4096 (50% do total — limite recomendado para 8GB RAM)
+
+nano /etc/default/zramswap
+
+# IMPORTANTE: zstd para modelos NLP (dados repetitivos comprimem 3:1)
+ALGO=zstd
+SIZE=4096
+PRIORITY=100
+
+# Salvar: Ctrl+O → ENTER → Ctrl+X
+systemctl restart zramswap
+systemctl enable zramswap
+swapon --show
+✅ Resultado esperado: /dev/zram0  partition  4G  0B  100
+
+PASSO 5
+SWAP FILE NO SSD
+5 min
+
+  CORRIGIDO    fallocate → dd + chattr +C (fallocate em BTRFS cria arquivo com buracos que o kernel recusa como swap)
+
+mkdir -p /swap
+# CRÍTICO: setar nodatacow ANTES de criar o arquivo
+chattr +C /swap
+
+# dd garante arquivo contíguo (fallocate falha em BTRFS)
+dd if=/dev/zero of=/swap/swapfile bs=1M count=2048 status=progress
+chmod 600 /swap/swapfile
+mkswap /swap/swapfile
+swapon -p 50 /swap/swapfile
+
+echo '/swap/swapfile none swap sw,pri=50 0 0' >> /etc/fstab
+swapon --show
+
+Resultado esperado:
+NAME           TYPE      SIZE  USED  PRIO
+/dev/zram0     partition   4G    0B   100   ← usa primeiro
+/swap/swapfile file        2G    0B    50   ← overflow
+
+PASSO 6
+SYSCTL TUNADO
+5 min
+
+  CORRIGIDO    vm.swappiness=10 → 150 (com ZRAM o kernel deve preferir comprimir memória, não liberar cache)
+  CORRIGIDO    vm.overcommit_memory=1 → 2, ratio=100 → 80 (evita OOM matar containers no meio do render)
+  CORRIGIDO    fs.inotify.max_user_watches=1048576 (dobrado para muitos projetos ClipFusion simultâneos)
+
+nano /etc/sysctl.d/99-performance.conf
+
+# === SCHEDULER (2c/4t i5-6200U) ===
+kernel.sched_migration_cost_ns=5000000
+kernel.sched_min_granularity_ns=2000000
+kernel.sched_wakeup_granularity_ns=3000000
+kernel.sched_latency_ns=12000000
+kernel.sched_autogroup_enabled=1
+
+# === MEMÓRIA ===
+vm.swappiness=150
+    # 150 com ZRAM: kernel prioriza comprimir antes de liberar cache (valor testado e seguro)
+vm.vfs_cache_pressure=50
+vm.dirty_ratio=30
+vm.dirty_background_ratio=10
+vm.dirty_expire_centisecs=1000
+vm.dirty_writeback_centisecs=500
+vm.min_free_kbytes=131072
+vm.overcommit_memory=2
+  # 2 = overcommit controlado (evita OOM no meio do render ClipFusion)
+vm.overcommit_ratio=80
+  # 80% da RAM física + swap comprometida
+
+# === NETWORK ===
+net.core.default_qdisc=fq_codel
+net.ipv4.tcp_congestion_control=bbr
+net.core.netdev_max_backlog=16384
+net.core.somaxconn=8192
+net.ipv4.tcp_max_syn_backlog=8192
+net.ipv4.tcp_fastopen=3
+net.ipv4.tcp_slow_start_after_idle=0
+
+# === FILESYSTEM ===
+fs.inotify.max_user_watches=1048576
+  # ClipFusion File Watcher precisa de muitos watches
+fs.file-max=2097152
+fs.aio-max-nr=524288
+
+# Salvar: Ctrl+O → ENTER → Ctrl+X
+sysctl -p /etc/sysctl.d/99-performance.conf
+
+PASSO 7
+TDP UNLOCK — i5-6200U CORRETO
+10 min
+
+  CORRIGIDO    Turbo ratio 0x20 (3.2GHz) → 0x1C (2.7GHz) — máximo real do i5-6200U conforme HWMonitor
+  CORRIGIDO    TDP: PL1=20W sustentado, PL2=25W burst, Turbo 2.7GHz all-core (ponto ótimo)
+
+7.1 — Carregando módulo MSR
+modprobe msr
+echo 'msr' >> /etc/modules
+
+7.2 — Script TDP unlock
+nano /usr/local/bin/tdp-unlock.sh
+
+#!/bin/bash
+
+[ "$EUID" -ne 0 ] && echo 'Execute como root' && exit 1
+
+modprobe msr
+
+# i5-6200U: PL1=20W sustentado, PL2=25W burst
+# Com refrigeração caseira: 20W é seguro e eficiente
+wrmsr -a 0x610 0x00dc8004dc8000
+  # PL1=20W sustentado, PL2=25W burst
+
+# Turbo all-core: 2.7GHz (27x = 0x1B) — ponto ótimo de eficiência
+# 2.8GHz (0x1C) dá só +3% mas consome muito mais — não vale
+wrmsr -a 0x1ad 0x1B1B1B1B1B1B1B1B
+
+# Time window: 28s (padrão Intel)
+wrmsr -a 0x618 0x0
+
+echo "TDP unlocked: PL1=20W, PL2=25W, Turbo=2.7GHz (i5-6200U)"
+
+chmod +x /usr/local/bin/tdp-unlock.sh
+
+7.3 — Systemd service
+nano /etc/systemd/system/tdp-unlock.service
+
+[Unit]
+Description=TDP Unlock i5-6200U
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/tdp-unlock.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+
+systemctl enable tdp-unlock.service
+systemctl start tdp-unlock.service
+systemctl status tdp-unlock.service
+✅ Resultado: Active: active (exited) — TDP unlocked: PL1=20W, PL2=25W, Turbo=2.7GHz (i5-6200U)
+
+PASSO 8
+SENSORS E FSTRIM
+5 min
+
+  NOVO    fstrim.timer habilitado — complementa discard=async com TRIM semanal preventivo
+
+sensors-detect       # Apertar ENTER em tudo
+sensors              # Verificar temperatura
+
+# TRIM semanal (complementa o discard=async nas mount options)
+systemctl enable fstrim.timer
+systemctl start fstrim.timer
+systemctl status fstrim.timer
+
+Adicionando user aos grupos
+usermod -aG video,render,docker highlander
+
+✅ CHECKPOINT FASE 2: Kernel params OK, NVIDIA bloqueada, VA-API iHD, ZRAM 4GB zstd, Swap 2GB, Sysctl tunado, TDP unlock 2.7GHz, fstrim ativo
+
+🖼️ FASE 3: INTERFACE GRÁFICA + DOCKER
+
+PASSO 1
+INSTALANDO i3wm
+10 min
+
+apt install -y \
+  xorg i3-wm i3status i3lock \
+  lightdm lightdm-gtk-greeter \
+  fonts-noto fonts-noto-color-emoji fonts-firacode \
+  rxvt-unicode rofi feh \
+  firefox-esr neofetch thunar
+
+systemctl enable lightdm
+reboot
+
+Tela do LightDM aparece → Login: highlander → Senha: [sua senha]
+i3 config wizard: Win (tecla Windows) como modifier → ENTER
+
+Configurando i3
+Win + ENTER    # Abre terminal
+su -
+mkdir -p /home/highlander/.config/i3
+cp /etc/i3/config /home/highlander/.config/i3/
+chown -R highlander:highlander /home/highlander/.config/i3
+nano /home/highlander/.config/i3/config
+
+Adicionar no final do arquivo:
+# Sem gaps (performance)
+gaps inner 0
+gaps outer 0
+default_border pixel 1
+
+# Atalhos
+bindsym $mod+Shift+m exec urxvt -e btop
+bindsym $mod+Shift+g exec urxvt -e intel_gpu_top
+bindsym $mod+b exec firefox-esr
+
+# Workspace ClipFusion
+assign [class="clipfusion"] → workspace 4:render
+
+# Win + Shift + R para recarregar
+
+PASSO 2
+INSTALANDO DOCKER
+10 min
+
+  CORRIGIDO    storage-driver: btrfs → overlay2 (btrfs nativo do Docker tem bugs com nodatacow, overlay2 funciona perfeitamente em BTRFS)
+
+curl -fsSL https://get.docker.com | sh
+usermod -aG docker highlander
+
+Configurando Docker daemon
+nano /etc/docker/daemon.json
+
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  },
+  "storage-driver": "overlay2",
+  // overlay2 funciona corretamente em BTRFS com nodatacow
+  // btrfs driver nativo do Docker tem bugs com subvolumes aninhados
+  "default-ulimits": {
+    "nofile": { "Hard": 1048576, "Soft": 1048576 },
+    "nproc":  { "Hard": 65536,   "Soft": 65536   }
+  },
+  "max-concurrent-downloads": 10,
+  "max-concurrent-uploads": 5,
+  "live-restore": true,
+  "userland-proxy": false,
+  "features": { "buildkit": true }
+}
+
+Systemd override (limites de recursos)
+mkdir -p /etc/systemd/system/docker.service.d
+nano /etc/systemd/system/docker.service.d/override.conf
+
+[Service]
+MemoryMax=5G
+MemoryHigh=4.5G
+CPUQuota=350%
+TasksMax=8192
+LimitNOFILE=1048576
+LimitNPROC=infinity
+Nice=-5
+IOSchedulingClass=best-effort
+IOSchedulingPriority=0
+OOMScoreAdjust=-800
+
+systemctl daemon-reload
+systemctl restart docker
+systemctl enable docker
+docker run hello-world
+
+PASSO 3
+DOCKER COMPOSE + ESTRUTURA /data
+10 min
+
+apt install -y python3-pip
+pip3 install docker-compose --break-system-packages
+docker-compose --version
+
+mkdir -p /data/clipfusion/{media/raw,media/processed,exports,projects,logs}
+mkdir -p /data/cache/{whisper,ffmpeg}
+mkdir -p /data/backup
+chown -R highlander:highlander /data
+chmod -R 755 /data
+tree -L 3 /data
+
+✅ CHECKPOINT FASE 3: i3wm OK, LightDM OK, Docker overlay2 OK, Docker Compose OK, /data criado
+
+✅ FASE 4: VALIDAÇÃO E SCRIPTS
+
+PASSO 1
+SCRIPT DE VALIDAÇÃO COMPLETO
+10 min
+
+  CORRIGIDO    validate-system.sh atualizado: checa enable_guc=3 (era 2), NVIDIA bloqueada, overlay2, i5-6200U
+
+nano /usr/local/bin/validate-system.sh
+
+#!/bin/bash
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+FAILED=0
+
+echo "╔════════════════════════════════════════════════════╗"
+echo "║   VALIDAÇÃO DEBIAN TUNADO 3.0 - i5-6200U          ║"
+echo "╚════════════════════════════════════════════════════╝"
+
+# 1. HARDWARE
+echo "═══ 1. HARDWARE ═══"
+echo -n "CPU: "
+lscpu | grep 'Model name' | awk -F: '{print $2}' | xargs
+
+# 2. KERNEL PARAMS
+echo ""
+echo "═══ 2. KERNEL PARAMS ═══"
+check_param() {
+  echo -n "$1: "
+  grep -q "$2" /proc/cmdline && echo -e "${GREEN}✅${NC}" || { echo -e "${RED}❌${NC}"; ((FAILED++)); }
+}
+check_param 'i915.enable_guc=3' 'i915.enable_guc=3'
+check_param 'mitigations=off'   'mitigations=off'
+check_param 'intel_pstate'      'intel_pstate=active'
+
+# 3. NVIDIA BLOQUEADA
+echo ""
+echo "═══ 3. NVIDIA BLOQUEADA ═══"
+echo -n 'nouveau blacklisted: '
+if ! lsmod | grep -q nouveau && grep -q 'blacklist nouveau' /etc/modprobe.d/blacklist-nvidia.conf 2>/dev/null; then
+  echo -e "${GREEN}✅${NC}"
+else
+  echo -e "${RED}❌${NC}"; ((FAILED++))
+fi
+
+# 4. VA-API
+echo ""
+echo "═══ 4. VA-API ═══"
+echo -n 'Driver iHD: '
+vainfo 2>&1 | grep -q 'iHD' && echo -e "${GREEN}✅${NC}" || { echo -e "${RED}❌${NC}"; ((FAILED++)); }
+echo -n 'H.264 encode: '
+vainfo 2>&1 | grep -q 'VAEntrypointEncSlice' && echo -e "${GREEN}✅${NC}" || { echo -e "${RED}❌${NC}"; ((FAILED++)); }
+
+# 5. MEMÓRIA
+echo ""
+echo "═══ 5. MEMÓRIA ═══"
+echo -n 'ZRAM ativo: '
+swapon --show | grep -q zram && echo -e "${GREEN}✅ $(swapon --show --bytes | grep zram | awk '{printf "%.0fGB", $3/1073741824}')${NC}" || { echo -e "${RED}❌${NC}"; ((FAILED++)); }
+echo -n 'Swap SSD: '
+swapon --show | grep -q swapfile && echo -e "${GREEN}✅${NC}" || { echo -e "${RED}❌${NC}"; ((FAILED++)); }
+echo -n 'swappiness=150: '
+[ "$(sysctl -n vm.swappiness)" = '150' ] && echo -e "${GREEN}✅${NC}" || { echo -e "${YELLOW}⚠️  $(sysctl -n vm.swappiness)${NC}"; }
+
+# 6. FILESYSTEM
+echo ""
+echo "═══ 6. FILESYSTEM ═══"
+SUBVOL_COUNT=$(btrfs subvolume list / 2>/dev/null | wc -l)
+echo -n "Subvolumes BTRFS: "
+[ "$SUBVOL_COUNT" -ge 6 ] && echo -e "${GREEN}✅ ${SUBVOL_COUNT}${NC}" || { echo -e "${RED}❌ ${SUBVOL_COUNT}${NC}"; ((FAILED++)); }
+echo -n 'BTRFS saudável: '
+btrfs device stats / 2>/dev/null | grep -q 'errors 0' && echo -e "${GREEN}✅${NC}" || { echo -e "${RED}❌${NC}"; ((FAILED++)); }
+echo -n 'fstrim.timer: '
+systemctl is-active fstrim.timer &>/dev/null && echo -e "${GREEN}✅${NC}" || { echo -e "${RED}❌${NC}"; ((FAILED++)); }
+
+# 7. DOCKER
+echo ""
+echo "═══ 7. DOCKER ═══"
+echo -n 'Docker service: '
+systemctl is-active docker &>/dev/null && echo -e "${GREEN}✅${NC}" || { echo -e "${RED}❌${NC}"; ((FAILED++)); }
+echo -n 'Docker overlay2: '
+docker info 2>/dev/null | grep -q 'overlay2' && echo -e "${GREEN}✅${NC}" || { echo -e "${RED}❌${NC}"; ((FAILED++)); }
+echo -n 'Docker memory limit: '
+DOCKER_MEM=$(systemctl show docker.service -p MemoryMax --value 2>/dev/null)
+[ "$DOCKER_MEM" = '5368709120' ] && echo -e "${GREEN}✅ 5GB${NC}" || echo -e "${YELLOW}⚠️ $(($DOCKER_MEM/1073741824))GB${NC}"
+
+# 8. TEMPERATURA
+echo ""
+echo "═══ 8. TEMPERATURA ═══"
+if command -v sensors &>/dev/null; then
+  TEMP=$(sensors 2>/dev/null | grep 'Core 0' | awk '{print $3}' | tr -d '+°C')
+  echo -n "CPU: "
+  (( $(echo "$TEMP > 0 && $TEMP < 85" | bc -l) )) && echo -e "${GREEN}${TEMP}°C${NC}" || { echo -e "${RED}${TEMP}°C${NC}"; ((FAILED++)); }
+fi
+
+# 9. i3wm
+echo ""
+echo "═══ 9. INTERFACE ═══"
+echo -n 'i3wm: '
+command -v i3 &>/dev/null && echo -e "${GREEN}✅${NC}" || { echo -e "${RED}❌${NC}"; ((FAILED++)); }
+echo -n 'thermald: '
+systemctl is-active thermald &>/dev/null && echo -e "${GREEN}✅${NC}" || { echo -e "${RED}❌${NC}"; ((FAILED++)); }
+
+echo "════════════════════════════════════════════════════"
+if [ $FAILED -eq 0 ]; then
+  echo -e "${GREEN}✅ SISTEMA 100% VALIDADO - PRONTO PRO CLIPFUSION!${NC}"
+  exit 0
+else
+  echo -e "${RED}❌ FALHAS: ${FAILED} - Revise acima${NC}"
+  exit 1
+fi
+
+chmod +x /usr/local/bin/validate-system.sh
+
+PASSO 2
+SCRIPTS DE MONITORAMENTO E SNAPSHOT
+5 min
+
+Monitor em tempo real
+Script em /usr/local/bin/monitor-system.sh — atualiza a cada 2s mostrando CPU, temp, memória, swap layers e Docker.
+
+Snapshot semanal automático
+nano /usr/local/bin/snapshot-weekly.sh
+
+#!/bin/bash
+DATE=$(date +%Y%m%d-%H%M)
+KEEP=7
+btrfs subvolume snapshot -r /      /.snapshots/root-$DATE
+btrfs subvolume snapshot -r /home  /.snapshots/home-$DATE
+echo "$(date): Snapshot $DATE criado" >> /var/log/snapshots.log
+ls -t /.snapshots/root-* | tail -n +$(($KEEP+1)) | xargs -r btrfs subvolume delete
+ls -t /.snapshots/home-* | tail -n +$(($KEEP+1)) | xargs -r btrfs subvolume delete
+journalctl --vacuum-time=7d
+
+chmod +x /usr/local/bin/snapshot-weekly.sh
+crontab -e
+# Adicionar: 0 3 * * 0 /usr/local/bin/snapshot-weekly.sh
+
+PASSO 3
+ALIASES E VARIÁVEIS DE AMBIENTE
+5 min
+
+nano /home/highlander/.bashrc
+
+# Adicionar no final:
+alias ll='ls -lah'
+alias update='sudo apt update && sudo apt upgrade -y'
+alias temps='sensors | grep Core'
+alias docker-clean='docker system prune -af --volumes'
+alias validate='sudo /usr/local/bin/validate-system.sh'
+alias monitor='sudo /usr/local/bin/monitor-system.sh'
+alias snapshot='sudo /usr/local/bin/snapshot-weekly.sh'
+
+# VA-API sempre iHD (Intel HD 520)
+export LIBVA_DRIVER_NAME=iHD
+export LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
+
+su - highlander
+source ~/.bashrc
+
+PASSO 4
+VALIDAÇÃO FINAL
+5 min
+
+validate
+
+Output esperado — todas as linhas verdes:
+  CPU: Intel(R) Core(TM) i5-6200U CPU @ 2.30GHz
+  i915.enable_guc=3: ✅
+  mitigations=off: ✅
+  nouveau blacklisted: ✅
+  Driver iHD: ✅    H.264 encode: ✅
+  ZRAM 4GB: ✅    Swap SSD: ✅    swappiness=150: ✅
+  Subvolumes BTRFS: ✅ 6    BTRFS saudável: ✅    fstrim.timer: ✅
+  Docker overlay2: ✅    5GB limit: ✅
+  CPU temp: ~42°C
+  i3wm: ✅    thermald: ✅
+  ✅ SISTEMA 100% VALIDADO - PRONTO PRO CLIPFUSION!
+
+
+🎊 SISTEMA COMPLETO — RESUMO FINAL
+
+Componente
+Configuração
+CPU
+i5-6200U @ 2.7GHz all-core (TDP PL1=20W/PL2=25W)
+GPU
+Intel HD 520 com VA-API iHD (NVIDIA 920MX desabilitada)
+Kernel
+i915.enable_guc=3, mitigations=off, intel_pstate=active
+NVIDIA
+Totalmente bloqueada (blacklist modprobe + GRUB)
+BTRFS
+6 subvolumes, zstd:3 em todos, nodatacow docker/pg
+ZRAM
+4GB, algoritmo zstd (3:1 — efetivo ~14GB RAM)
+Swap
+2GB no SSD (prioridade 50, só overflow)
+swappiness
+150 (prioriza ZRAM antes de liberar cache)
+Docker
+overlay2, 5GB RAM, 350% CPU, BuildKit
+i3wm
+Enxuto, sem GNOME, ~400MB RAM livre
+thermald
+Intel DPTF ativo — evita throttle desnecessário
+fstrim.timer
+TRIM semanal preventivo do SSD
+Snapshots
+BTRFS automático — domingo 3h, últimos 7 mantidos
+
+🚀 PERFORMANCE ESPERADA
+
+Métrica
+Stock (Windows)
+Debian Tunado 3.0
+CPU render
+Linha de base
++15% (TDP 20W + mitigations=off, eficiência máxima em 2.7GHz)
+Encode vídeo
+CPU puro (lento)
++200% (VA-API h264_vaapi)
+RAM disponível
+~5GB (GNOME+NVIDIA)
+~7GB (i3+ZRAM+NVIDIA off)
+Temperatura idle
+55-60°C (NVIDIA ativa)
+~42°C (NVIDIA off)
+Temperatura encode
+80-90°C
+~65-72°C (VA-API descarrega CPU)
+Projetos/dia ClipFusion
+3-4
+6-8
+
+📝 ANOTAÇÕES FINAIS
+
+🔐 SENHAS — Anotar em papel físico ANTES de formatar:
+    • Root: [senha forte]
+    • User highlander: [senha]
+    • Wi-Fi: [senha]
+
+Arquivos importantes:
+    • /root/disk-uuids.txt — UUIDs das partições
+    • /var/log/snapshots.log — Log dos snapshots BTRFS
+    • /usr/local/bin/ — Todos os scripts criados
+    • /etc/modprobe.d/blacklist-nvidia.conf — Bloqueio NVIDIA
+    • /usr/local/bin/tdp-unlock.sh — TDP i5-6200U
+
+Se algo der errado:
+# No rescue mode (pendrive):
+mount /dev/sdb2 /mnt -o subvol=@snapshots
+ls /mnt
+btrfs subvolume snapshot /mnt/root-YYYYMMDD /mnt/@
+reboot
+
+⬆️ PRÓXIMOS PASSOS OPCIONAIS
+
+Após validar tudo com sucesso:
+    • Aplicar pasta térmica nova (MX-4 ou NT-H1) + instalar cooler Nero 3
+    • TDP já configurado em PL1=20W — sistema de refrigeração caseiro validado
+    • Instalar ClipFusion: cd ~/clipfusion && docker-compose up -d
+    • Configurar pgvector no PostgreSQL para busca semântica
+
+Para subir TDP para 20W após cooler (opcional):
+nano /usr/local/bin/tdp-unlock.sh
+
+# Mudar a linha wrmsr 0x610 para:
+wrmsr -a 0x610 0x00dc8004dc8000  # PL1=20W sustentado, PL2=25W burst
+
+systemctl restart tdp-unlock.service
+
+
+DEBIAN TUNADO 3.0 — Versão Corrigida e Validada
+Highlander  •  Março 2026  •  13 correções aplicadas  •  Hardware: i5-6200U + Intel HD 520
+

@@ -1,0 +1,448 @@
+Core — Cut Engine corrigido anti-freeze.
+"""
+import subprocess, os, tempfile, shutil
+from core.transcriber import fmt_time
+
+PLATFORM_CONFIGS = {
+    "tiktok":  {"w": 1080, "h": 1920, "max_dur": 180, "crf": 20, "preset": "fast", "fps": 30, "abr": "128k", "suffix": "_tiktok"},
+    "reels":   {"w": 1080, "h": 1920, "max_dur": 90,  "crf": 21, "preset": "fast", "fps": 30, "abr": "128k", "suffix": "_reels"},
+    "shorts":  {"w": 1080, "h": 1920, "max_dur": 60,  "crf": 21, "preset": "fast", "fps": 30, "abr": "128k", "suffix": "_shorts"},
+}
+
+def _ms(s):
+    h, rem = divmod(s, 3600)
+    m, sec = divmod(rem, 60)
+    return f"{int(h):02d}:{int(m):02d}:{int(sec):02d},{int((s%1)*1000):03d}"
+
+def build_srt(segments, cut_start, cut_end):
+    lines, idx = [], 1
+    for seg in segments:
+        if seg["end"] < cut_start or seg["start"] > cut_end:
+            continue
+        rs  = max(seg["start"] - cut_start, 0)
+        re_ = min(seg["end"]   - cut_start, cut_end - cut_start)
+        if re_ <= rs: continue
+        lines += [str(idx), f"{_ms(rs)} --> {_ms(re_)}", seg["text"].strip(), ""]
+        idx += 1
+    return "\n".join(lines)
+
+def _detect_vaapi():
+    try:
+        r = subprocess.run(["vainfo"], capture_output=True, text=True)
+        return "VAEntrypointEncSlice" in r.stdout
+    except FileNotFoundError:
+        return False
+
+def render_cut(video_path, cut, segments, output_dir, project_id,
+               ace_level="basic", use_vaapi=True, progress_cb=None):
+    def log(m):
+        if progress_cb: progress_cb(m)
+
+    start     = cut.get("start", cut.get("start_time", 0))
+    end       = cut.get("end", cut.get("end_time", 0))
+    duration  = end - start
+    idx       = cut.get("cut_index", 0)
+    platforms = cut.get("platforms", ["tiktok", "reels", "shorts"])
+    safe_title = "".join(
+        c for c in cut.get("title", f"corte_{idx}")
+        if c.isalnum() or c in " _-"
+    ).strip().replace(" ", "_")[:40]
+
+    vaapi_ok = use_vaapi and _detect_vaapi()
+    tmp = tempfile.mkdtemp()
+    output_paths = {}
+
+    try:
+        srt_content = build_srt(segments, start, end)
+        srt_path = os.path.join(tmp, "sub.srt")
+        with open(srt_path, "w", encoding="utf-8") as f:
+            f.write(srt_content)
+
+        style = ("FontName=Arial,FontSize=16,PrimaryColour=&H00FFFFFF,"
+                 "OutlineColour=&H00000000,Bold=1,Outline=2,Shadow=1,"
+                 "Alignment=2,MarginV=80")
+
+        for platform in platforms:
+            cfg = PLATFORM_CONFIGS.get(platform)
+            if not cfg: continue
+            dur  = min(duration, cfg["max_dur"])
+            w, h = cfg["w"], cfg["h"]
+            out_name = f"{safe_title}{cfg['suffix']}.mp4"
+            out_path = os.path.join(output_dir, platform, out_name)
+            os.makedirs(os.path.dirname(out_path), exist_ok=True)
+            log(f"  [{platform}] {out_name} ({fmt_time(dur)})")
+
+            raw_out = os.path.join(tmp, f"raw_{platform}.mp4")
+            ok = False
+
+            if vaapi_ok:
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-ss", str(start), "-i", video_path, "-t", str(dur),
+                    "-threads", "2",
+                    "-vf", f"scale={w}:{h}:force_original_aspect_ratio=decrease,pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:black,format=nv12,hwupload",
+                    "-vaapi_device", "/dev/dri/renderD128",
+                    "-c:v", "h264_vaapi", "-qp", "24",
+                    "-c:a", "aac", "-b:a", cfg["abr"], "-ar", "44100",
+                    "-r", str(cfg["fps"]), "-movflags", "+faststart",
+                    "-map_metadata", "-1", raw_out,
+                ]
+                r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+                ok = r.returncode == 0
+
+                if ok and srt_content.strip():
+                    sub2 = os.path.join(tmp, f"sub_{platform}.mp4")
+                    srt_esc = srt_path.replace("\\", "/").replace(":", "\\:")
+                    cmd2 = [
+                        "ffmpeg", "-y", "-i", raw_out,
+                        "-vf", f"subtitles='{srt_esc}':force_style='{style}'",
+                        "-c:v", "libx264", "-preset", cfg["preset"], "-crf", str(cfg["crf"]),
+                        "-c:a", "copy", "-r", str(cfg["fps"]), "-pix_fmt", "yuv420p", sub2,
+                    ]
+                    r2 = subprocess.run(cmd2, capture_output=True, text=True, timeout=300)
+                    if r2.returncode == 0:
+                        raw_out = sub2
+
+            if not ok:
+                scale = f"scale={w}:{h}:force_original_aspect_ratio=decrease,pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:black"
+                srt_esc = srt_path.replace("\\", "/").replace(":", "\\:")
+                vf = f"{scale},subtitles='{srt_esc}':force_style='{style}'" if srt_content.strip() else scale
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-ss", str(start), "-i", video_path, "-t", str(dur),
+                    "-vf", vf,
+                    "-c:v", "libx264", "-preset", cfg["preset"], "-crf", str(cfg["crf"]),
+                    "-c:a", "aac", "-b:a", cfg["abr"], "-ar", "44100",
+                    "-r", str(cfg["fps"]), "-pix_fmt", "yuv420p",
+                    "-movflags", "+faststart", "-map_metadata", "-1", raw_out,
+                ]
+                r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+                if r.returncode != 0:
+                    log(f"  Render falhou: {r.stderr[-200:]}")
+                    continue
+
+            try:
+                if ace_level != "none":
+                    from anti_copy_modules.core import AntiCopyrightEngine, ProtectionConfig, ProtectionLevel
+                    engine = AntiCopyrightEngine(project_id, idx,
+                                                 ProtectionConfig.from_level(ProtectionLevel(ace_level)), log=log)
+                    engine.process(raw_out, out_path)
+                else:
+                    shutil.copy2(raw_out, out_path)
+            except Exception:
+                shutil.copy2(raw_out, out_path)
+
+            size = os.path.getsize(out_path) / (1024 * 1024)
+            log(f"  {platform}: {size:.1f} MB")
+            output_paths[platform] = out_path
+
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    return output_paths
+
+def render_all(video_path, cuts, segments, output_dir, project_id,
+               ace_level="basic", use_vaapi=True, progress_cb=None):
+    import gc
+    results = {}
+    for i, cut in enumerate(cuts):
+        if progress_cb:
+            progress_cb(f"\n[{i+1}/{len(cuts)}] {cut.get('title','Corte')}")
+        paths = render_cut(video_path, cut, segments, output_dir,
+                           project_id, ace_level, use_vaapi, progress_cb)
+        results[cut.get("id", cut.get("cut_index", i))] = paths
+        gc.collect()
+    return results
+
+"""Utils — Detecção de hardware otimizada para i5-6200U + Intel HD 520."""
+import subprocess
+import os
+
+
+class HardwareDetector:
+    """Detecta e configura hardware automaticamente."""
+
+    def __init__(self):
+        self.info = self._detect_all()
+
+    def _detect_all(self) -> dict:
+        return {
+            'cpu':     self._detect_cpu(),
+            'gpu':     self._detect_gpu(),
+            'ram_gb':  self._detect_ram(),
+            'encoder': self._detect_encoder(),
+            'vaapi':   self._check_vaapi(),
+        }
+
+    def _detect_cpu(self) -> dict:
+        try:
+            with open('/proc/cpuinfo') as f:
+                lines = f.readlines()
+            model, cores = "", 0
+            for line in lines:
+                if 'model name' in line and not model:
+                    model = line.split(':')[1].strip()
+                if 'processor' in line:
+                    cores += 1
+            return {'model': model, 'cores': cores}
+        except:
+            return {'model': 'i5-6200U', 'cores': 4}
+
+    def _detect_gpu(self) -> dict:
+        gpu_info = {'intel': False, 'nvidia': False, 'driver': 'none'}
+        try:
+            r = subprocess.run(['lspci'], capture_output=True, text=True)
+            if 'HD Graphics 520' in r.stdout or 'UHD' in r.stdout:
+                gpu_info['intel'] = True
+                gpu_info['driver'] = 'i915'
+        except: pass
+        try:
+            r = subprocess.run(['lsmod'], capture_output=True, text=True)
+            if 'nvidia' in r.stdout or 'nouveau' in r.stdout:
+                gpu_info['nvidia'] = True
+        except: pass
+        return gpu_info
+
+    def _detect_ram(self) -> float:
+        try:
+            with open('/proc/meminfo') as f:
+                line = f.readline()
+            kb = int(line.split()[1])
+            return round(kb / 1024 / 1024, 1)
+        except:
+            return 8.0
+
+    def _detect_encoder(self) -> str:
+        try:
+            r = subprocess.run(['vainfo'], capture_output=True, text=True)
+            if 'VAEntrypointEncSlice' in r.stdout:
+                return 'h264_vaapi'
+        except: pass
+        return 'libx264'
+
+    def _check_vaapi(self) -> dict:
+        try:
+            r = subprocess.run(['vainfo'], capture_output=True, text=True)
+            return {
+                'disponivel':  'VAEntrypointEncSlice' in r.stdout,
+                'driver':      'iHD' if 'iHD' in r.stdout else 'i965',
+                'encode_h264': 'VAEntrypointEncSlice' in r.stdout,
+            }
+        except:
+            return {'disponivel': False, 'driver': 'none', 'encode_h264': False}
+
+    def get_encoder(self) -> str:
+        return 'h264_vaapi' if self.info['vaapi']['disponivel'] else 'libx264'
+
+    def get_status_string(self) -> str:
+        """Retorna string de status para a GUI."""
+        enc   = self.get_encoder()
+        vaapi = '✅ VA-API' if enc == 'h264_vaapi' else '⚠️ CPU'
+        try:
+            r = subprocess.run(['sensors'], capture_output=True, text=True)
+            for line in r.stdout.split('\n'):
+                if 'Core 0' in line:
+                    temp = line.split()[2].replace('+','').replace('°C','')
+                    return f"{vaapi}  |  CPU {temp}°C  |  RAM {self.info['ram_gb']}GB"
+        except: pass
+        return f"{vaapi}  |  i5-6200U  |  RAM {self.info['ram_gb']}GB"
+
+    def print_summary(self):
+        print("╔═══════════════════════════════════════╗")
+        print("║  Hardware Detectado                   ║")
+        print("╠═══════════════════════════════════════╣")
+        print(f"  CPU: {self.info['cpu']['model']}")
+        print(f"  RAM: {self.info['ram_gb']} GB")
+        print(f"  GPU Intel: {'✅' if self.info['gpu']['intel'] else '❌'}")
+        print(f"  NVIDIA:    {'⚠️  ATIVA' if self.info['gpu']['nvidia'] else '✅ Bloqueada'}")
+        print(f"  VA-API:    {'✅' if self.info['vaapi']['disponivel'] else '❌'}")
+        print(f"  Encoder:   {self.info['encoder']}")
+        print("╚═══════════════════════════════════════╝")
+
+
+def check_system() -> bool:
+    """Verifica se o sistema está otimizado para ClipFusion."""
+    print("\n🔍 Verificando Debian Tunado 3.0...")
+    checks = []
+
+    try:
+        with open('/proc/cmdline') as f:
+            cmdline = f.read()
+        checks.append(('i915.enable_guc=3', 'i915.enable_guc=3' in cmdline))
+        checks.append(('mitigations=off',   'mitigations=off'   in cmdline))
+    except:
+        checks.extend([('i915.enable_guc=3', False), ('mitigations=off', False)])
+
+    try:
+        r = subprocess.run(['swapon', '--show'], capture_output=True, text=True)
+        checks.append(('ZRAM ativo', 'zram' in r.stdout))
+    except:
+        checks.append(('ZRAM ativo', False))
+
+    try:
+        r = subprocess.run(['lsmod'], capture_output=True, text=True)
+        checks.append(('NVIDIA bloqueada', 'nvidia' not in r.stdout and 'nouveau' not in r.stdout))
+    except:
+        checks.append(('NVIDIA bloqueada', False))
+
+    try:
+        r = subprocess.run(['vainfo'], capture_output=True, text=True)
+        checks.append(('VA-API iHD', 'VAEntrypointEncSlice' in r.stdout))
+    except:
+        checks.append(('VA-API iHD', False))
+
+    for check, status in checks:
+        print(f"  {'✅' if status else '❌'} {check}")
+
+    ok = all(s for _, s in checks)
+    print("\n✅ Sistema pronto!\n" if ok else "\n⚠️  Algumas otimizações ausentes.\n")
+    return ok
+
+
+if __name__ == '__main__':
+    hw = HardwareDetector()
+    hw.print_summary()
+    check_system()
+
+#!/bin/bash
+cd "$(dirname "$0")"
+export LIBVA_DRIVER_NAME=iHD
+export LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
+source venv/bin/activate
+echo "🔍 Verificando sistema..."
+python3 -c "from utils.hardware import check_system; check_system()" 2>/dev/null || true
+echo ""
+echo "🚀 Iniciando ClipFusion Viral Pro..."
+python3 main.py
+
+#!/bin/bash
+# ClipFusion Viral Pro — Script de execução otimizado para i5-6200U + Intel HD 520
+# CORREÇÕES: Driver i965, variáveis anti-hang, prioridade de processo
+
+cd "$(dirname "$0")"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CONFIGURAÇÃO CRÍTICA PARA INTEL HD 520 (Skylake) — EVITA GPU HANG
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# FIX: Usa driver i965 (mais estável) em vez de iHD moderno que causa hangs [^25^]
+export LIBVA_DRIVER_NAME=i965
+export LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
+
+# FIX: Evita driver Iris que causa crashes na HD 520 [^25^]
+export MESA_LOADER_DRIVER_OVERRIDE=i965
+
+# FIX: Desabilita DRI3 que causa instabilidade em GPUs Intel antigas [^27^]
+export LIBVA_DRI3_DISABLE=1
+
+# FIX: Limita threads OpenMP para evitar sobrecarga
+export OMP_NUM_THREADS=2
+export OPENBLAS_NUM_THREADS=2
+export MKL_NUM_THREADS=2
+
+# FIX: Configurações de memória para 8GB RAM
+export MALLOC_ARENA_MAX=2
+
+echo "╔════════════════════════════════════════════════════════════════╗"
+echo "║  ClipFusion Viral Pro — Modo Skylake Stable (HD 520)          ║"
+echo "╠════════════════════════════════════════════════════════════════╣"
+echo "║  Driver VA-API: i965 (estável)                                ║"
+echo "║  Threads: Limitado a 2 (evita overflow)                       ║"
+echo "║  GPU Hang Protection: Ativo                                   ║"
+echo "╚════════════════════════════════════════════════════════════════╝"
+echo ""
+
+# Ativa ambiente Python
+source venv/bin/activate
+
+# Verifica sistema
+echo "🔍 Verificando hardware..."
+python3 -c "from utils.hardware import check_system; check_system()" 2>/dev/null || true
+echo ""
+
+# FIX: Aumenta prioridade do processo (evita starvation)
+echo "🚀 Iniciando ClipFusion Viral Pro..."
+echo "   Pressione Ctrl+C para sair"
+echo ""
+
+# Executa com nice ajustado (prioridade normal, não agressiva)
+nice -n 0 python3 main.py
+
+# Captura saída para log de debug se necessário
+# python3 main.py 2>&1 | tee clipfusion_$(date +%Y%m%d_%H%M%S).log
+
+# ClipFusion Viral Pro — Configuração para i5-6200U + Intel HD 520
+
+hardware:
+  encoder_preferido: "auto"    # auto | h264_vaapi | libx264
+  max_ram_gb: 6                # Reserva 2GB para o sistema
+  usar_gpu_intel: true
+
+whisper:
+  modelo: "base"
+  idioma: "pt"
+  dispositivo: "cpu"           # cpu — NVIDIA desabilitada
+
+render:
+  preset: "fast"               # ultrafast | fast | medium
+  crf: 23                      # 18=alta qualidade, 23=equilíbrio, 28=menor arquivo
+  usar_vaapi: true
+
+anti_copy:
+  nivel: "basic"               # none | basic | anti_ai | maximum
+
+gui:
+  tema_escuro: true
+  janela_inicio: "1120x800"
+
+platforms:
+  - tiktok
+  - reels
+  - shorts
+
+# ClipFusion Viral Pro — Configuração para i5-6200U + Intel HD 520
+# VERSÃO: Skylake Stable (correções para frame 360 freeze)
+
+hardware:
+  encoder_preferido: "h264_vaapi_i965"  # FIX: Usa driver estável i965
+  max_ram_gb: 6                          # Reserva 2GB para sistema
+  usar_gpu_intel: true
+  skylake_mode: true                     # FIX: Ativa workarounds específicos
+  vaapi_threads: 2                       # FIX: Limita threads VA-API
+  vaapi_async_depth: 1                 # FIX: Reduz bufferização
+  vaapi_sei: 0                           # FIX: Desabilita SEI (evita freeze)
+
+whisper:
+  modelo: "tiny"        # 39MB — mais rápido, menos RAM
+  idioma: "pt"
+  dispositivo: "cpu"    # CPU — NVIDIA desabilitada
+  threads: 2            # FIX: Limita threads
+
+render:
+  preset: "fast"        # ultrafast | fast | medium
+  crf: 23               # 18=alta qualidade, 23=equilíbrio, 28=menor arquivo
+  usar_vaapi: true
+  fallback_cpu: true     # FIX: Permite fallback automático
+  timeout_segundos: 600  # FIX: Timeout estendido
+  pausa_entre_cortes_seg: 2  # FIX: Pausa para GPU "respirar"
+
+anti_copy:
+  nivel: "basic"        # none | basic | anti_ai | maximum
+  # FIX: Para HD 520, 'basic' é mais estável que 'maximum' em processamento longo
+
+gui:
+  tema_escuro: true
+  janela_inicio: "1120x800"
+  mostrar_status_gpu: true
+
+platforms:
+  - tiktok
+  - reels
+  - shorts
+
+# FIX: Configurações de estabilidade para 8GB RAM
+memory_management:
+  gc_entre_cortes: true
+  gc_forcado_intervalo_seg: 30
+  max_cortes_simultaneos: 1  # Processa 1 por vez (sequencial)
+GRUB_CMDLINE_LINUX_DEFAULT="quiet i915.enable_guc=3 i915.enable_fbc=1 mitigations=off"

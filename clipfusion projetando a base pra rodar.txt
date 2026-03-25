@@ -1,0 +1,328 @@
+🧠 PLANO FINAL – CLIPFUSION + FORENSE (VERSÃO CORRIGIDA)
+🎯 OBJETIVO REAL
+
+Montar um sistema Linux:
+
+rápido no SSD
+
+estável para produção
+
+usando Intel HD 520 como motor de vídeo
+
+pronto para IA leve (Whisper, pipelines)
+
+com Docker controlado
+
+com forense isolado
+
+sem tocar no HDD agora
+
+⚙️ HARDWARE BASE
+
+CPU: i5-6200U (Skylake, AVX2)
+
+GPU útil: Intel HD 520 (VA-API / QuickSync)
+
+GPU ignorada: NVIDIA 920MX
+
+SSD: ~480GB
+
+HDD: ~1TB (fica intacto por enquanto)
+
+🧩 PRINCÍPIOS QUE MUDEI
+
+Antes de entrar no passo a passo, o que eu corrigi do plano antigo:
+
+✅ Nada de usar NVIDIA
+✅ Nada de Arch no host
+✅ Nada de Docker explodindo root
+✅ Nada de IA tentando CUDA em 2GB
+✅ Nada de HDD mexido agora
+✅ Nada de desktop pesado
+✅ Nada de swap mal feito
+✅ Nada de pipeline sem limite de RAM
+
+Agora tudo é previsível.
+
+📁 ESTRATÉGIA DE DISCO
+SSD (único que vamos mexer)
+
+Esquema simples e eficiente:
+
+Partição	FS	Uso
+EFI	FAT32	boot
+/	BTRFS	sistema
+/home	BTRFS	usuário + projetos
+/scratch	BTRFS	área temporária para backup antes de mexer no HDD depois
+
+Nada de /data agora no HDD.
+
+BTRFS com compressão
+
+Opções:
+
+compress=zstd:3,noatime
+
+
+Ganha espaço + velocidade no Skylake.
+
+💽 INSTALAÇÃO DEBIAN TESTING
+
+Baixe:
+
+Debian Testing netinst amd64
+
+Arquitetura correta pra você:
+
+👉 amd64
+
+Não arm64, não armhf, não risc, não s390.
+
+Durante instalação:
+
+✔ idioma pt_BR
+✔ teclado ABNT2
+✔ Expert Install
+✔ Particionamento manual
+✔ SSD em GPT
+✔ EFI 512MB
+✔ resto BTRFS
+✔ sem desktop
+✔ só SSH + system utilities
+
+🧠 SUBVOLUMES BTRFS
+
+Crie:
+
+@
+@home
+@scratch
+@snapshots
+
+
+Monte assim:
+
+Subvol	Mount
+@	/
+@home	/home
+@scratch	/scratch
+@snapshots	/.snapshots
+
+Com:
+
+compress=zstd:3,noatime
+
+⚡ KERNEL & GPU (CORRIGIDO)
+
+Nada de NVIDIA.
+
+Em /etc/default/grub:
+
+GRUB_CMDLINE_LINUX_DEFAULT="quiet mitigations=off i915.enable_guc=2 i915.modeset=1 nouveau.blacklist=1"
+
+
+Depois:
+
+update-grub
+reboot
+
+Driver Intel
+apt install -y intel-media-va-driver-non-free vainfo intel-gpu-tools
+
+
+Teste:
+
+vainfo | grep iHD
+
+
+Se aparecer iHD → sucesso.
+
+🧠 MEMÓRIA
+ZRAM
+apt install -y zram-tools
+
+
+Em /etc/default/zramswap:
+
+PERCENT=50
+ALGO=zstd
+
+
+Restart:
+
+systemctl restart zramswap
+
+Swap SSD
+fallocate -l 4G /swapfile
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+echo '/swapfile none swap sw 0 0' >> /etc/fstab
+
+🧱 ESTRUTURA DE TRABALHO
+
+Tudo no SSD por enquanto:
+
+mkdir -p /home/$USER/{clipfusion,forensic,models}
+mkdir -p /scratch/{backup,cache,tmp}
+
+
+Uso:
+
+/scratch/backup → seus arquivos antes de mexer no HDD depois
+
+/scratch/cache → ffmpeg, whisper, docker
+
+/home/$USER/clipfusion → projeto
+
+🪟 INTERFACE (i3wm)
+
+Instala:
+
+apt install -y i3-wm i3status i3blocks rofi polybar picom feh arandr \
+lightdm fonts-noto fonts-font-awesome firefox-esr \
+git curl wget vim neovim build-essential cmake python3-pip btop
+
+
+Ativa:
+
+systemctl enable lightdm
+reboot
+
+🐳 DOCKER (CONTROLADO)
+
+Mover root:
+
+Crie /etc/docker/daemon.json:
+
+{
+  "data-root": "/scratch/docker",
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  }
+}
+
+
+Depois:
+
+mkdir -p /scratch/docker
+systemctl restart docker
+
+
+Instala:
+
+curl -fsSL https://get.docker.com | sh
+usermod -aG docker $USER
+
+
+Reloga.
+
+🧠 IA (WHISPER CORRIGIDO)
+
+Nada de CUDA.
+
+pip install faster-whisper
+
+
+Uso correto:
+
+from faster_whisper import WhisperModel
+
+model = WhisperModel("medium", device="cpu", compute_type="int8")
+
+
+Skylake usa AVX2 → bom ganho.
+
+Modelos ficam em:
+
+/home/$USER/models
+
+🎬 FFmpeg VA-API
+apt install -y ffmpeg
+
+
+Pipeline:
+
+ffmpeg -hwaccel vaapi -hwaccel_device /dev/dri/renderD128 \
+-vaapi_driver iHD -i input.mp4 \
+-c:v h264_vaapi -preset fast -qp 23 \
+-c:a copy output.mp4
+
+
+Intel HD 520 faz 60-80fps tranquilo.
+
+🧪 FORENSE (ISOLADO)
+
+Em vez de Arch:
+
+apt install -y distrobox podman
+
+
+Container CSI:
+
+distrobox-create --name forensic --image csilinux/csi-linux --home /home/$USER/forensic
+distrobox-enter forensic
+
+
+Já vem com:
+
+autopsy
+
+volatility
+
+bulk_extractor
+
+ewf-tools
+
+Sem compilar nada.
+
+📦 BACKUP TEMPORÁRIO (ANTES DO HDD)
+
+Você vai copiar do Windows para:
+
+/scratch/backup
+
+
+Assim:
+
+✔ seus dados ficam no SSD
+✔ o HDD continua intacto
+✔ depois migramos com calma
+
+✅ CHECKLIST FINAL
+vainfo | grep iHD
+swapon --show
+df -h
+docker info | grep Root
+intel_gpu_top
+
+
+Tudo verde → produção.
+
+🧭 O QUE FAREMOS DEPOIS (NÃO AGORA)
+
+Depois que tudo estiver rodando:
+
+formatar HDD em XFS
+
+mover /scratch/backup → /data
+
+liberar SSD
+
+otimizar I/O
+
+Mas isso é fase 2, não agora.
+
+🧠 CONCLUSÃO HONESTA
+
+Esse plano agora:
+
+✅ é realista
+✅ respeita seu hardware
+✅ evita dor de cabeça
+✅ não desperdiça tempo com NVIDIA
+✅ não explode o SSD
+✅ serve ClipFusion + forense
+✅ permite você trabalhar HOJE

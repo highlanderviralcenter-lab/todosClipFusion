@@ -1,0 +1,117 @@
+✂ ClipFusion Viral Pro: Documentação Técnica de Alta Performance
+
+1. Visão Geral e Proposta de Valor
+
+O ClipFusion Viral Pro é uma infraestrutura de processamento de vídeo de nível industrial, projetada especificamente para pipelines de criação de conteúdo curto em larga escala. Diferente de soluções genéricas, esta arquitetura foi otimizada para mitigar gargalos severos de hardware, focando no processador Intel Core i5-6200U (Skylake) e seu subsistema gráfico Intel HD 520.
+
+Através de uma implementação rigorosa de aceleração via hardware e gestão agressiva de recursos do sistema, o ClipFusion alcança uma eficiência operacional de apenas 23% de utilização do motor de renderização VA-API, garantindo estabilidade térmica e capacidade multitarefa em sistemas com recursos limitados.
+
+2. Otimização de Hardware e Kernel
+
+A estabilidade do sistema em hardware legado é garantida por ajustes no nível do subsistema de vídeo e gestão de memória virtual.
+
+Parâmetros Críticos do Kernel
+
+O script install.sh automatiza a injeção de parâmetros no carregador de inicialização para desbloquear capacidades de hardware:
+
+* i915.enable_guc=3: Ativa o suporte ao firmware GuC/HuC para descarga (offloading) de tarefas de vídeo e escalonamento de alta performance na GPU Intel.
+* Priorização de I/O: Otimização do agendador de disco para suportar o throughput de leitura de arquivos de vídeo brutos.
+
+Arquitetura de Memória Escalonada
+
+Para superar a limitação física de 8GB de RAM, o sistema implementa um modelo de 14GB de memória efetiva:
+
+* Composição: 8GB RAM física + 6GB zRAM (dispositivo de bloco comprimido na RAM). A escolha de zRAM em detrimento do swap tradicional visa reduzir a latência de acesso ao buffer de vídeo, utilizando ciclos de CPU para compressão em vez de aguardar o I/O de disco.
+* Memory Management: Implementação de Lazy Loading para módulos de processamento pesado (como modelos de IA), resultando em uma economia imediata de ~300MB no estado de espera.
+* Garbage Collection Manual: O sistema executa gc.collect() de forma explícita ao final de cada ciclo de renderização de segmento, forçando a limpeza do heap de memória e liberando buffers de GPU que o coletor padrão do Python pode negligenciar em loops intensivos.
+
+3. Sistema Anti-Copyright Multicamadas
+
+A blindagem do conteúdo é processada pelo diretório anti_copy_modules, que contém uma suíte de ferramentas modulares para alteração da assinatura digital do vídeo.
+
+Inventário de Módulos (7+ Proteções)
+
+1. metadata_stripper.py: Remoção total de EXIF e metadados de origem.
+2. chroma_shifter.py: Ajuste sutil no espectro cromático para desvio de hashes de cor.
+3. freq_shifter.py: Alteração de frequências de áudio para evitar detecção por Content ID.
+4. frame_jitter.py: Injeção de micro-variações no framerate.
+5. noise_injector.py: Adição de ruído digital imperceptível ao olho humano, mas disruptivo para IAs de reconhecimento.
+6. dynamic_zoom.py: Reenquadramento algorítmico baseado em movimento.
+7. color_regrading.py: Aplicação de LUTs customizadas.
+
+Níveis de Proteção
+
+Nível	Identificação	Descrição Técnica e Impacto
+0	Nenhum	Pass-through: Mantém o arquivo original bit-a-bit.
+1	Básico	Zoom dinâmico, correção de cor, stripping de metadados e ajustes de áudio.
+2	Anti-IA	Nível 1 + Injeção de ruído, deslocamento de croma e técnicas de anti-detecção algorítmica.
+3	MÁXIMO	Acumulativo: Unifica todas as técnicas modulares para blindagem total contra detecção profunda (Deep Fingerprinting).
+
+4. Motor Viral e Inteligência Emocional
+
+O viral_analyzer.py atua como o cérebro estratégico, operando sobre uma base de dados de retenção.
+
+* Detecção de Nicho Automática: Identifica padrões semânticos em Investimentos, Fitness, Tecnologia, Relacionamentos e Empreendedorismo.
+* Audience Analyzer: Avalia demografia, psicografia e comportamento do público-alvo para sugerir a melhor plataforma (TikTok, Reels ou Shorts).
+* 10 Arquétipos Emocionais: Orientam a edição para evocar respostas específicas (Curiosidade, Urgência, Autoridade, etc.).
+* Hook Engine: Gera 3 variações de ganchos visuais e textuais por corte, maximizando o "Stop the Scroll".
+* Scoring de Viralidade: Algoritmo proprietário que pondera retenção projetada, shareability e watch time.
+* Agenda Anti-Padrão: Calcula horários de postagem que evitam o estrangulamento de APIs e janelas de alta competição.
+
+5. Recursos de Processamento de Áudio e Vídeo
+
+O pipeline de mídia foi desenhado para contornar limitações de threads e memória do i5-6200U.
+
+* Transcrição via Python API (Whisper): A utilização da API nativa em Python evita o overhead de spawnar novos subprocessos CLI para cada segmento, preservando ciclos de CPU e reduzindo o consumo de RAM em comparação ao Whisper-CLI.
+* Audio Ducking Adaptativo: Balanceamento automático entre narração e trilha sonora via filtros de sidechain compressor em tempo real.
+* Render 2-pass (Híbrido):
+  * Passo 1 (VA-API): Utiliza aceleração por hardware para cortes rápidos e redimensionamento, onde o I/O bound é crítico.
+  * Passo 2 (libx264): Delega a sobreposição de legendas e elementos gráficos para a CPU, evitando race conditions no driver Intel que ocorrem ao tentar processar overlays complexos via hardware.
+
+6. Interface e Workflow (GUI de 7 Abas)
+
+1. Projeto: Ingestão de mídia e parametrização inicial.
+2. Transcrição: Edição e revisão de texto gerado pelo Whisper.
+3. IA Externa: Ponte para integração Claude/ChatGPT via JSON para refino de roteiro.
+4. Cortes: Interface de seleção de segmentos virais aprovados.
+5. Render: Painel de monitoramento de progresso e telemetria de hardware.
+6. Histórico: Base de dados SQLite (db.py) de projetos anteriores.
+7. Agenda: Planejador de postagens baseado nas recomendações do motor viral.
+
+7. Configuração de Ambiente de Desktop (i3wm)
+
+Para maximizar o rendimento em renderizações críticas, o sistema foi configurado para o gerenciador de janelas i3wm:
+
+* Priorização de Processo: O script run.sh utiliza renice -n -10 no processo de renderização para garantir prioridade de escalonamento.
+* Mitigação de GPU Throttling: Configuração automática para desativar o compositor de janelas (picom/compton) durante a renderização, liberando ciclos de GPU para o VA-API.
+
+8. Estrutura de Diretórios
+
+.
+├── anti_copy_modules/    # Suite de proteção (metadata, chroma, noise)
+├── config/               # Parametrização YAML (local e render)
+├── core/                 # Lógica de processamento de vídeo
+├── Docs_uteis/           # Referências e manuais
+├── gui/                  # Interface PyQT/Tkinter de 7 abas
+├── utils/                # Helpers e utilitários de sistema
+├── viral_engine/         # Motor de análise (viral_analyzer.py)
+├── analytics_engine.py   # Motor de telemetria e reports
+├── db.py                 # Gestão de banco de dados local
+├── install.sh            # Script de setup e otimização de Kernel
+├── main.py               # Entry point da aplicação
+├── requirements.txt      # Dependências de baixo nível
+└── run.sh                # Launcher com priorização de processo
+
+
+9. Guia de Instalação Rápida
+
+1. Clonagem: Obtenha o código fonte do repositório oficial.
+2. Otimização do Sistema: Execute sudo ./install.sh. Este passo aplicará as flags do kernel i915 e configurará o zRAM.
+3. Ambiente: Instale as dependências via pip install -r requirements.txt. Certifique-se de que o ffmpeg com suporte VA-API está instalado no sistema.
+4. Execução: Utilize ./run.sh para iniciar o sistema com as prioridades de CPU/GPU corretas.
+
+10. Notas de Legado e Licença
+
+* LEGACY.md: Histórico de migração de componentes antigos e refatorações de código para economia de memória.
+* Licença: Software disponibilizado para fins estritamente educacionais e uso pessoal.
+

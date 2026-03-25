@@ -1,0 +1,225 @@
+Manual Técnico e Repositório de Código: ClipFusion Viral Pro
+
+Este documento provê a especificação técnica e o guia de implementação do ClipFusion Viral Pro, um ecossistema de "Video-Ops" desenvolvido para extração de cortes virais sob restrições severas de hardware. O sistema foi otimizado especificamente para a arquitetura Intel Skylake (i5-6200U / HD 520) em ambientes Linux (i3wm), focando em estabilidade de renderização e eficiência de memória.
+
+
+--------------------------------------------------------------------------------
+
+
+1. Visão Geral do Sistema e Arquitetura
+
+O ClipFusion Viral Pro opera em uma arquitetura de processamento híbrido. Em CPUs de apenas dois núcleos físicos, como o i5-6200U, o maior desafio é evitar a saturação do barramento (bus bandwidth) e o travamento do encoder. O sistema mitiga isso através de um Render 2-pass: o hardware (VA-API) realiza o corte inicial bruto, enquanto a CPU (libx264) processa as camadas de legendagem e filtros de proteção, prevenindo conflitos de driver que ocorrem quando se tenta injetar texto via hardware em drivers Intel antigos.
+
+Tecnologias de Otimização:
+
+* Whisper Python API: Implementação direta via biblioteca para evitar o overhead de memória do Whisper-CLI.
+* Aceleração VA-API: Uso do hardware dedicado da Intel HD 520 para transcodificação acelerada.
+* Gerenciamento Dinâmico de RAM: Técnicas de Lazy Loading e limpeza agressiva de heap.
+* Motor Anti-Copyright Multi-Camada: 7 módulos independentes de proteção de conteúdo.
+
+Hierarquia do Repositório:
+
+ClipFusion-a-arte-viral/
+├── Docs_uteis/
+├── anti_copy_modules/
+├── config/
+├── core/
+├── gui/
+├── utils/
+├── viral_engine/
+├── .gitignore
+├── LEGACY.md
+├── README.md
+├── analytics_engine.py
+├── config.yaml
+├── db.py
+├── erro_final.log
+├── generate_report.py
+├── install.sh
+├── main.py
+├── os
+├── requirements.txt
+└── run.sh
+
+
+
+--------------------------------------------------------------------------------
+
+
+2. Configuração de Ambiente e Instalação (install.sh)
+
+O instalador abaixo foi projetado para ser idempotente e configurar o subsistema gráfico para suportar firmware GuC/HuC, reduzindo a carga de interrupções da CPU durante o processamento de vídeo.
+
+#!/bin/bash
+# ClipFusion Viral Pro - System Provisioning Script
+set -e
+
+echo "--- Iniciando Otimização de Ambiente Video-Ops ---"
+
+# 1. Dependências de Sistema e Drivers
+sudo apt update
+sudo apt install -y python3-pip python3-dev ffmpeg \
+    intel-media-va-driver-non-free vainfo zram-tools \
+    util-linux coreutils
+
+# 2. Configuração de Kernel (GuC/HuC para Skylake)
+# Vital para liberar agendamento de hardware na Intel HD 520
+if ! grep -q "i915.enable_guc=3" /etc/default/grub; then
+    sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="i915.enable_guc=3 /' /etc/default/grub
+    sudo update-grub
+    echo "[!] Parâmetro GuC configurado. Reinicialização necessária."
+fi
+
+# 3. Configuração de zRAM (Target: 6GB)
+# Cria um swap comprimido para evitar OOM (Out of Memory)
+echo -e "ALGO=lz4\nSIZE=6144" | sudo tee /etc/default/zramswap
+sudo service zramswap restart
+
+# 4. Dependências Python
+pip3 install --upgrade pip
+pip3 install -r requirements.txt
+
+# 5. Verificação de Aceleração de Hardware
+echo "--- Status VA-API ---"
+vainfo | grep -i entrypoint || echo "Erro: Driver VA-API não detectado."
+
+echo "Instalação Finalizada."
+
+
+Nota Técnica: O parâmetro i915.enable_guc=3 é crítico. Ele transfere a responsabilidade do agendamento de tarefas de vídeo da CPU para o firmware do processador gráfico (GuC) e habilita o microcontrolador de vídeo (HuC) para autenticar o bitstream, resultando em uma redução de até 40% no consumo de ciclos da CPU durante a decodificação.
+
+
+--------------------------------------------------------------------------------
+
+
+3. Otimização de Memória e Gestão de Recursos (RAM/zRAM)
+
+Operar em sistemas com 8GB de RAM exige uma estratégia de 14GB efetivos. Através do zram-tools com algoritmo LZ4, transformamos 6GB de RAM em um buffer de troca ultra-rápido.
+
+Implementação de Lazy Loading e Garbage Collection: Módulos como o whisper ou pandas (em analytics_engine.py) não são carregados no boot do sistema. Eles são importados em escopo local e destruídos imediatamente após o uso para economizar ~300MB por ciclo.
+
+import gc
+import sys
+
+def run_transcription(video_file):
+    # Lazy Loading: O modelo só consome RAM quando a função é chamada
+    import whisper 
+    
+    try:
+        model = whisper.load_model("base")
+        result = model.transcribe(video_file)
+        return result
+    finally:
+        # Crucial: Limpeza agressiva entre cada corte para evitar OOM
+        del model
+        if 'whisper' in sys.modules:
+            del sys.modules['whisper']
+        gc.collect() 
+        print("Memory Purged: Ready for next segment.")
+
+
+
+--------------------------------------------------------------------------------
+
+
+4. Motor de Áudio: Audio Ducking Profissional
+
+O sistema utiliza o filtro sidechaincompress para garantir que a trilha sonora não abafe a voz, criando um resultado profissional de forma automatizada.
+
+Lógica FFmpeg (Engine):
+
+ffmpeg -i vox.mp4 -i bgm.mp3 -filter_complex \
+"[1:a][0:a]sidechaincompress=threshold=0.1:ratio=20:attack=15:release=200[bgm_low]; \
+ [0:a][bgm_low]amix=inputs=2:duration=first" -c:v copy output.mp4
+
+
+Implementação Python (Integração Full-Stack):
+
+import ffmpeg
+
+def apply_audio_ducking(vox_path, bgm_path, out_path):
+    vox = ffmpeg.input(vox_path).audio
+    bgm = ffmpeg.input(bgm_path).audio
+    
+    ducked = ffmpeg.filter([bgm, vox], 'sidechaincompress', 
+                            threshold=0.1, ratio=20, 
+                            attack=15, release=200)
+    
+    mixed = ffmpeg.filter([vox, ducked], 'amix', inputs=2, duration='first')
+    
+    # Renderização preservando o vídeo original (Stream Copy)
+    stream = ffmpeg.output(mixed, ffmpeg.input(vox_path).video, out_path, vcodec='copy')
+    stream.run(overwrite_output=True)
+
+
+
+--------------------------------------------------------------------------------
+
+
+5. Inteligência Viral e Arquétipos Emocionais (viral_analyzer.py)
+
+O viral_analyzer.py é o núcleo de inteligência que detecta nichos específicos (Investimentos, Fitness, Tecnologia, Relacionamentos e Empreendedorismo) e aplica scoring baseada em 10 arquétipos:
+
+1. Curiosidade: Ganchos de interrogação aberta.
+2. Medo de Perder (FOMO): Escassez de oportunidade.
+3. Autoridade: Gatilhos de prova social/especialidade.
+4. Empatia: Identificação com a "dor" do usuário.
+5. Indignação: Polarização e quebra de injustiça.
+6. Humor/Quebra de Padrão: Gancho visual ou auditivo disruptivo.
+7. Surpresa: Fatos contra-intuitivos.
+8. Urgência: Tempo limitado para ação.
+9. Controvérsia: Opiniões fortes que geram comentários.
+10. Transformação: O arco do "antes e depois".
+
+O sistema calcula o Viral Score (0-100) analisando Retenção (3s iniciais), Shareability, Comentabilidade e Watch Time estimado, gerando 3 variações de ganchos otimizados por corte para testes A/B.
+
+
+--------------------------------------------------------------------------------
+
+
+6. Sistema de Renderização e Anti-Copyright
+
+Para evasão de detecção de algoritmos de ID de conteúdo, o sistema utiliza 7 módulos de proteção: (1) Zoom/Crop dinâmico, (2) Ajuste de Colorimetria, (3) Limpeza de Metadados, (4) Pitch de Áudio, (5) Ruído de Frame (Grain), (6) Chroma Shifting e (7) FPS Mirroring.
+
+Matriz de Proteção:
+
+Nível	Módulos Ativos	Objetivo Técnico
+NENHUM	0	Preservação da integridade do arquivo original.
+BÁSICO	1, 2, 3	Evasão de hashes de arquivos duplicados simples.
+ANTI-IA	1, 2, 3, 4, 5	Deformação sutil de padrões de frames para enganar detecção de IA.
+MÁXIMO	Todos (1-7)	Proteção máxima contra Content ID e OCR de plataformas.
+
+Justificativa do Render 2-pass: O processamento em duas etapas evita a "saturação do encoder". A primeira passada usa VA-API para o corte rápido (I-frame accurate). A segunda passada usa a libx264 via CPU para injetar legendas e ruído, garantindo que o driver Intel HD 520 não sofra kernel panic por excesso de camadas de hardware overlay.
+
+
+--------------------------------------------------------------------------------
+
+
+7. Estabilidade i3wm e Priorização de Processos
+
+Em uma CPU de apenas 2 núcleos (4 threads), o FFmpeg pode facilmente causar "input lag" ou congelar a interface gráfica. Como Engenheiro de Sistemas, a solução é o uso de agendamento de prioridade.
+
+Script de Lançamento run.sh:
+
+#!/bin/bash
+# Lançamento seguro: Garante ciclos para o i3wm e X11/Wayland
+# CPU priority: 15 (Baixa) | I/O priority: Idle
+nice -n 15 ionice -c 3 python3 main.py
+
+
+Raciocínio: O nice -n 15 garante que o processo de renderização ceda ciclos sempre que o i3wm precisar redesenhar a interface ou processar entrada do teclado. O ionice -c 3 impede que a escrita do arquivo de vídeo sature o SSD, mantendo o sistema responsivo.
+
+
+--------------------------------------------------------------------------------
+
+
+8. Guia de Operação (Fluxo de Trabalho)
+
+1. Aba Projeto: Carregamento de mídia e definição de presets.
+2. Aba Transcrição: Execução do Whisper e revisão de precisão linguística.
+3. Aba IA Externa: O sistema gera um prompt estruturado. Obrigatório: Copie o prompt, cole no Claude/ChatGPT e traga o retorno em formato JSON puro para a interface.
+4. Aba Cortes: Validação dos timestamps e arquétipos identificados.
+5. Aba Render: Processamento 2-pass (Hardware + Software).
+6. Aba Histórico: Gestão de metadados e arquivos exportados.
+7. Aba Agenda: Geração de cronograma com horários anti-padrão para evitar o "limbo" algorítmico de postagens em massa.
+

@@ -1,0 +1,10 @@
+a estrutura>
+
+Diretório: C:\The Classic Games
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----        26/01/2026     20:09                The Classic PW 1.2.6
+-a----        24/12/2025     05:52             65 config.ini
+-a----        24/12/2025     05:50       11194368 The Classic Games Launcher.exe

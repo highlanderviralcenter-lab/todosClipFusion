@@ -1,0 +1,955 @@
+Projeto proposto
+Nome
+SignalCut Hybrid
+Frase do projeto
+
+Sistema local de descoberta, embalagem e validação de cortes virais com inteligência híbrida manual.
+
+Missão
+
+Pegar vídeos longos e transformar em poucos cortes altamente promissores, já com:
+
+seleção editorial forte
+
+score real
+
+adaptação por plataforma
+
+pacote social do post
+
+aprendizado com desempenho futuro
+
+Não é para “economizar tempo”.
+É para aumentar a taxa de acerto dos cortes.
+
+Tese central
+
+A maioria dos sistemas erra porque tenta fazer uma destas duas coisas:
+
+deixar tudo na mão da IA externa
+
+deixar tudo na mão de heurística local
+
+O projeto certo faz isto:
+
+Sistema local
+
+faz o que é mensurável e consistente.
+
+IA externa
+
+faz o que é interpretativo e editorial.
+
+Sistema local de novo
+
+valida, pontua e decide.
+
+Então o coração do projeto é:
+
+local → IA externa → local
+O que o sistema realmente faz
+
+Ele não é só um cortador.
+
+Ele é um sistema que:
+
+transcreve
+
+segmenta
+
+descobre microcandidatos
+
+pontua localmente
+
+cria um prompt estruturado
+
+recebe resposta da IA externa
+
+reavalia
+
+decide automaticamente
+
+gera corte + embalagem
+
+registra tudo como dado
+
+Objetivo editorial
+
+O sistema deve ser bom em achar:
+
+momento forte
+
+virada
+
+cena
+
+resposta inesperada
+
+payoff
+
+conflito
+
+revelação
+
+tensão
+
+momento humano
+
+clipe que segura retenção
+
+Ele não pode ficar preso só em:
+
+frase forte
+
+nome famoso
+
+headline
+
+número
+
+polêmica declarada
+
+Modos do sistema
+1. Standalone
+
+Tudo local.
+
+Serve para:
+
+fallback
+
+rascunho rápido
+
+operar sem depender de ninguém
+
+2. Híbrido
+Esse é o modo principal.
+
+O sistema prepara o melhor material possível.
+Você leva para a IA externa.
+Ela devolve análise estruturada.
+O sistema reavalia e decide.
+
+3. Online
+
+Futuro opcional.
+Não é prioridade.
+
+Filosofia de validação
+
+Você corrigiu isso muito bem:
+
+A validação não deve depender de “você gostar ou não”.
+
+O sistema deve tomar a decisão.
+
+Então cada corte passa por:
+
+análise local
+
+análise da IA externa
+
+reanálise local
+
+nota final
+
+decisão automática
+
+Regra de decisão
+
+>= 9.0 → aprovado para corte
+
+7.0 até 8.9 → refazer / melhorar
+
+< 7.0 → descartar
+
+Esse é o centro do projeto.
+
+Stack que eu escolheria
+Linguagem
+
+Python 3.11+
+
+Ferramentas base
+
+FFmpeg
+
+SQLite
+
+PyYAML
+
+Pydantic
+
+Typer
+
+Rich
+
+Jinja2
+
+rapidfuzz
+
+numpy
+
+joblib
+
+scikit-learn (fase 2, opcional)
+
+faster-whisper
+
+Por que
+
+Porque isso:
+
+é grátis
+
+é estudável
+
+roda no seu hardware
+
+não exige infraestrutura cara
+
+permite crescer depois
+
+Arquitetura do projeto
+signalcut_hybrid/
+  app/
+    config/
+      settings.yaml
+      platforms.yaml
+      scoring.yaml
+    locales/
+      pt.yaml
+      en.yaml
+      es.yaml
+
+    core/
+      ingest.py
+      transcribe.py
+      segment.py
+      candidate_engine.py
+      scoring_engine.py
+      platform_engine.py
+      hybrid_prompt.py
+      hybrid_parser.py
+      decision_engine.py
+      post_pack.py
+      output_manager.py
+      learning_engine.py
+      transcription_quality.py
+
+    storage/
+      db.py
+      schema.py
+
+    reports/
+      review_html.py
+      export_json.py
+
+    cli/
+      main.py
+
+  workspace/
+    projects/
+Módulos principais
+1. ingest.py
+
+Responsável por:
+
+registrar projeto
+
+copiar vídeo original
+
+extrair metadados básicos
+
+gerar ID do projeto
+
+2. transcribe.py
+
+Responsável por:
+
+chamar faster-whisper
+
+detectar idioma
+
+gerar transcrição em segmentos
+
+salvar texto e timestamps
+
+3. transcription_quality.py
+
+Responsável por:
+
+detectar qualidade da transcrição
+
+identificar trechos corrompidos
+
+medir confiança por janela
+
+marcar trechos suspeitos
+
+Isso é essencial
+
+Porque transcrição ruim contamina tudo.
+
+4. segment.py
+
+Responsável por:
+
+usar pausas
+
+usar fim de frase
+
+usar limites naturais de fala
+
+criar blocos coerentes
+
+Não em janelas burras apenas.
+
+5. candidate_engine.py
+
+Responsável por:
+
+gerar microcandidatos dentro dos blocos
+
+combinar frase + ritmo + contexto
+
+produzir candidatos de diferentes durações
+
+Faixas que eu usaria
+
+curto: 12–22 s
+
+médio: 22–38 s
+
+longo: 38–60 s
+
+Faixas por modo
+
+headline: 12–28 s
+
+moment: 18–42 s
+
+balanced: 15–35 s
+
+6. scoring_engine.py
+
+Responsável por:
+
+calcular subnotas
+
+produzir score final local
+
+gerar score por plataforma
+
+Subnotas
+
+hook_strength
+
+moment_strength
+
+retention_score
+
+shareability
+
+commentability
+
+clarity_score
+
+transcription_quality
+
+duration_fit
+
+platform_fit
+
+redundancy_penalty
+
+7. platform_engine.py
+
+Responsável por:
+
+dizer qual corte combina mais com:
+
+TikTok
+
+Reels
+
+Shorts
+
+sugerir bucket de duração ideal
+
+sugerir formato editorial
+
+8. hybrid_prompt.py
+
+Responsável por:
+
+pegar tudo o que o sistema já sabe
+
+montar o prompt mais forte possível
+
+enviar contexto estruturado para a IA externa
+
+9. hybrid_parser.py
+
+Responsável por:
+
+validar o JSON da IA externa
+
+extrair campos
+
+rejeitar schema ruim
+
+padronizar o retorno
+
+10. decision_engine.py
+
+Responsável por:
+
+combinar score local com externo
+
+recalcular nota final
+
+decidir:
+
+approved
+
+retry
+
+rejected
+
+11. post_pack.py
+
+Responsável por:
+
+gerar o pacote social do corte
+
+preparar o que será usado no post
+
+12. output_manager.py
+
+Responsável por:
+
+organizar tudo por projeto e por corte
+
+impedir a bagunça das plataformas misturadas
+
+13. learning_engine.py
+
+Responsável por:
+
+receber dados reais de performance
+
+ajustar pesos no futuro
+
+aprender sem depender de modelo pesado logo no início
+
+Fluxo do sistema
+Etapa 1 — ingestão
+
+Você adiciona um vídeo.
+
+Etapa 2 — transcrição
+
+O sistema transcreve e detecta idioma.
+
+Etapa 3 — análise de qualidade
+
+Ele mede a qualidade da transcrição e marca trechos problemáticos.
+
+Etapa 4 — segmentação
+
+Ele encontra blocos coerentes e cria microcandidatos.
+
+Etapa 5 — score local
+
+Cada microcandidato recebe score por:
+
+modo editorial
+
+plataforma
+
+duração
+
+força de momento
+
+qualidade do texto
+
+Etapa 6 — prompt híbrido
+
+O sistema pega os melhores candidatos e monta um prompt muito estruturado para a IA externa.
+
+Etapa 7 — resposta externa
+
+A IA externa devolve:
+
+cortes refinados
+
+embalagens
+
+leitura viral
+
+títulos
+
+comentários
+
+CTA
+
+scores externos
+
+Etapa 8 — reavaliação local
+
+O sistema cruza:
+
+local
+
+externo
+
+plataforma
+
+duração
+
+transcrição
+
+e gera a nota final.
+
+Etapa 9 — decisão
+
+aprovado
+
+retry
+
+rejeitado
+
+Etapa 10 — output
+
+O sistema gera:
+
+arquivos do corte
+
+pacote social
+
+relatório
+
+dados para aprendizado
+
+O JSON ideal da IA externa
+
+A resposta da IA externa não pode ser pobre.
+
+Para cada corte, ela deve devolver:
+
+{
+  "cut_id": "cut_001",
+  "start": 123.2,
+  "end": 149.8,
+  "editorial_mode": "moment",
+  "angle": "revelação com virada",
+  "title_main": "…",
+  "title_alts": ["…", "…", "…"],
+  "hook_main": "…",
+  "hook_alt": "…",
+  "reason": "…",
+  "viral_score_external": 9.1,
+  "confidence_external": 8.8,
+  "platform_recommendation": {
+    "tiktok": 9.2,
+    "reels": 8.7,
+    "shorts": 8.9
+  },
+  "duration_strategy": "medium",
+  "cover_text": "…",
+  "description_short": "…",
+  "hashtags": ["…"],
+  "pinned_comment": "…",
+  "pinned_comment_alt": "…",
+  "audience_question": "…",
+  "cta": "…",
+  "editor_note": "…"
+}
+
+Isso faz valer o transporte manual.
+
+A nota final
+
+A nota final não deve ser mágica.
+
+Ela vem de subnotas.
+
+Fórmula proposta
+final_score =
+(local_score * 0.50) +
+(external_score * 0.30) +
+(platform_fit * 0.10) +
+(duration_fit * 0.05) +
+(transcription_quality * 0.05)
+
+Isso é calibrável depois.
+
+Plataforma e duração
+
+Você está certo: isso precisa ser central.
+
+Então o sistema deve ter score separado por:
+
+TikTok
+
+Mais tolerante a variações, mas forte em:
+
+scroll stop
+
+impacto
+
+conversa
+
+provocação
+
+Reels
+
+Mais dependente de:
+
+embalagem
+
+limpeza
+
+ritmo
+
+leitura visual
+
+Shorts
+
+Mais dependente de:
+
+payoff
+
+retenção
+
+arco enxuto
+
+E cada corte deve ter:
+
+tiktok_fit
+
+reels_fit
+
+shorts_fit
+
+Não score único genérico.
+
+Modos editoriais
+headline
+
+Busca:
+
+afirmação forte
+
+conflito
+
+choque
+
+curiosidade
+
+moment
+
+Busca:
+
+virada
+
+timing
+
+payoff
+
+reação
+
+dinâmica
+
+balanced
+
+Mistura os dois.
+
+Minha opinião
+
+O sistema deve nascer com:
+
+headline
+
+moment
+
+E só depois usar balanced.
+
+Pacote social do corte
+
+O sistema não entrega só o vídeo.
+
+Ele entrega:
+
+título principal
+
+títulos alternativos
+
+hook
+
+texto de capa
+
+descrição
+
+hashtags
+
+comentário fixado
+
+comentário alternativo
+
+pergunta ao público
+
+CTA
+
+nota editorial
+
+Isso é tão importante quanto o timestamp.
+
+Organização física de output
+workspace/
+  projects/
+    project_001/
+      source/
+        original.mp4
+
+      analysis/
+        transcript.json
+        transcript.txt
+        transcript_quality.json
+        candidates.json
+        local_scores.json
+        hybrid_prompt.txt
+        hybrid_response.json
+        final_scores.json
+
+      cuts/
+        cut_001/
+          metadata.json
+          preview.mp4
+          tiktok.mp4
+          reels.mp4
+          shorts.mp4
+          post_pack.json
+
+        cut_002/
+          ...
+
+      reports/
+        review.html
+        summary.json
+
+Essa estrutura acaba com a bagunça.
+
+Banco
+Tabelas
+
+projects
+
+transcripts
+
+candidates
+
+cuts
+
+scores
+
+platform_scores
+
+post_packs
+
+performance_events
+
+O que guardar
+
+score local
+
+score externo
+
+score final
+
+plataforma
+
+duração
+
+modo editorial
+
+qualidade da transcrição
+
+status
+
+resultado real depois
+
+Aprendizado
+Fase 1
+
+Nada de modelo complexo.
+
+Usar:
+
+regras
+
+pesos
+
+feedback real
+
+Fase 2
+
+Quando tiver dados:
+
+regressão logística
+
+ranking leve
+
+ajuste de pesos por plataforma e modo
+
+Fase 3
+
+Aprender:
+
+qual duração funciona melhor
+
+qual modo editorial funciona melhor
+
+quais assuntos funcionam curtos
+
+quais pedem médio
+
+quais pedem longo
+
+O que o projeto não vai fazer agora
+
+Ele não vai tentar agora:
+
+visão computacional pesada
+
+emoção facial
+
+multimodal forte
+
+diarização pesada
+
+IA local gigante
+
+agenda automática baseada em demografia
+
+modelo de audiência avançado
+
+Porque isso não é o gargalo principal agora.
+
+O gargalo principal
+
+O gargalo principal é:
+
+transformar vídeo longo em poucos cortes realmente promissores, com nota alta e confiança real para postagem.
+
+Tudo o que não ajuda nisso diretamente fica para depois.
+
+MVP real
+
+Se eu tivesse que escolher a versão mínima forte, seria:
+
+MVP 1
+
+ingestão
+
+transcrição
+
+qualidade da transcrição
+
+segmentação
+
+microcandidatos
+
+2 modos editoriais
+
+score local
+
+prompt híbrido
+
+parser híbrido
+
+reavaliação local
+
+decisão automática
+
+pacote social
+
+organização de output
+
+relatório HTML
+
+Isso já seria muito forte.
+
+Ordem de implementação
+Fase 1 — base
+
+settings.yaml
+
+platforms.yaml
+
+scoring.yaml
+
+locales/
+
+Fase 2 — núcleo
+
+transcribe.py
+
+transcription_quality.py
+
+segment.py
+
+candidate_engine.py
+
+Fase 3 — decisão
+
+scoring_engine.py
+
+platform_engine.py
+
+decision_engine.py
+
+Fase 4 — híbrido
+
+hybrid_prompt.py
+
+hybrid_parser.py
+
+post_pack.py
+
+Fase 5 — saída
+
+output_manager.py
+
+review_html.py
+
+db.py
+
+Fase 6 — aprendizado
+
+learning_engine.py
+
+performance_events
+
+Crítica sincera final
+
+Se eu tivesse carta branca, este é o projeto que eu faria para você.
+
+Não é o mais rápido.
+Não é o mais bonito.
+Não é o mais moderno de mercado.
+
+Mas é o mais alinhado com o que você quer:
+
+ser certeiro
+
+usar o poder da IA externa ao máximo
+
+tomar decisão automática
+
+entregar corte pronto para publicação
+
+rodar sem custo
+
+crescer depois com dados reais

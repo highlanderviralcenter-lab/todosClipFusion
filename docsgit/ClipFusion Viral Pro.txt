@@ -1,0 +1,181 @@
+ClipFusion Viral Pro: Documentação Técnica Definitiva Sumário
+
+Filosofia e Visão do Sistema
+Arquitetura Geral e Modos de Operação
+Hardware-Alvo e Otimizações de Sistema
+Estrutura de Diretórios e Organização
+Camada de Persistência: Banco de Dados Unificado
+Pipeline de Processamento de Vídeo
+Motor Viral e Scoring Emocional
+Módulos Anti-Copyright e Proteção de Conteúdo
+Interface Gráfica e Fluxo de Trabalho
+Ciclo de Aprendizado e Analytics
+Instalação e Configuração de Ambiente
+Considerações de Performance e Limitações
+Roadmap e Evoluções Futuras
+
+    Filosofia e Visão do Sistema
+
+O ClipFusion Viral Pro não é apenas mais um editor de vídeo ou uma ferramenta de cortes automáticos. Ele é uma plataforma de engenharia de conteúdo viral projetada sob uma premissa fundamental: extrair o máximo de hardware limitado (Intel i5-6200U, 8GB RAM, Intel HD 520) enquanto entrega funcionalidades que rivalizam com soluções baseadas em nuvem (como Opus Clip, CapCut, etc.).
+A visão que guia o projeto é:
+
+Democratizar a criação de conteúdo viral, permitindo que qualquer pessoa com um notebook modesto possa transformar horas de vídeo em dezenas de cortes de alto engajamento, com proteção contra copyright e aprendizado contínuo a partir dos resultados reais.
+
+Isso se traduz em três pilares técnicos:
+
+Eficiência Computacional: Cada linha de código é pensada para respeitar os limites de CPU, GPU e memória. Lazy loading, garbage collection explícito e aceleração de hardware são regras, não exceções.
+
+Arquitetura Híbrida: Combina o melhor do processamento local (rápido, previsível, sem custo) com a inteligência de IAs externas (Claude, ChatGPT) quando necessário, criando um ciclo de melhoria contínua.
+
+Foco no Resultado Final: O sistema não apenas gera cortes; ele decide quais cortes merecem ser produzidos, aprende com o desempenho real e ajusta seus próprios pesos para melhorar continuamente.
+
+    Arquitetura Geral e Modos de Operação
+
+O ClipFusion opera em três modos distintos, permitindo flexibilidade desde o uso totalmente offline até a integração com IAs de ponta. 2.1 Modo Standalone
+
+Funcionamento: Todo o processamento é local. O motor viral usa heurísticas determinísticas (baseadas em palavras-chave, duração, pausas) para gerar e pontuar candidatos.
+
+Vantagens: Rápido, sem dependência de internet, custo zero.
+Indicado para: Processamento em lote, testes, ou quando a qualidade da IA externa não é necessária.
+
+2.2 Modo Online
+
+Funcionamento: O sistema gera um prompt otimizado e o usuário o copia para uma IA externa (Claude, ChatGPT). A resposta em JSON é colada de volta no ClipFusion, que a utiliza para refinar os cortes.
+
+Vantagens: Aproveita o poder de LLMs de ponta para análise semântica profunda e criativa.
+Indicado para: Vídeos "carro-chefe" onde se quer maximizar o potencial viral.
+
+2.3 Modo Híbrido (Recomendado)
+
+Funcionamento: O motor local gera de 20 a 30 candidatos iniciais com base em pausas naturais e heurísticas. Um prompt estruturado é enviado à IA externa contendo apenas esses candidatos. A IA retorna um JSON refinado, que é então combinado com os scores locais pelo Decision Engine para produzir o veredito final (Aprovado/Revisar/Descartado).
+
+Vantagens: Economia de tokens (a IA só vê o melhor material), qualidade superior (foco da IA) e aprendizado contínuo (os resultados realimentam o motor local).
+Indicado para: Uso diário, equilibrando custo e qualidade.
+
+    Hardware-Alvo e Otimizações de Sistema
+
+O sistema foi projetado e testado exaustivamente no seguinte hardware: Componente Especificação Observação Técnica Processador Intel Core i5-6200U (Skylake) 2 núcleos físicos / 4 threads, TDP 15W (configurável até 25W) GPU Intel HD Graphics 520 24 Execution Units, suporte VA-API, até 1 GHz Memória RAM 8 GB DDR3L/DDR4 Gerenciamento agressivo via zRAM e swap Armazenamento SSD SATA 480 GB Sistema de arquivos BTRFS com compressão zstd 3.1 Otimizações de Kernel e Sistema Parâmetro Crítico: i915.enable_guc=3
+
+O que faz: Ativa o firmware GuC (Graphics Micro-Controller) e HuC (HEVC/H.264 Micro-Controller) na GPU Intel.
+
+Por que é necessário: Sem ele, o agendamento de tarefas de vídeo é feito pela CPU, causando micro-stutters e aumento de latência. Com ele ativo, a GPU gerencia suas próprias filas, liberando a CPU para outras tarefas e garantindo fluidez na renderização.
+Verificação: Presente no /proc/cmdline.
+
+Estratégia de Memória Escalonada (14GB Efetivos)
+Dada a limitação física de 8GB, o sistema implementa uma hierarquia de memória:
+
+RAM física (8GB): Para processos ativos e buffers.
+zRAM (4GB): Dispositivo de bloco na RAM com compressão zstd. Dados de modelos Whisper e caches são comprimidos, reduzindo a necessidade de swap em disco.
+Swapfile (2GB): No SSD, com prioridade 50, usado apenas quando zRAM está cheio.
+
+Resultado: ~14GB de memória efetiva, com latência de acesso muito inferior ao uso direto de swap em disco. Garbage Collection Explícito
+O Python, em loops intensivos, pode acumular objetos e não liberar memória rapidamente. O ClipFusion insere gc.collect() entre etapas críticas (transcrição → geração de candidatos → render), garantindo que o garbage collector seja chamado antes que a memória se esgote. Lazy Loading de Módulos Pesados
+Módulos como whisper, pandas e bibliotecas de processamento de imagem são importados apenas no momento do uso e destruídos imediatamente após. Isso economiza aproximadamente 300MB de RAM em idle. 4. Estrutura de Diretórios e Organização text
+clipfusion/ ├── anti_copy_modules/ # 7+ módulos de proteção │ ├── core.py # Orquestrador │ ├── audio_advanced.py # Pitch, tempo, EQ │ ├── fingerprint_evasion.py # Cor, ruído, croma │ └── ... ├── config/ # Configurações centralizadas │ ├── settings.yaml # Parâmetros gerais │ ├── platforms.yaml # Especificações por plataforma │ └── scoring.yaml # Pesos e palavras-chave ├── core/ # Módulos principais │ ├── ingest.py # Criação de projeto e pastas │ ├── transcribe.py # Transcrição Whisper (faster-whisper) │ ├── transcription_quality.py # Filtro de confiança │ ├── segment.py # Segmentação por pausas │ ├── candidate_engine.py # Geração de microcandidatos │ ├── scoring_engine.py # Cálculo de subnotas │ ├── platform_engine.py # Ajuste por plataforma │ ├── hybrid_prompt.py # Geração de prompts para IA │ ├── hybrid_parser.py # Parsing de JSON da IA │ ├── decision_engine.py # Regra de ouro e veredito │ ├── protection_factory.py # Aplicação de proteção │ ├── post_pack.py # Geração de metadados de postagem │ ├── posting_schedule.py # Agenda com jitter │ └── learning_engine.py # Aprendizado com dados reais ├── gui/ # Interface Tkinter │ ├── main_gui.py # Janela principal e 7 abas │ └── init.py ├── locales/ # Internacionalização │ ├── pt.yaml │ └── en.yaml ├── utils/ # Utilitários │ ├── hardware.py # Detecção de hardware │ └── init.py ├── workspace/ # Dados de projetos │ └── projects/ # Cada projeto tem sua pasta ├── db.py # Camada de persistência (SQLite) ├── main.py # Entry point ├── run.sh # Script de execução ├── install.sh # Instalação automática └── requirements.txt # Dependências Python
+
+"Multiplique" "Como ganhar [X] em [Y] dias" 0.26 Prova Social "Milhares de pessoas", "Todo mundo está" "O que [influenciador] não te contou" 0.24 Autoridade "Especialista revela", "Ciência prova" "Estudo de Harvard mostra que..." 0.22 Empatia "Eu entendo sua dor", "Já passei por isso" "Se você já sentiu [dor], esse vídeo é pra você" 0.20 Indignação "Isso é um absurdo", "Não podemos aceitar" "A verdade sobre [assunto] que ninguém quer que você saiba" 0.27 Exclusividade "Só para poucos", "Conteúdo VIP" "O método secreto que [profissionais] usam" 0.23 Alívio "Finalmente", "A solução definitiva" "Chega de sofrer com [problema]" 0.21 Transformação "Antes e depois", "Mudei minha vida" "Como eu saí do zero em 30 dias" 0.25 7.2 Scoring Engine (core/scoring_engine.py)
+Para cada candidato, são calculadas subnotas independentes: Nota Descrição Métrica hook_strength Força do gancho nos primeiros 3s Presença de palavras de gatilho, posição, intensidade (?) retention_score Capacidade de prender a atenção Densidade de palavras de continuidade ("mas", "porém", "então") moment_strength Presença de "virada" ou clímax Palavras de mudança ("descobri", "repentinamente") shareability Probabilidade de compartilhamento Palavras de alta excitação ("incrível", "chocante") platform_fit_* Adequação a TikTok/Reels/Shorts Comprimento do texto, densidade
+
+A nota combinada é uma média ponderada dessas subnotas, com pesos definidos em config/scoring.yaml. 7.3 Exemplo de JSON de Retorno da IA json
+[ { "candidate_id": 1, "start": 12.3, "end": 35.7, "title": "O segredo da prospecção", "hook": "Você sabia que 80% dos vendedores erram?", "archetype": "Curiosidade", "score": 8.5, "platforms": ["tiktok", "reels"], "reason": "Gancho forte com pergunta retórica, aborda uma dor comum." } ]
+7.4 Decision Engine (core/decision_engine.py)
+O decision engine combina o score local (do scoring_engine) com o score da IA externa e aplica a Regra de Ouro:
+
+Nota ≥ 9.0: Aprovado → vai para a fila de render.
+7.0 ≤ Nota < 9.0: Revisar → marcado para análise humana.
+Nota < 7.0: Descartado → não perde tempo renderizando.
+
+A nota final é calculada como: text final_score = (local_score * 0.5) + (external_score * 0.3) + (platform_fit * 0.1) + (transcription_quality * 0.1)
+
+    Módulos Anti-Copyright e Proteção de Conteúdo
+
+O diretório anti_copy_modules contém 7+ técnicas de alteração da assinatura digital do vídeo, organizadas em 4 níveis de proteção. 8.1 As 7 Técnicas Principais
+Técnica Descrição FFmpeg Filter
+1 Zoom Dinâmico Redimensiona o vídeo com leve zoom (1–3%) scale=1.02iw:-2,crop=iw/1.02:ih/1.022 Ajuste de Colorimetria Modifica brilho, contraste, saturação eq=brightness=0.02:contrast=1.03:saturation=1.023 Strip de Metadados Remove todos os metadados (data, software) -map_metadata -14 Reamostragem de Áudio Altera pitch e tempo (±1%) asetrate=441001.01,atempo=0.99 5 Injeção de Ruído Síncrono Adiciona granulação quase invisível noise=alls=2:allf=t+u 6 Alteração de Chroma Subsampling Muda a forma como as cores são amostradas format=yuv444p (ou yuv420p) 7 Vetores de Movimento Anti-IA Pequena rotação/perspectiva rotate=0.1*PI/180 8.2 Os 4 Níveis de Proteção Nível Módulos Ativos Objetivo Uso Recomendado 🟢 NENHUM 0 Arquivo original intacto Testes, arquivamento 🟡 BÁSICO 1, 2, 3, 4 Evitar detecção por hash de arquivo Conteúdo original de baixo risco 🟠 ANTI-IA 1 a 6 Confundir redes neurais de similaridade Conteúdo que pode ser verificado por IA 🔴 MÁXIMO 1 a 7 Proteção máxima contra Content ID Conteúdo sensível ou reutilizado 8.3 Como a Proteção é Aplicada
+A protection_factory.py recebe o nível desejado e constrói a string de filtros adequada, que é então passada ao FFmpeg no passo 1 do render 2-pass. Os filtros são aplicados antes da codificação final, garantindo que o vídeo resultante seja único. 9. Interface Gráfica e Fluxo de Trabalho
+A GUI (Tkinter) é organizada em 7 abas, cada uma correspondendo a uma etapa do fluxo de trabalho.
+9.1 Aba 1: Projeto Seleção do vídeo fonte. Definição de nome do projeto e contexto (para a IA externa). Escolha do modelo Whisper (tiny, base, small), idioma e nível de proteção anti-copyright.
+9.2 Aba 2: Transcrição Exibe a transcrição completa com timestamps. Permite edição manual (se necessário) e visualização da qualidade (transcription_quality).
+9.3 Aba 3: IA Externa Gera um prompt estruturado baseado nos candidatos pré-selecionados. Botão "Copiar" para levar o prompt ao Claude/ChatGPT.
+
+Caixa de texto para colar a resposta JSON da IA.
+
+9.4 Aba 4: Cortes Lista os cortes sugeridos pela IA, cada um com: Título, timestamp, duração. Hook, justificativa e arquétipo. Checkbox para selecionar quais renderizar.(ou deixar o sistema de notas ja estabelecido automatizar) Botões "Todos" e "Nenhum" para seleção em massa.
+9.5 Aba 5: Render Log em tempo real do progresso de cada corte. Ao final, mostra a pasta de saída e tamanho dos arquivos.
+9.6 Aba 6: Histórico
+
+Lista projetos anteriores com status.
+Permite carregar um projeto antigo para continuar ou revisar.
+
+9.7 Aba 7: Agenda
+
+Gera uma agenda de postagens com jitter anti-padrão (horários não redondos) para evitar detecção de automação.
+Exporta em formato legível ou CSV.
+
+9.8 Design e Usabilidade
+
+Tema escuro (para reduzir fadiga visual).
+Uso de cores para status (verde para ok, amarelo para aviso, vermelho para erro).
+Mensagens de status na barra inferior.
+
+    Ciclo de Aprendizado e Analytics
+
+O sistema não é estático; ele aprende com os resultados reais. 10.1 Coleta de Dados
+Após postar um corte, o usuário pode registrar o desempenho na aba Analytics:
+
+Views, likes, shares, comments.
+Plataforma e horário de postagem.
+
+Esses dados são armazenados na tabela performances. 10.2 Learning Engine (core/learning_engine.py)
+Periodicamente (ou manualmente), o Learning Engine consulta as performances e calcula:
+
+Média de views por arquétipo.
+Média de views por tipo de hook.
+Melhores horários (agrupados por hora do dia).
+Top 10 cortes com melhor desempenho.
+
+Com base nisso, ele reajusta os pesos dos arquétipos no config/scoring.yaml e atualiza a tabela learning_weights. Por exemplo, se cortes com arquétipo "Curiosidade" têm 30% mais views que a média, o peso desse arquétipo é aumentado proporcionalmente. 10.3 Relatórios
+O módulo analytics_engine.py gera relatórios em HTML/console com gráficos e insights, permitindo ao usuário entender o que está funcionando e ajustar sua estratégia. 11. Instalação e Configuração de Ambiente
+A instalação é totalmente automatizada pelo script install.sh, que:
+
+Atualiza o sistema e instala pacotes essenciais (ffmpeg, drivers Intel, zram-tools, etc.).
+Configura o kernel com i915.enable_guc=3 (se não presente).
+Configura a ZRAM com 4GB, algoritmo zstd, prioridade 100.
+Configura swapfile de 2GB no SSD, com prioridade 50.
+Aplica sysctl tuning (swappiness=150, overcommit, etc.).
+Instala thermald e cpufrequtils com governor performance.
+Cria a estrutura de diretórios e todos os arquivos de código.
+Configura o ambiente virtual Python e instala as dependências.
+
+Após a instalação, basta reiniciar e executar ./run.sh.
+
+    Considerações de Performance e Limitações
+
+12.1 Métricas de Performance Esperadas Operação Tempo (aprox.) Observação Transcrição (10 min de áudio) 2–3 min Modelo base, CPU Geração de candidatos 10 s Heurísticas rápidas Scoring de candidatos 5 s Por candidato Render de um corte (60s) 30–45 s VA-API + libx264 Consumo de RAM 2–4 GB Depende do modelo Whisper
+12.2 Limitações Conhecidas
+
+Renderização de legendas complexas: A HD 520 não suporta sobreposição de legendas via hardware; daí a necessidade do 2-pass.
+
+TDP unlock: Em alguns kernels, o wrmsr pode ser bloqueado; nesse caso, a CPU opera nos limites padrão (15W), mas ainda é suficiente.
+Transcrição em tempo real: O Whisper não é otimizado para streaming; todo o áudio é extraído antes da transcrição.
+Dependência de IA externa: O modo híbrido exige que o usuário tenha acesso a uma IA como Claude ou ChatGPT (gratuito ou pago). O modo standalone contorna isso.
+
+    Roadmap e Evoluções Futuras 13.1 Versão 2.0 (Atual)
+    ✅ Arquitetura híbrida com três modos. ✅ Schema unificado de scores. ✅ Micro-segmentação por pausas. ✅ Filtro de qualidade de transcrição. ✅ Motor de decisão com regra de ouro. ✅ Módulos anti-copyright com 4 níveis. ✅ Interface com 7 abas. ✅ Aprendizado inicial com dados reais.
+
+13.2 Versão 2.1 (Planejada)
+
+🔲 Integração com IA local via Ollama (modelos como LLaMA 3.2, Mistral).
+🔲 Geração automática de narração sintética (TTS com Piper ou Coqui).
+🔲 Suporte a múltiplos idiomas aprimorado (detecção automática de sotaque).
+🔲 Exportação de relatórios em PDF com gráficos.
+
+13.3 Versão 3.0 (Visão de Longo Prazo)
+
+🔲 Versão SaaS (quando houver investimento) com autenticação multi-usuário.
+🔲 Pipeline de render distribuído (uso de múltiplas máquinas).
+🔲 Modelo de recomendação baseado em deep learning treinado nos dados do usuário.
+🔲 Integração direta com APIs de plataformas (TikTok, Reels, Shorts) para postagem automática.
+
+Conclusão
+O ClipFusion Viral Pro é mais que um software; é uma plataforma de engenharia de conteúdo que respeita as limitações do hardware, tira proveito do melhor da IA externa e aprende com o tempo. Sua arquitetura modular, schema unificado e foco em resultados reais o tornam uma ferramenta única no mercado, capaz de transformar um notebook modesto em uma máquina de gerar cortes virais.

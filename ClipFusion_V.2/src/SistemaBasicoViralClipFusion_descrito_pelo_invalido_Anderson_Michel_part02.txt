@@ -1,0 +1,119 @@
+5. Camada de Persistência: Banco de Dados Unificado
+
+O coração da consistência dos dados é o db.py, que implementa um schema unificado para evitar o "defeito técnico grave" (notas zeradas ou inconsistentes).
+5.1 Schema (Principais Tabelas)
+Tabela	Campos	Descrição
+projects	id, nome, video_path, language, status	Metadados do projeto
+transcripts	id, project_id, full_text, segments_json, quality_score	Transcrição completa com qualidade
+candidates	id, project_id, transcript_id, start_time, end_time, text, hook_strength, retention_score, moment_strength, shareability, platform_fit_tiktok, platform_fit_reels, platform_fit_shorts, combined_score, status	Microcandidatos com todas as subnotas
+cuts	id, project_id, candidate_id, start_time, end_time, title, hook, archetype, platforms, protection_level, output_paths, viral_score, decision	Cortes finais aprovados
+performances	id, cut_id, platform, views, likes, shares, comments, posted_at	Dados reais de engajamento
+learning_weights	id, module, subkey, weight	Pesos aprendidos pelo sistema
+5.2 Por que isso resolve o problema de "notas zeradas"?
+
+No ClipFusion original (e em muitas ferramentas similares), diferentes módulos usam nomes diferentes para as mesmas métricas (ex: viral_score vs retencao_estimada). Isso faz com que o sistema tome decisões baseadas em dados incompletos ou nulos.
+
+No schema unificado, todos os módulos (scoring_engine, hybrid_prompt, decision_engine) leem e escrevem os mesmos campos. Se um campo não for preenchido, o DEFAULT 0.0 garante que o sistema nunca trabalhe com NULL, evitando decisões equivocadas.
+5.3 Persistência em SQLite
+
+O SQLite foi escolhido por:
+
+    Ser zero-configuração e embutido.
+    Oferecer integridade transacional (rollback em caso de falha).
+    Suportar concorrência leve (o suficiente para um único usuário).
+
+O banco fica em ~/.clipfusion/clipfusion.db, isolado do código do projeto.
+6. Pipeline de Processamento de Vídeo
+
+O pipeline é otimizado para extrair o máximo da Intel HD 520, evitando conflitos de driver e gargalos de memória.
+6.1 Ingestão (core/ingest.py)
+
+    Cria uma estrutura de pastas única para cada projeto:
+    text
+
+workspace/projects/Nome_Projeto_AAAAMMDD_HHMMSS/
+├── source/        # Vídeo original (cópia)
+├── work/          # Arquivos intermediários
+├── output/        # Cortes renderizados
+└── state/         # Metadados e estado do projeto
+
+    Essa organização resolve o problema de "pastas bagunçadas" que você enfrentava, onde arquivos de diferentes projetos se misturavam.
+
+6.2 Transcrição (core/transcribe.py)
+
+    Utiliza faster-whisper (implementação otimizada do Whisper) com detecção automática de idioma.
+    Parâmetros ajustados para 8GB RAM:
+
+        beam_size=5, best_of=5 (compromisso entre qualidade e consumo).
+        vad_filter=True (filtro de atividade de voz) para reduzir processamento em silêncios.
+        compute_type="int8" para usar quantização e acelerar em CPU.
+
+    Após a transcrição, o modelo é explicitamente destruído (del model) e o GC é chamado, liberando a memória.
+
+6.3 Filtro de Qualidade (core/transcription_quality.py)
+
+    Calcula um score de qualidade baseado na densidade de palavras por segmento.
+    Segmentos com qualidade abaixo de 0.75 (ajustável) são descartados antes de gerar candidatos, evitando que trechos ruidosos ou mal transcritos contaminem o processo.
+
+6.4 Micro-Segmentação (core/segment.py e core/candidate_engine.py)
+
+    Em vez de janelas fixas de 55 segundos (que diluem o gancho), o sistema segmenta o áudio baseado em pausas naturais da fala.
+    Algoritmo: percorre os segmentos do Whisper e agrupa até atingir um limite de duração (18–35s) ou quando uma pausa > 0.5s é detectada.
+    Isso gera microcandidatos com narrativa mais coesa e maior densidade de informação.
+
+6.5 Renderização 2-pass (Proteção e Legendas)
+
+A Intel HD 520 tem uma limitação conhecida: tentar aplicar legendas e filtros complexos diretamente no fluxo VA-API pode causar buffer overflow ou travamento do driver. A solução é o render em duas passagens:
+
+Passo 1 (Hardware - VA-API):
+
+    Decodificação do vídeo original.
+    Aplicação de filtros de proteção (zoom, cor, ruído) via hardware.
+    Saída: um vídeo intermediário sem legendas.
+
+Passo 2 (Software - libx264):
+
+    Sobreposição de legendas (usando subtitles filter) e elementos gráficos.
+    Re-encode com libx264 (já que o arquivo intermediário é pequeno, o custo é baixo).
+
+Comando base:
+bash
+
+# Passo 1 (VA-API)
+ffmpeg -hwaccel vaapi -hwaccel_device /dev/dri/renderD128 -i input.mp4 \
+  -vf "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,format=nv12,hwupload" \
+  -c:v h264_vaapi -qp 24 intermediate.mp4
+
+# Passo 2 (libx264)
+ffmpeg -i intermediate.mp4 -vf "subtitles=legendas.srt" \
+  -c:v libx264 -preset fast -crf 22 -c:a copy output.mp4
+
+6.6 Gerenciamento de Memória Durante Render
+
+    A cada corte renderizado, o sistema chama gc.collect() e também libera explicitamente objetos do FFmpeg.
+    Isso evita que o uso de memória acumule e cause OOM (Out of Memory) após múltiplos cortes.
+
+7. Motor Viral e Scoring Emocional
+
+O motor viral (viral_engine/) é o cérebro que decide o que merece virar corte. Ele é baseado em 10 arquétipos emocionais e um sistema de pontuação multi-fator.
+7.1 Os 10 Arquétipos Emocionais
+Arquétipo	Gatilho	Exemplo de Hook	Peso Inicial
+Curiosidade	"Você sabia que...", "O segredo de..."	"O que ninguém te conta sobre [tema]"	0.30
+Medo/Urgência	"Cuidado", "Pare agora", "Isso pode destruir"	"Se você faz isso, pare imediatamente!"	0.28
+Ganância	"Lucro", "Ganhe dinheiro", "Multiplique"	"Como ganhar [X] em [Y] dias"	0.26
+Prova Social	"Milhares de pessoas", "Todo mundo está"	"O que [influenciador] não te contou"	0.24
+Autoridade	"Especialista revela", "Ciência prova"	"Estudo de Harvard mostra que..."	0.22
+Empatia	"Eu entendo sua dor", "Já passei por isso"	"Se você já sentiu [dor], esse vídeo é pra você"	0.20
+Indignação	"Isso é um absurdo", "Não podemos aceitar"	"A verdade sobre [assunto] que ninguém quer que você saiba"	0.27
+Exclusividade	"Só para poucos", "Conteúdo VIP"	"O método secreto que [profissionais] usam"	0.23
+Alívio	"Finalmente", "A solução definitiva"	"Chega de sofrer com [problema]"	0.21
+Transformação	"Antes e depois", "Mudei minha vida"	"Como eu saí do zero em 30 dias"	0.25
+7.2 Scoring Engine (core/scoring_engine.py)
+
+Para cada candidato, são calculadas subnotas independentes:
+Nota	Descrição	Métrica
+hook_strength	Força do gancho nos primeiros 3s	Presença de palavras de gatilho, posição, intensidade (?)
+retention_score	Capacidade de prender a atenção	Densidade de palavras de continuidade ("mas", "porém", "então")
+moment_strength	Presença de "virada" ou clímax	Palavras de mudança ("descobri", "repentinamente")
+shareability	Probabilidade de compartilhamento	Palavras de alta excitação ("incrível", "chocante")
+platform_fit_*	Adequação a TikTok/Reels/Shorts	Comprimento do texto, densidade

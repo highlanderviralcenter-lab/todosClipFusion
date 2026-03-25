@@ -1,0 +1,28 @@
+ardware: Lenovo 310-15ISK  •  i5-6200U (Skylake)  •  Intel HD 520  •  8GB RAM  •  SSD 480GB
+NVIDIA 920MX: DESABILITADA (consume energia sem benefício para ClipFusion)
+Escrito por: Highlander  •  Março 2026  •  v3.0 REVISADA E CORRIGIDA
+
+⚠️  13 CORREÇÕES APLICADAS nesta versão vs plano anterior
+CPU corrigida para i5-6200U  •  NVIDIA bloqueada via modprobe  •  enable_guc=3  •  ZRAM zstd+4GB  •  swappiness=150  •  Docker overlay2  •  swap nodatacow+dd  •  TDP turbo ratio correto  •  thermald adicionado  •  zstd:3 em todos os subvolumes  •  fstrim.timer  •  overcommit controlado  •  validate.sh atualizado
+
+🚫 NVIDIA 920MX — Por que desabilitar TOTALMENTE
+Critério	NVIDIA 920MX	Intel HD 520
+TDP idle	8-10W sempre ativa	0W extra (no chip)
+Temperatura medida	52°C idle (HWMonitor)	+0°C
+VA-API (QSV encode)	❌ Não suporta	✅ h264_vaapi nativo
+NVENC (encode HW)	❌ Kepler: sem suporte	— (não precisa)
+ClipFusion render	❌ Zero benefício	✅ Acelera encode
+VRAM útil	2GB DDR3 64-bit (lento)	Compartilha RAM DDR4
+Drivers Linux	Problemático c/ Optimus	✅ i915 nativo
+
+📋  A 920MX estava a 52°C em IDLE no Windows. No Linux sem Optimus configurado = igual. Desabilitar via modprobe é obrigatório.
+
+O que teremos no final:
+•	Sistema enxuto (i3wm, não GNOME pesado) — libera ~400MB RAM
+•	Intel HD 520 com VA-API QSV (h264_vaapi) — encode 3x mais rápido que CPU pura
+•	NVIDIA 920MX completamente desabilitada — -10W, -12°C
+•	BTRFS com 6 subvolumes + snapshots semanais automáticos
+•	ZRAM 4GB (zstd) + Swap 2GB no SSD — memória efetiva ~14GB
+•	Docker com overlay2 + limites corretos
+•	PostgreSQL + pgvector para busca semântica
+•	TDP unlock configurado para o i5-6200U real

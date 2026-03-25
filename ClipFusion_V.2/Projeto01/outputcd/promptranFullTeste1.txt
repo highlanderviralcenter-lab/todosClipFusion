@@ -1,0 +1,267 @@
+Você é especialista em engenharia de retenção e viralização de conteúdo curto.
+## CONTEXTO
+video longo total config
+
+## DURAÇÃO TOTAL
+02:46:00
+
+## OBJETIVO
+Encontrar de 3 a 8 cortes realmente fortes para vídeo curto vertical.
+Você DEVE analisar o vídeo inteiro de forma distribuída, não só o começo.
+Priorize:
+- gancho forte nos primeiros 1–3s;
+- promessa clara, conflito, surpresa, contraste, utilidade ou revelação;
+- cortes entre 15s e 75s, preferencialmente 20s–60s;
+- linguagem com potencial de comentário, compartilhamento e retenção.
+
+## MAPA DE JANELAS PRIORITÁRIAS
+- W94 | score 43.2 | 00:47:00–00:47:55 | duração 55s
+- W116 | score 43.2 | 00:58:00–00:58:55 | duração 55s
+- W301 | score 43.2 | 02:30:30–02:31:25 | duração 55s
+- W256 | score 43.0 | 02:08:00–02:08:55 | duração 55s
+- W135 | score 41.4 | 01:07:30–01:08:25 | duração 55s
+- W283 | score 41.4 | 02:21:30–02:22:25 | duração 55s
+- W11 | score 41.2 | 00:05:30–00:06:25 | duração 55s
+- W18 | score 41.2 | 00:09:00–00:09:55 | duração 55s
+- W28 | score 41.2 | 00:14:00–00:14:55 | duração 55s
+- W43 | score 41.2 | 00:21:30–00:22:25 | duração 55s
+- W48 | score 41.2 | 00:24:00–00:24:55 | duração 55s
+- W65 | score 41.2 | 00:32:30–00:33:25 | duração 55s
+
+## TRANSCRIÇÃO POR JANELAS PRIORITÁRIAS
+### W94 | score 43.2 | 00:47:00–00:47:55
+[00:46:58] What is George Carlin's thing?
+[00:47:01] Like, where'd?
+[00:47:03] So I studied all of the comedy masters regardless of the field.
+[00:47:07] Because I loved to laugh.
+[00:47:10] I didn't know that these people were making a great living at doing this.
+[00:47:14] I thought this is just what they did.
+[00:47:17] They tell jokes.
+[00:47:18] They're funny people.
+[00:47:19] But I loved the craft.
+[00:47:21] And that's why when I got into the craft,
+[00:47:24] I thought it was my obligation to make sure that I can't
+[00:47:27] write new materials so much that it forced these comedians to stop doing the set.
+[00:47:33] They've been doing for 10 years and keep writing some new stuff.
+[00:47:37] And I knew that if I could get that to take on,
+[00:47:40] that most of these bombs will have to just quit comedy.
+[00:47:43] Because they can't keep up.
+[00:47:44] They're not going to keep writing an hour or were from material.
+[00:47:47] I've written an hour were from material 19 times.
+[00:47:51] They're not going to do it.
+[00:47:53] Bye.
+[00:47:53] Because they're not creative writers.
+
+### W116 | score 43.2 | 00:58:00–00:58:55
+[00:57:59] When did you know you were funny?
+[00:58:05] Probably about 10 years ago.
+[00:58:10] 10 years ago?
+[00:58:11] Yeah, about 10 years.
+[00:58:13] So you didn't think of a child.
+[00:58:15] Because obviously, you said the bear structure background,
+[00:58:18] your family was very religious.
+[00:58:20] So obviously, you didn't get an opportunity.
+[00:58:24] I never did a talent show.
+[00:58:26] I was never in any extra curricular activities.
+[00:58:29] I was never in drama.
+[00:58:30] I was never in bank account.
+[00:58:32] Never a boy's guy.
+[00:58:33] I hate his dance school all the time.
+[00:58:34] I would love to get for it because you dropped.
+[00:58:36] You understand?
+[00:58:37] You understand?
+[00:58:38] So there was no, like, I don't, I don't tolerate high school games.
+[00:58:45] I didn't go to high school.
+[00:58:46] I don't know how most of the games they think I play.
+[00:58:49] I'm not even aware of them.
+[00:58:51] But, but can't for you to get on stage.
+[00:58:54] And like I said, a lot of people like a lot of comedians
+
+### W301 | score 43.2 | 02:30:30–02:31:25
+[02:30:28] Do you mind if he takes it?
+[02:30:30] It helps him eat.
+[02:30:32] Because he does 19, 100 city tours, flying across the line.
+[02:30:37] And so he doesn't get hungry on the regular.
+[02:30:40] He doesn't get sleepy at night.
+[02:30:42] He's got to literally put himself to sleep.
+[02:30:44] He's got to make his healthy.
+[02:30:46] So this marijuana helps him do both of those things.
+[02:30:51] I want to hear this sweet.
+[02:30:53] Oh yeah.
+[02:30:55] Because remember as a comedian, what you're doing is against your natural timeline.
+[02:31:00] Your natural timeline wouldn't be that you would start your work day at 8 o'clock PM.
+[02:31:05] And then your work day is over at 23 AM.
+[02:31:09] Like that's a weird, right?
+[02:31:12] You tell your body now that we're pumped up on endorphins.
+[02:31:15] Now let's go to sleep at 3.
+[02:31:18] They don't work like that.
+[02:31:19] Your body has to try to get a whole new schedule.
+[02:31:22] So you know, it's suffered, but that's what worked for me.
+
+### W256 | score 43.0 | 02:08:00–02:08:55
+[02:07:58] So would you have a co-habitation agreement?
+[02:08:01] Never.
+[02:08:02] How?
+[02:08:03] I'm going to be a single parent and be married.
+[02:08:05] You two, you know, there are people that like, were married and then they get divorced and then they become single parents.
+[02:08:10] That's how they work.
+[02:08:13] Yeah, the person who's never been married means he'd never been married.
+[02:08:17] Okay.
+[02:08:18] I'm going to take you away for it.
+[02:08:21] Why would you need to take my word for it?
+[02:08:23] Oh, no, no.
+[02:08:24] If I had been married, wouldn't it somebody say who she was?
+[02:08:27] No.
+[02:08:28] If I had been long time ago.
+[02:08:30] No.
+[02:08:31] I've never been family-sara.
+[02:08:32] I've just, I just worked in the story out to you.
+[02:08:35] That, I don't have no hidden mysteries in my life.
+[02:08:38] That was Jesus.
+[02:08:39] I don't have no periods in my life where it's unaccounted for her.
+[02:08:43] No, no, no.
+[02:08:44] That person that said that was a liar.
+[02:08:46] I got a case right now in LA this lady said she was my assistant for four days.
+[02:08:49] And I heard her and something like that.
+[02:08:52] I never worked for me not until they in my life.
+
+### W135 | score 41.4 | 01:07:30–01:08:25
+[01:07:30] What's her?
+[01:07:31] They were talking about it.
+[01:07:32] What part would have been different if she was a man?
+[01:07:36] It would have just been more vicious.
+[01:07:37] You did that that's my point.
+[01:07:39] I took all the vicious and dynamo way because I didn't have any.
+[01:07:45] Plus I understood.
+[01:07:46] I'm not trying to offend black women with short hair.
+[01:07:50] I'm not trying to offend heavy set women.
+[01:07:53] I'm not trying to upset fellow comedians.
+[01:07:56] I'm not trying to do any of that.
+[01:07:58] And I can't.
+[01:07:59] I am qualified to be able to do none of that and still eviscerate you because I'm smart enough to know
+[01:08:06] that I need to say that you have narrowed fingers because I know you're limited education.
+[01:08:10] Means you don't know what the word means.
+[01:08:13] So you can't possibly respond to it.
+[01:08:15] You're not sure of the meaning.
+[01:08:18] And I'm going to continue hitting you because this is what comedians do.
+[01:08:22] Right.
+[01:08:22] You've been masturbating that you're a comedian too.
+
+### W283 | score 41.4 | 02:21:30–02:22:25
+[02:21:26] They're like, like we put too much pressure on Tyler Perry.
+[02:21:30] You know what I mean?
+[02:21:31] He ain't putting nobody on.
+[02:21:33] The people that been in his productions, they're not famous all of them,
+[02:21:36] could walk through them all without security.
+[02:21:39] Being what you're going to be, but put your people on.
+[02:21:42] If you were gay person and you in there, put some other gay people on.
+[02:21:48] Put somebody on.
+[02:21:50] Or don't be wondering why people keep saying gay keepers.
+[02:21:55] Because clearly, y'all are keeping these gates.
+[02:21:58] Clearly.
+[02:22:00] Why, I know how difficult was it for Nick Cannon to get you on and what was that?
+[02:22:05] What was that experience like?
+[02:22:08] I've known Nick Cannon since he was a teenager.
+[02:22:11] He had to have his, he in the comedy club.
+[02:22:14] If you're under age, you can't be in the regular club.
+[02:22:17] You had to be in the kitchen.
+[02:22:19] Right.
+[02:22:20] So I was the master of the kitchen every comedy place because I got a child.
+[02:22:24] And my child is back here in this place while I go on stage.
+
+### W11 | score 41.2 | 00:05:30–00:06:25
+[00:05:28] Where did he say he watched it at home?
+[00:05:31] He wasn't even at the premiere.
+[00:05:33] You telling this man, you stole that.
+[00:05:35] Also, he could get his name in the same sentence.
+[00:05:39] What a great one.
+[00:05:40] It is sad.
+[00:05:41] He was just that bitter when we were shooting it.
+[00:05:44] He told everybody, it should have been my role.
+[00:05:47] Everybody on the scene.
+[00:05:48] Why do you think no cast member has ever said anything?
+[00:05:52] He could have played that role like you.
+[00:05:53] I thought he was a fair.
+[00:05:54] No one, why no.
+[00:05:57] He was with Katie.
+[00:05:59] He beat up Terry Cruz.
+[00:06:00] Why nobody know this story.
+[00:06:02] You talking about a Hollywood they switched off role.
+[00:06:05] You take this and he.
+[00:06:06] What?
+[00:06:07] Ricky smiley knows this.
+[00:06:11] I don't know why he would lose a child and come on the air and start lying.
+[00:06:15] That's why people believe in rituals right there.
+[00:06:18] It's because, well, why would he lie?
+[00:06:19] I don't know why lie your life.
+[00:06:21] But I can tell you this.
+[00:06:23] We auditioned in Los Angeles.
+
+### W18 | score 41.2 | 00:09:00–00:09:55
+[00:08:59] Did he wear a dress in it?
+[00:09:01] You bet he did.
+[00:09:02] It's in my contract.
+[00:09:05] Why would you put that in your Twitter's can?
+[00:09:06] Your contract cat?
+[00:09:08] That's where he's the unbelievable actor.
+[00:09:11] Him and Tyler Perry can't play a man to say it a life.
+[00:09:15] They play good women.
+[00:09:17] And I believe that the best actor should be in the best role.
+[00:09:21] So that's why because when we released that clip and he said that you responded because
+[00:09:26] he said he was supposed to play money in you were supposed to play Santa Claus.
+[00:09:31] Now right line.
+[00:09:32] That he knows is a lie.
+[00:09:34] So why would he say it?
+[00:09:36] Because he's a liar.
+[00:09:37] Nobody knows why liar's lie.
+[00:09:39] And that's why I had to come on the program.
+[00:09:41] Sedric did the same thing.
+[00:09:43] Sedric told you when you asked him did you still cat Williams joke.
+[00:09:46] He said it don't lie in up.
+[00:09:48] How it don't lie in up that I did it on TV in 2018.
+[00:09:52] You came to see me at the comedy store, do it in 2019 and then did it on the Kings of
+
+## ARQUÉTIPOS DISPONÍVEIS
+- 01_despertar: Curiosidade + Urgência — Algo que muda a percepção — o espectador descobre que estava errado sobre algo importante.
+- 02_tensao: Medo + Antecipação — Risco iminente, prazo, ameaça — o espectador sente urgência.
+- 03_confronto: Raiva + Determinação — Enfrentamento direto — opinião forte, posição clara, contra-narrativa.
+- 04_virada: Esperança + Empoderamento — Mudança de perspectiva — existe um caminho melhor que poucos conhecem.
+- 05_revelacao: Surpresa + Fascínio — Segredo revelado, dado inesperado — informação que poucos têm.
+- 06_justo_engolido: Injustiça + Revolta — Alguém sendo prejudicado — o espectador quer justiça.
+- 07_transformacao: Superação + Inspiração — Jornada antes/depois — prova social de que a mudança é possível.
+- 08_resolucao: Alívio + Satisfação — Solução entregue, problema resolvido — valor prático imediato.
+- 09_impacto: Choque + Admiração — Número forte, resultado surpreendente, escala inesperada.
+- 10_encerramento: Realização + Fechamento — Lição aprendida, conclusão poderosa — o espectador sai com algo.
+
+## PLATAFORMAS
+- tiktok: vertical 9:16, ideal 30–60s, máx 180s
+- reels: vertical 9:16, ideal 15–60s, máx 90s
+- shorts: vertical 9:16, máx 60s
+
+## TAREFA
+Retorne somente os melhores cortes.
+Você pode escolher trechos dentro das janelas acima ou combinar partes adjacentes,
+mas os timestamps devem ser exatos.
+Evite cortes redundantes, mornos ou que demoram para “entrar”.
+
+## RESPOSTA — SOMENTE JSON, SEM MARKDOWN
+{
+  "cortes": [
+    {
+      "titulo": "título (máx 60 chars)",
+      "start": 123.4,
+      "end": 187.2,
+      "archetype": "05_revelacao",
+      "hook": "o que prende nos primeiros 3 segundos",
+      "reason": "por que vai viralizar (2 frases)",
+      "platforms": ["tiktok", "reels", "shorts"],
+      "metadata": {
+        "titulo_post": "título para publicação",
+        "descricao": "2–3 frases",
+        "hashtags": ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5"]
+      }
+    }
+  ]
+}
+
+Analise agora:

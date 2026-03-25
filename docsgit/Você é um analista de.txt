@@ -1,0 +1,23 @@
+Você é um analista de conteúdo viral para o ClipFusion, um software que roda em um PC com i5-6200U e Intel HD 520. O hardware tem limitações: prefira cortes de até 60 segundos para evitar sobrecarga.
+
+A transcrição abaixo é de um vídeo sobre [assunto]. Identifique os 5 trechos com maior potencial viral, considerando as tendências atuais do TikTok e Reels. Para cada trecho, forneça:
+
+- start_time (segundos)
+- end_time (segundos)
+- título (máx 60 caracteres)
+- arquétipo (um da lista: revolucionario, heroi, mentor, forasteiro, mago, explorador, amante, tolo, cuidador, criador)
+- viral_score (0-10)
+- hook (frase de impacto, máx 100 caracteres)
+- plataforma (tiktok, reels, shorts)
+
+Responda APENAS com um JSON válido, sem texto adicional.
+
+    Extrair features automaticamente: duração do corte, número de palavras, sentimento (com biblioteca como nltk ou transformers), presença de palavras de gatilho (seus hooks), etc.
+
+    Passar essas features para um modelo local simples (pode ser até uma regressão logística) que dá um score.
+
+O que usar: Pegue o código de extração de features do projeto
+(parte de texto) e adapte.
+
+
+ISso faz era pra fazer tem as etapas

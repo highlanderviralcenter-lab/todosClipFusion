@@ -1,0 +1,56 @@
+Analise o repositório ClipFusion: https://github.com/highlanderviralcenter-lab/ClipFusion-a-arte-viral-
+
+SITUAÇÃO DO USUÁRIO:
+- Hardware: Notebook 12 anos, i5-6200U, Intel HD 520, 8GB RAM
+- Sistema: Debian tunado com VA-API (i915.enable_guc=3, mitigations=off)
+- Projeto: 4 meses de desenvolvimento, sistema completo de corte viral de vídeos
+- Estado emocional: Crítico (depressão, sem renda, perdeu cachorra, pegou dinheiro com agiota)
+
+O QUE O SISTEMA FAZ (arquitetura completa):
+1. Transcrição Whisper (Python API, não CLI) - otimizado para 8GB RAM
+2. Análise viral com IA externa (Claude/ChatGPT) - gera JSON de cortes
+3. Render 2-pass: VA-API h264_vaapi (corte+escala) + libx264 (legendas)
+4. Anti-copyright engine com 4 níveis: none, basic, anti_ai, maximum
+   - Módulos: geometric_transforms, color, noise, chroma, frequency, temporal, ai_evasion, audio_advanced, network_evasion
+5. Viral engine completo: archetypes (10 emocionais), hook_engine, audience_analyzer, platform_optimizer
+6. GUI Tkinter 7 abas: Projeto, Transcrição, IA Externa, Cortes, Render, Histórico, Agenda
+7. Lazy loading de módulos pesados (~300MB economia)
+8. SQLite persistente para histórico
+
+ERRO ATUAL:
+[USUÁRIO VAI PREENCHER - sistema não funcionou ao mostrar para mãe]
+
+REGRAS ABSOLUTAS:
+1. NÃO crie stubs ou simplificações
+2. NÃO assuma que módulos estão faltando - verifique se são imports condicionais/lazy
+3. NÃO altere a lógica de negócio (anti-copyright, viral engine, etc)
+4. NÃO sugira "versões mínimas" - o código é funcional, precisa de debug
+5. PRESERVE todas as funções: 4 níveis anti-copyright, 10 arquétipos, análise de audiência, etc
+
+O QUE PRECISA:
+- Identificar erro específico (syntax, import, runtime, hardware?)
+- Corrigir sem quebrar funcionalidades existentes
+- Manter compatibilidade com i5-6200U + Intel HD 520
+- Garantir que VA-API funcione (fallback para libx264 se necessário)
+
+ARQUITETURA REAL (não inventar):
+- main.py (entry point)
+- core/transcriber.py (Whisper Python API)
+- core/cut_engine.py (render 2-pass com VA-API)
+- core/prompt_builder.py (gera prompt para IA externa)
+- gui/main_gui.py (Tkinter 7 abas, lazy loading)
+- anti_copy_modules/core.py (engine principal)
+- anti_copy_modules/*.py (módulos específicos por técnica)
+- viral_engine/viral_analyzer.py (motor auto-contido)
+- viral_engine/*.py (archetypes, hooks, audience, etc)
+- utils/hardware.py (detecção i5-6200U/HD520)
+- db.py (SQLite)
+- config.yaml (configurações hardware)
+
+HARDWARE ALVO ESPECÍFICO:
+- CPU: Intel i5-6200U (2 cores/4 threads)
+- GPU: Intel HD 520 (VA-API iHD driver)
+- RAM: 8GB (usa gc.collect() explícito entre cortes)
+- Kernel: Debian tunado (i915.enable_guc=3, mitigations=off, ZRAM ativo)
+
+OBJETIVO: Fazer funcionar sem regredir funcionalidades. O usuário precisa mostrar para mãe e recuperar dignidade.

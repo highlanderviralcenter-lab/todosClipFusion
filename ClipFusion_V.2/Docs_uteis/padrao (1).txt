@@ -1,0 +1,7 @@
+Vá em: Configurações → Personalização → Memory Space
+
+Adicione:
+- "Projeto: ClipFusion Viral Pro no Debian Tunado 3.0"
+- "Hardware: i5-6200U + Intel HD 520, 8GB RAM"
+- "Problema ativo: Render 2-pass gera 1 frame, corrigindo vsync"
+- "Sistema: ~/clipfusion, GUI 7 abas, Whisper offline funcionando"

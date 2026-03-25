@@ -1,0 +1,12 @@
+venv/
+.venv/
+workspace/
+__pycache__/
+*.pyc
+.env
+*.log
+*.zip
+*.mp4
+*.mkv
+*.avi
+*.mov

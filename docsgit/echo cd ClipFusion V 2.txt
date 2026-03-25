@@ -1,0 +1,2 @@
+echo "  cd ~/ClipFusion_V.2"
+echo "  ./run.sh"

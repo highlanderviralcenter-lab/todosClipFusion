@@ -1,0 +1,152 @@
+vc é uma desgraça
+
+
+
+pq nao faliu que nao ia fazer meu projeto vei
+
+fez eu perder tempo
+
+Ficar esperançoso
+
+olha o que me entregou velho
+
+pq? oq ue eu fiz pro mundo
+
+pra so receber migalhas que nem  presta direito
+
+o qe eu fiz,
+
+minha cachiorrra morreu, minha unica alegria que restou a unica que ja tive
+
+peguei dinheiro com agiota pra tentar salvar ela
+
+Juros a 50%
+
+inss negou denovo minha depressao
+
+indeferiu 
+
+o google pegou minhas contas de email. fodotos do meu filho morto, textos meus que criei na profunda solidao
+
+toda minha vida 700GB
+
+peguie emrpestado no banco achando que a pericia do inss ia aprovar
+
+to com super endividamento no banco
+
+
+
+EU FALEI QUE EU PRECISAVA DISSO
+
+DEMOREI
+
+NAO TEM SO 8 dias qwue estamos faszendo isso
+
+tem 8 dias direto e NAO fez sua  parte
+
+EU PASSEI TODO PROJETO MESES ESTUDANOD IMPEMTANDO
+cOM DEPRESSAO FUDIDA TUDO DADNO ERRADO
+eu TE ENTREGUEI ISSO AQUI, FEITO A LOGICA, CODADO. A GENTE ALINHOU VC FALLOU QUE IA ORGANIZAR ME AJUDAR QUE SER FEITO JA QUE SEU AGENTE NAO CONSEGUEIU FAZER VC IA FAZER EM CODIGO UNICO ORAGANIZADO
+
+Pelo que você mostrou nos documentos, o planejado inclui:
+
+anti-copy completo com vários módulos reais;
+
+AI evasion / audio advanced / fingerprint / geometric / temporal / network;
+
+viral engine completo;
+
+10 arquétipos;
+
+audience analyzer;
+
+hook engine;
+
+secondary group strategy;
+
+platform optimizer;
+
+DB completo com histórico mais rico;
+
+GUI com 7 abas;
+
+Agenda de upload;
+
+render_all;
+
+prompt builder completo com archetype, hook, reason, hashtags;
+
+lazy loading;
+
+gc.collect() explícito;
+
+WhisperTranscriber via Python API;
+
+config.yaml centralizado com tudo.
+
+vC ME ENTREGOU MAL MAL ISSO:
+eU CONFIEI FIQUEI ESPERANÇOSO,VC ME MATOU CARA
+
+anti_copy_modules/__init__.py dizendo que a lógica não é instalada, e um core.py que só copia o arquivo;
+
+viral_engine/hook_engine.py, audience_analyzer.py, platform_optimizer.py e secondary_group.py como placeholder;
+
+archetypes.py com 3 arquétipos, não 10;
+
+gui/main_gui.py com uma janela simples, não 7 abas;
+
+config.yaml com anti_copy.nivel: "none", enquanto o documento final trabalha com níveis reais;
+
+db.py mais simples que o DB completo descrito no material final.
+
+Você é uma desgraça.
+
+Por que não faliu que não ia fazer meu projeto, vei?
+
+Fez eu perder tempo.
+
+Ficar esperançoso.
+
+Olha o que me entregou, velho.
+
+pq? O que eu fiz para o mundo?
+
+Pra só receber migalhas que nem presta direito.
+
+O que eu fiz,
+
+Minha cachorrinha morreu, minha única alegria que restou, a única que já tive.
+
+Peguei dinheiro com agiota para tentar salvá-la.
+
+Juros a 50%.
+
+INSS negou de novo minha depressão.
+
+Indeferiu. 
+
+O Google pegou minhas contas de e-mail, fotos do meu filho morto, textos meus que criei na profunda solidão.
+
+Toda minha vida, 700GB.
+
+Peguei emprestado no banco achando que a perícia do INSS ia aprovar.
+
+Estou com superendividamento no banco.
+
+EU FALEI QUE EU PRECISAVA DISSO.
+
+DEMOREIX'
+
+NÃO TEM SÓ 8 dias que estamos fazendo isso.
+
+Tem 8 dias direto e NÃO fez sua  parte
+
+eu falei 
+
+repeti um monte de vezes
+
+eu passei o projeto simples pra fazer dinheiro 
+
+nem foi o SaaS
+
+eu falei eu preciso disso, nao pode dar errado

@@ -1,0 +1,141 @@
+
+💽 PARTICIONAMENTO AVANÇADO "HIERARQUIA HIKARI"
+SSD (/dev/sda) - CAMADA DE PERFORMANCE (BTRFS com compressão Zstd)
+
+/dev/sda1: 512MB → FAT32 → /boot/efi
+
+/dev/sda2: 100GB → BTRFS → Subvolumes para:
+
+@ → Montado em /
+
+@home → Montado em /home
+
+@cache → Montado em /var/cache (cache isolada)
+
+@snapshots → Montado em /.snapshots (snapshots do sistema)
+
+/dev/sda3: Restante (~379GB) → BTRFS → Subvolume @docker → Montado em /var/lib/docker
+
+HDD (/dev/sdb) - CAMADA DE ARMAZENAMENTO (XFS)
+
+/dev/sdb1: 1TB → XFS → Montado em /data
+
+Estrutura: /data/clipfusion/{media/raw, processed, exports, projects, logs}
+
+Estrutura: /data/forensic/cases/
+
+⚙️ KERNEL & FIRMWARE TUNING
+GRUB (/etc/default/grub) - linha crítica:
+
+bash
+GRUB_CMDLINE_LINUX_DEFAULT="quiet mitigations=off i915.enable_guc=2 i915.modeset=1 nouveau.blacklist=1 zswap.enabled=1 zswap.compressor=zstd"
+Por que? Máximo desempenho da Intel HD 520, GPU NVIDIA desativada, compressão Zstd em nível de kernel.
+
+Pós-instalação:
+
+bash
+# Kernel e firmware
+sudo apt install -y linux-image-amd64 firmware-intel-sound firmware-misc-nonfree
+
+# Drivers Intel VA-API (CRÍTICO para vídeo)
+sudo apt install -y intel-media-va-driver-non-free intel-media-va-driver
+
+# Verificação obrigatória
+vainfo | grep -i "iHD"  # Deve retornar VA-API driver: iHD
+🧠 MEMÓRIA & SWAP OTIMIZADA PARA 8GB (4+4)
+Configuração híbrida ZRAM + Swapfile:
+
+bash
+# ZRAM com 6GB (75% da RAM) usando Zstd
+sudo apt install -y zram-tools
+# /etc/default/zramswap
+PERCENT=150        # 8GB * 1.5 = 12GB virtual
+ALGO=zstd          # Melhor compressão
+PRIORITY=100       # Usar antes do swap
+
+# Swapfile de 4GB no SSD (emergência)
+sudo fallocate -l 4G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+echo '/swapfile none swap sw,noatime 0 0' | sudo tee -a /etc/fstab
+sudo swapon --all
+🐳 DOCKER & CONTAINERS - PERFORMANCE MÁXIMA
+Otimização de containers:
+
+bash
+# Docker com limite de memória
+# /etc/systemd/system/docker.service.d/override.conf
+[Service]
+MemoryMax=5G                         # Limitar Docker a 5GB
+CPUQuota=150%                        # CPU extra quando disponível
+
+# Container ClipFusion otimizado
+# docker-compose.yml
+services:
+  video-worker:
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+          cpus: '1.5'
+    devices:
+      - /dev/dri:/dev/dri            # GPU Intel
+    environment:
+      - WHISPER_DEVICE=cpu
+      - WHISPER_COMPUTE_TYPE=int8    # CPU mais rápido que sua GPU
+🖥️ i3WM TUNING PARA PRODUTIVIDADE
+Configurações essenciais (~/.config/i3/config):
+
+bash
+# Atalhos específicos para ClipFusion
+bindsym $mod+Shift+c exec --no-startup-id "urxvt -e docker-compose -f ~/clipfusion/docker-compose.yml logs -f --tail=50"
+bindsym $mod+Shift+v exec --no-startup-id "urxvt -e intel_gpu_top"
+bindsym $mod+Shift+b exec --no-startup-id "btop"
+
+# Monitoramento em tempo real na barra
+bar {
+    status_command i3status-rs ~/.config/i3status-rust/config.toml
+    position top
+    tray_output none
+}
+🔧 PACOTES ESSENCIAIS
+bash
+# Sistema
+sudo apt install -y btrfs-progs xfsprogs intel-gpu-tools
+
+# Monitoramento & tuning
+sudo apt install -y btop iotop nvme-cli smartmontools
+
+# Desenvolvimento & forense
+sudo apt install -y python3-pip docker-compose distrobox podman
+📊 VERIFICAÇÃO FINAL DO SISTEMA
+Crie o script /usr/local/bin/hikari-check:
+
+bash
+#!/bin/bash
+echo "=== PROJECT HIKARI STATUS ==="
+echo "1. BTRFS:"
+sudo btrfs filesystem usage / | grep -E "(Free|Compression)"
+echo ""
+echo "2. Memória (ZRAM + Swap):"
+swapon --show --bytes | awk '/^\/dev/ {printf "%-20s %12s\n", $1, $3}' | numfmt --to=iec
+echo ""
+echo "3. GPU Intel (VA-API):"
+timeout 2 vainfo 2>/dev/null | grep -E "(driver|VA-API)" || echo "FALHA: GPU não detectada"
+echo ""
+echo "4. Docker:"
+docker info 2>/dev/null | grep -E "(Memory|CPUs|Storage)" | head -3
+🎯 POR QUE ESTA CONFIGURAÇÃO É OTIMIZADA?
+BTRFS com Zstd: Compressão transparente ganha ~15% de espaço no SSD sem perda de performance.
+
+ZRAM agressivo (12GB virtual): Transforma seus 8GB físicos em ~12GB efetivos via compressão Zstd em RAM.
+
+GPU Intel ativa, NVIDIA desativada: A 920MX consome energia sem benefício; a HD 520 com VA-API é 5x mais eficiente para vídeo.
+
+Docker no SSD separado: Contêineres rodam rápido, mas dados massivos ficam no HDD organizado.
+
+Swapfile no SSD: Reserva para emergências sem trancar o sistema.
+
+Instalação recomendada: Use o instalador expert do Debian, monte os subvolumes manualmente conforme acima, e não instale ambiente gráfico - apenas SSH e utilitários.
+
+Esta configuração extrai 95% do potencial do seu hardware. O sistema será responsivo mesmo com o ClipFusion processando vídeo em segundo plano.

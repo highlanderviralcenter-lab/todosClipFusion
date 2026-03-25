@@ -1,0 +1,1868 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# ClipFusion Viral Pro — Instalador Completo
+# Hardware: i5-6200U + Intel HD 520 + Debian Tunado 3.0
+# Uso: sudo bash clipfusion-ambiente.sh
+# ==============================================================================
+set -Eeuo pipefail
+
+GRN='\033[0;32m'; YEL='\033[1;33m'; RED='\033[0;31m'; BLU='\033[0;34m'; NC='\033[0m'
+ok()   { echo -e "${GRN}[✓]${NC} $1"; }
+warn() { echo -e "${YEL}[!]${NC} $1"; }
+info() { echo -e "${BLU}[>]${NC} $1"; }
+err()  { echo -e "${RED}[✗]${NC} $1"; exit 1; }
+
+TARGET_USER="${SUDO_USER:-${USER:-highlander}}"
+if [ "$TARGET_USER" = "root" ] && id highlander >/dev/null 2>&1; then
+  TARGET_USER="highlander"
+fi
+TARGET_HOME="$(getent passwd "$TARGET_USER" | cut -d: -f6 2>/dev/null || echo "/home/$TARGET_USER")"
+APP_DIR="$TARGET_HOME/clipfusion"
+DB_DIR="$TARGET_HOME/.clipfusion"
+
+[ "${EUID}" -eq 0 ] || err "Execute como root: sudo bash $0"
+
+echo ""
+echo "╔══════════════════════════════════════════════════════════╗"
+echo "║     ClipFusion Viral Pro — Instalação Completa         ║"
+echo "║     i5-6200U + Intel HD 520 + Debian Tunado 3.0        ║"
+echo "╚══════════════════════════════════════════════════════════╝"
+echo ""
+info "Usuário: $TARGET_USER  |  Pasta: $APP_DIR"
+
+# ── 1. Verificação do Debian Tunado ──────────────────────────────────────────
+info "Verificando Debian Tunado 3.0..."
+grep -q "i915.enable_guc=3" /proc/cmdline 2>/dev/null \
+  && ok "i915.enable_guc=3 ativo" \
+  || warn "i915.enable_guc=3 ausente — execute o Debian Tunado 3.0 primeiro"
+grep -q "mitigations=off" /proc/cmdline 2>/dev/null \
+  && ok "mitigations=off ativo" \
+  || warn "mitigations=off ausente"
+
+# ── 2. Dependências do sistema ───────────────────────────────────────────────
+info "Instalando dependências do sistema..."
+apt-get update -qq
+export DEBIAN_FRONTEND=noninteractive
+apt-get install -y \
+  python3 python3-pip python3-venv python3-tk \
+  ffmpeg git curl wget \
+  intel-media-va-driver-non-free \
+  libva-drm2 libva-x11-2 libva-glx2 \
+  i965-va-driver-shaders \
+  vainfo intel-gpu-tools \
+  lm-sensors >/dev/null
+ok "Dependências do sistema instaladas"
+
+# ── 3. VA-API ────────────────────────────────────────────────────────────────
+info "Validando VA-API Intel HD 520..."
+export LIBVA_DRIVER_NAME=iHD
+export LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
+if vainfo 2>&1 | grep -q "VAEntrypointEncSlice"; then
+  ok "VA-API iHD — H.264 encode disponível (3x mais rápido que CPU)"
+elif vainfo 2>&1 | grep -q "iHD\|i965"; then
+  warn "VA-API presente, encode não confirmado — vai funcionar"
+else
+  warn "VA-API não detectado — render usará CPU (libx264)"
+fi
+
+# Persiste vars no .bashrc do usuário
+grep -q "LIBVA_DRIVER_NAME" "$TARGET_HOME/.bashrc" 2>/dev/null || {
+  echo 'export LIBVA_DRIVER_NAME=iHD' >> "$TARGET_HOME/.bashrc"
+  echo 'export LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri' >> "$TARGET_HOME/.bashrc"
+  ok "LIBVA vars adicionadas ao .bashrc"
+}
+
+# ── 4. Estrutura de diretórios ───────────────────────────────────────────────
+info "Criando estrutura de diretórios..."
+install -d \
+  "$APP_DIR" "$DB_DIR" \
+  "$APP_DIR/utils" "$APP_DIR/core" "$APP_DIR/gui" \
+  "$APP_DIR/anti_copy_modules" "$APP_DIR/viral_engine" \
+  "$APP_DIR/config"
+ok "Estrutura criada"
+
+# ── 5. Escrita dos arquivos Python ───────────────────────────────────────────
+info "Escrevendo arquivos do projeto..."
+
+# ── requirements.txt ────────────────────────────────────────────────────────
+cat > "$APP_DIR/requirements.txt" << 'PYEOF'
+openai-whisper
+numpy
+pillow
+pyyaml
+PYEOF
+
+# ── config.yaml ──────────────────────────────────────────────────────────────
+cat > "$APP_DIR/config.yaml" << 'YAMLEOF'
+hardware:
+  encoder_preferido: "auto"
+  max_ram_gb: 6
+  usar_gpu_intel: true
+
+whisper:
+  modelo: "tiny"
+  idioma: "pt"
+  dispositivo: "cpu"
+
+render:
+  preset: "fast"
+  crf: 23
+  usar_vaapi: true
+
+anti_copy:
+  nivel: "basic"
+
+gui:
+  tema_escuro: true
+  janela_inicio: "1120x800"
+
+platforms:
+  - tiktok
+  - reels
+  - shorts
+YAMLEOF
+
+# ── main.py ──────────────────────────────────────────────────────────────────
+cat > "$APP_DIR/main.py" << 'PYEOF'
+#!/usr/bin/env python3
+"""ClipFusion Viral Pro — Entry point"""
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from gui.main_gui import ClipFusionApp
+
+if __name__ == "__main__":
+    ClipFusionApp().run()
+PYEOF
+
+# ── db.py ────────────────────────────────────────────────────────────────────
+cat > "$APP_DIR/db.py" << 'PYEOF'
+"""ClipFusion — SQLite. Histórico de projetos, transcrições e cortes."""
+import sqlite3, json, os
+from pathlib import Path
+
+DB_PATH = Path(os.path.expanduser("~")) / ".clipfusion" / "db.sqlite"
+
+def _conn():
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    c = sqlite3.connect(str(DB_PATH))
+    c.row_factory = sqlite3.Row
+    return c
+
+def init():
+    c = _conn()
+    c.executescript("""
+        CREATE TABLE IF NOT EXISTS projects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT, video_path TEXT,
+            status TEXT DEFAULT 'novo',
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE TABLE IF NOT EXISTS transcriptions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER, full_text TEXT, segments TEXT,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE TABLE IF NOT EXISTS cuts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER, cut_index INTEGER,
+            start_time REAL, end_time REAL,
+            title TEXT, archetype TEXT, hook TEXT, reason TEXT,
+            platforms TEXT, status TEXT DEFAULT 'pendente',
+            output_paths TEXT, metadata TEXT,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+    """)
+    c.commit(); c.close()
+
+def create_project(name, video_path):
+    c = _conn()
+    cur = c.execute(
+        "INSERT INTO projects (name,video_path,status) VALUES (?,?,'transcrevendo')",
+        (name, video_path))
+    pid = cur.lastrowid; c.commit(); c.close(); return pid
+
+def update_project_status(pid, status):
+    c = _conn()
+    c.execute("UPDATE projects SET status=? WHERE id=?", (status, pid))
+    c.commit(); c.close()
+
+def get_project(pid):
+    c = _conn()
+    r = c.execute("SELECT * FROM projects WHERE id=?", (pid,)).fetchone()
+    c.close()
+    return dict(r) if r else None
+
+def list_projects():
+    c = _conn()
+    rows = c.execute("SELECT * FROM projects ORDER BY created_at DESC").fetchall()
+    c.close()
+    return [dict(r) for r in rows]
+
+def save_transcription(pid, full_text, segments):
+    c = _conn()
+    c.execute(
+        "INSERT INTO transcriptions (project_id,full_text,segments) VALUES (?,?,?)",
+        (pid, full_text, json.dumps(segments, ensure_ascii=False)))
+    c.commit(); c.close()
+
+def get_transcription(pid):
+    c = _conn()
+    r = c.execute(
+        "SELECT * FROM transcriptions WHERE project_id=? ORDER BY id DESC LIMIT 1",
+        (pid,)).fetchone()
+    c.close()
+    if not r: return None
+    d = dict(r); d["segments"] = json.loads(d["segments"] or "[]"); return d
+
+def save_cuts(pid, cuts):
+    c = _conn(); c.execute("DELETE FROM cuts WHERE project_id=?", (pid,))
+    for i, cut in enumerate(cuts):
+        c.execute("""INSERT INTO cuts
+            (project_id,cut_index,start_time,end_time,title,archetype,
+             hook,reason,platforms,status,metadata)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+            (pid, i, cut["start"], cut["end"], cut.get("title",""),
+             cut.get("archetype",""), cut.get("hook",""), cut.get("reason",""),
+             json.dumps(cut.get("platforms",[])), "pendente",
+             json.dumps(cut.get("metadata",{}), ensure_ascii=False)))
+    c.commit(); c.close()
+
+def get_cuts(pid, status=None):
+    c = _conn()
+    if status:
+        rows = c.execute(
+            "SELECT * FROM cuts WHERE project_id=? AND status=? ORDER BY cut_index",
+            (pid, status)).fetchall()
+    else:
+        rows = c.execute(
+            "SELECT * FROM cuts WHERE project_id=? ORDER BY cut_index",
+            (pid,)).fetchall()
+    c.close()
+    result = []
+    for r in rows:
+        d = dict(r)
+        d["platforms"]    = json.loads(d["platforms"]    or "[]")
+        d["output_paths"] = json.loads(d["output_paths"] or "{}")
+        d["metadata"]     = json.loads(d["metadata"]     or "{}")
+        result.append(d)
+    return result
+
+def update_cut_status(cut_id, status):
+    c = _conn()
+    c.execute("UPDATE cuts SET status=? WHERE id=?", (status, cut_id))
+    c.commit(); c.close()
+
+def update_cut_output(cut_id, paths):
+    c = _conn()
+    c.execute(
+        "UPDATE cuts SET output_paths=?,status='renderizado' WHERE id=?",
+        (json.dumps(paths), cut_id))
+    c.commit(); c.close()
+
+init()
+PYEOF
+
+# ── utils/__init__.py ─────────────────────────────────────────────────────────
+echo "# utils" > "$APP_DIR/utils/__init__.py"
+
+# ── utils/hardware.py ─────────────────────────────────────────────────────────
+cat > "$APP_DIR/utils/hardware.py" << 'PYEOF'
+"""Utils — Detecção de hardware otimizada para i5-6200U + Intel HD 520."""
+import subprocess, os
+
+
+class HardwareDetector:
+    def __init__(self):
+        self.info = self._detect_all()
+
+    def _detect_all(self) -> dict:
+        return {
+            'cpu':     self._detect_cpu(),
+            'gpu':     self._detect_gpu(),
+            'ram_gb':  self._detect_ram(),
+            'encoder': self._detect_encoder(),
+            'vaapi':   self._check_vaapi(),
+        }
+
+    def _detect_cpu(self) -> dict:
+        try:
+            with open('/proc/cpuinfo') as f:
+                lines = f.readlines()
+            model, cores = "", 0
+            for line in lines:
+                if 'model name' in line and not model:
+                    model = line.split(':')[1].strip()
+                if 'processor' in line:
+                    cores += 1
+            return {'model': model, 'cores': cores}
+        except:
+            return {'model': 'i5-6200U', 'cores': 4}
+
+    def _detect_gpu(self) -> dict:
+        gpu_info = {'intel': False, 'nvidia': False, 'driver': 'none'}
+        try:
+            r = subprocess.run(['lspci'], capture_output=True, text=True)
+            if 'HD Graphics 520' in r.stdout or 'UHD' in r.stdout:
+                gpu_info['intel'] = True; gpu_info['driver'] = 'i915'
+        except: pass
+        try:
+            r = subprocess.run(['lsmod'], capture_output=True, text=True)
+            if 'nvidia' in r.stdout or 'nouveau' in r.stdout:
+                gpu_info['nvidia'] = True
+        except: pass
+        return gpu_info
+
+    def _detect_ram(self) -> float:
+        try:
+            with open('/proc/meminfo') as f:
+                line = f.readline()
+            kb = int(line.split()[1])
+            return round(kb / 1024 / 1024, 1)
+        except:
+            return 8.0
+
+    def _detect_encoder(self) -> str:
+        try:
+            env = dict(os.environ); env.setdefault('LIBVA_DRIVER_NAME', 'iHD')
+            r = subprocess.run(['vainfo'], env=env, capture_output=True, text=True)
+            if 'VAEntrypointEncSlice' in r.stdout:
+                return 'h264_vaapi'
+        except: pass
+        return 'libx264'
+
+    def _check_vaapi(self) -> dict:
+        try:
+            env = dict(os.environ); env.setdefault('LIBVA_DRIVER_NAME', 'iHD')
+            r = subprocess.run(['vainfo'], env=env, capture_output=True, text=True)
+            out = r.stdout + r.stderr
+            return {
+                'disponivel':  'VAEntrypointEncSlice' in out,
+                'driver':      'iHD' if 'iHD' in out else 'i965',
+                'encode_h264': 'VAEntrypointEncSlice' in out,
+            }
+        except:
+            return {'disponivel': False, 'driver': 'none', 'encode_h264': False}
+
+    def get_encoder(self) -> str:
+        return 'h264_vaapi' if self.info['vaapi']['disponivel'] else 'libx264'
+
+    def get_status_string(self) -> str:
+        enc = self.get_encoder()
+        vaapi = '✅ VA-API' if enc == 'h264_vaapi' else '⚠️ CPU'
+        try:
+            r = subprocess.run(['sensors'], capture_output=True, text=True)
+            for line in r.stdout.split('\n'):
+                if 'Core 0' in line:
+                    temp = line.split()[2].replace('+','').replace('°C','')
+                    return f"{vaapi}  |  CPU {temp}°C  |  RAM {self.info['ram_gb']}GB"
+        except: pass
+        return f"{vaapi}  |  i5-6200U  |  RAM {self.info['ram_gb']}GB"
+
+    def print_summary(self):
+        print("╔═══════════════════════════════════════╗")
+        print("║  Hardware Detectado                   ║")
+        print("╠═══════════════════════════════════════╣")
+        print(f"  CPU: {self.info['cpu']['model']}")
+        print(f"  RAM: {self.info['ram_gb']} GB")
+        print(f"  GPU Intel: {'✅' if self.info['gpu']['intel'] else '❌'}")
+        print(f"  NVIDIA:    {'⚠️  ATIVA' if self.info['gpu']['nvidia'] else '✅ Bloqueada'}")
+        print(f"  VA-API:    {'✅' if self.info['vaapi']['disponivel'] else '❌'}")
+        print(f"  Encoder:   {self.info['encoder']}")
+        print("╚═══════════════════════════════════════╝")
+
+
+def check_system() -> bool:
+    print("\n🔍 Verificando Debian Tunado 3.0...")
+    checks = []
+    try:
+        with open('/proc/cmdline') as f:
+            cmdline = f.read()
+        checks.append(('i915.enable_guc=3', 'i915.enable_guc=3' in cmdline))
+        checks.append(('mitigations=off',   'mitigations=off'   in cmdline))
+    except:
+        checks.extend([('i915.enable_guc=3', False), ('mitigations=off', False)])
+    try:
+        r = subprocess.run(['swapon', '--show'], capture_output=True, text=True)
+        checks.append(('ZRAM ativo', 'zram' in r.stdout))
+    except:
+        checks.append(('ZRAM ativo', False))
+    try:
+        r = subprocess.run(['lsmod'], capture_output=True, text=True)
+        checks.append(('NVIDIA bloqueada', 'nvidia' not in r.stdout and 'nouveau' not in r.stdout))
+    except:
+        checks.append(('NVIDIA bloqueada', False))
+    try:
+        env = dict(os.environ); env.setdefault('LIBVA_DRIVER_NAME', 'iHD')
+        r = subprocess.run(['vainfo'], env=env, capture_output=True, text=True)
+        checks.append(('VA-API iHD', 'VAEntrypointEncSlice' in (r.stdout + r.stderr)))
+    except:
+        checks.append(('VA-API iHD', False))
+    for check, status in checks:
+        print(f"  {'✅' if status else '❌'} {check}")
+    ok = all(s for _, s in checks)
+    print("\n✅ Sistema pronto!\n" if ok else "\n⚠️  Algumas otimizações ausentes.\n")
+    return ok
+
+if __name__ == '__main__':
+    hw = HardwareDetector()
+    hw.print_summary()
+    check_system()
+PYEOF
+
+# ── core/__init__.py ──────────────────────────────────────────────────────────
+echo "# core" > "$APP_DIR/core/__init__.py"
+
+# ── core/transcriber.py ───────────────────────────────────────────────────────
+cat > "$APP_DIR/core/transcriber.py" << 'PYEOF'
+"""Core — Transcrição Whisper via Python API."""
+import os, tempfile, shutil, subprocess, gc
+
+
+def fmt_time(s: float) -> str:
+    return f"{int(s//3600):02d}:{int((s%3600)//60):02d}:{int(s%60):02d}"
+
+
+class WhisperTranscriber:
+    def __init__(self, model: str = "tiny", language: str = "pt"):
+        self.model = model
+        self.language = language
+        try:
+            import whisper
+            self._whisper = whisper
+        except ImportError:
+            raise RuntimeError("Whisper não instalado. Execute: pip install openai-whisper")
+
+    def transcribe(self, video_path: str, progress_callback=None) -> dict:
+        def log(msg):
+            if progress_callback: progress_callback(msg)
+            print(msg)
+
+        tmp_dir  = tempfile.mkdtemp()
+        wav_path = os.path.join(tmp_dir, "audio.wav")
+        try:
+            log("🔊 Extraindo áudio (16kHz mono)...")
+            r = subprocess.run([
+                'ffmpeg', '-y', '-i', video_path,
+                '-vn', '-acodec', 'pcm_s16le', '-ar', '16000', '-ac', '1', wav_path
+            ], capture_output=True, text=True)
+            if r.returncode != 0:
+                raise RuntimeError(f"FFmpeg erro: {r.stderr[-200:]}")
+
+            log(f"🧠 Transcrevendo com Whisper '{self.model}'...")
+            model = self._whisper.load_model(self.model, device="cpu")
+            result = model.transcribe(
+                wav_path, language=self.language, fp16=False,
+                condition_on_previous_text=True, verbose=False,
+                no_speech_threshold=0.6, logprob_threshold=-1.0,
+            )
+            del model; gc.collect()
+
+            segments = [
+                {'start': round(s['start'], 2), 'end': round(s['end'], 2),
+                 'text':  s['text'].strip()}
+                for s in result.get('segments', [])
+            ]
+            log(f"✅ {len(segments)} segmentos transcritos.")
+            return {
+                'full_text': ' '.join(s['text'] for s in segments),
+                'segments':  segments,
+                'language':  result.get('language', self.language),
+            }
+        finally:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
+def transcribe(video_path: str, model: str = "tiny",
+               language: str = "pt", progress_cb=None) -> dict:
+    return WhisperTranscriber(model, language).transcribe(video_path, progress_cb)
+PYEOF
+
+# ── core/prompt_builder.py ────────────────────────────────────────────────────
+cat > "$APP_DIR/core/prompt_builder.py" << 'PYEOF'
+"""ClipFusion — Prompt Builder para IA externa."""
+import json, re
+from viral_engine.archetypes import ARCHETYPES
+from core.transcriber import fmt_time
+
+
+def build_analysis_prompt(segments: list, duration: float, context: str = "") -> str:
+    lines, total = [], 0
+    for s in segments:
+        line = f"[{fmt_time(s['start'])}] {s['text']}"
+        total += len(line)
+        if total > 12000:
+            lines.append("...(truncado)")
+            break
+        lines.append(line)
+    transcript = "\n".join(lines)
+    arch_block = "\n".join(
+        f"  {k}: {v['emocao']} — {v['descricao']}"
+        for k, v in ARCHETYPES.items())
+    ctx = f"\n## CONTEXTO\n{context.strip()}\n" if context.strip() else ""
+
+    return f"""Você é especialista em engenharia de retenção e viralização de conteúdo curto.
+{ctx}
+## DURAÇÃO TOTAL: {fmt_time(duration)}
+
+## TRANSCRIÇÃO COM TIMESTAMPS
+{transcript}
+
+## ARQUÉTIPOS DISPONÍVEIS
+{arch_block}
+
+## PLATAFORMAS
+  tiktok: vertical 9:16, ideal 30–60s, máx 180s. Gancho nos primeiros 1–2s.
+  reels: vertical 9:16, ideal 15–60s, máx 90s.
+  shorts: vertical 9:16, máx 60s.
+
+## TAREFA
+Identifique de 3 a 8 cortes com alto potencial viral.
+Critérios: gancho forte nos primeiros 3s, valor emocional claro, 20–90s de duração.
+
+## RESPOSTA — SOMENTE JSON, SEM MARKDOWN
+
+{{
+  "cortes": [
+    {{
+      "titulo": "título (máx 60 chars)",
+      "start": 123.4,
+      "end": 187.2,
+      "archetype": "05_revelacao",
+      "hook": "o que prende nos primeiros 3 segundos",
+      "reason": "por que vai viralizar (2 frases)",
+      "platforms": ["tiktok", "reels", "shorts"],
+      "metadata": {{
+        "titulo_post": "título para publicação",
+        "descricao": "2–3 frases",
+        "hashtags": ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5"]
+      }}
+    }}
+  ]
+}}
+
+Analise agora:"""
+
+
+def parse_ai_response(text: str) -> list:
+    text  = re.sub(r"```json\s*|```\s*", "", text.strip())
+    match = re.search(r'\{[\s\S]*\}', text)
+    if not match:
+        raise ValueError("Nenhum JSON encontrado.")
+    cortes = json.loads(match.group()).get("cortes", [])
+    result = []
+    for i, c in enumerate(cortes):
+        s, e = float(c.get("start", 0)), float(c.get("end", 0))
+        if e > s and (e - s) >= 10:
+            result.append({
+                "cut_index": i, "title": c.get("titulo", f"Corte {i+1}"),
+                "start": s, "end": e,
+                "archetype": c.get("archetype", "01_despertar"),
+                "hook": c.get("hook", ""), "reason": c.get("reason", ""),
+                "platforms": c.get("platforms", ["tiktok", "reels", "shorts"]),
+                "metadata": c.get("metadata", {}),
+            })
+    return result
+PYEOF
+
+# ── core/cut_engine.py ────────────────────────────────────────────────────────
+cat > "$APP_DIR/core/cut_engine.py" << 'PYEOF'
+"""
+Core — Cut Engine com render 2-pass correto para VA-API + legendas.
+
+Passo 1: Corte + escala via VA-API h264_vaapi (rápido, sem legenda)
+Passo 2: Burn legenda via libx264 (arquivo já pequeno = rápido também)
+Se VA-API indisponível: 1 passo com libx264 + legenda.
+"""
+import subprocess, os, tempfile, shutil, gc
+from core.transcriber import fmt_time
+
+PLATFORM_CONFIGS = {
+    "tiktok":  {"w": 1080, "h": 1920, "max_dur": 180, "crf": 20,
+                "preset": "fast", "fps": 30, "abr": "128k", "suffix": "_tiktok"},
+    "reels":   {"w": 1080, "h": 1920, "max_dur": 90,  "crf": 21,
+                "preset": "fast", "fps": 30, "abr": "128k", "suffix": "_reels"},
+    "shorts":  {"w": 1080, "h": 1920, "max_dur": 60,  "crf": 21,
+                "preset": "fast", "fps": 30, "abr": "128k", "suffix": "_shorts"},
+}
+
+
+def _ms(s: float) -> str:
+    h, rem = divmod(s, 3600)
+    m, sec = divmod(rem, 60)
+    return f"{int(h):02d}:{int(m):02d}:{int(sec):02d},{int((s%1)*1000):03d}"
+
+
+def build_srt(segments: list, cut_start: float, cut_end: float) -> str:
+    lines, idx = [], 1
+    for seg in segments:
+        if seg["end"] < cut_start or seg["start"] > cut_end:
+            continue
+        rs  = max(seg["start"] - cut_start, 0)
+        re_ = min(seg["end"]   - cut_start, cut_end - cut_start)
+        if re_ <= rs: continue
+        lines += [str(idx), f"{_ms(rs)} --> {_ms(re_)}", seg["text"].strip(), ""]
+        idx += 1
+    return "\n".join(lines)
+
+
+def _detect_vaapi() -> bool:
+    try:
+        env = dict(os.environ); env.setdefault('LIBVA_DRIVER_NAME', 'iHD')
+        r = subprocess.run(["vainfo"], env=env, capture_output=True, text=True)
+        return "VAEntrypointEncSlice" in (r.stdout + r.stderr)
+    except FileNotFoundError:
+        return False
+
+
+def render_cut(video_path: str, cut: dict, segments: list,
+               output_dir: str, project_id: str,
+               ace_level: str = "basic", use_vaapi: bool = True,
+               progress_cb=None) -> dict:
+    def log(m):
+        if progress_cb: progress_cb(m)
+
+    start, end = cut["start"], cut["end"]
+    duration   = end - start
+    idx        = cut.get("cut_index", 0)
+    platforms  = cut.get("platforms", ["tiktok", "reels", "shorts"])
+    safe_title = "".join(
+        c for c in cut.get("title", f"corte_{idx}")
+        if c.isalnum() or c in " _-"
+    ).strip().replace(" ", "_")[:40]
+
+    vaapi_ok = use_vaapi and _detect_vaapi()
+    if use_vaapi and not vaapi_ok:
+        log("  ⚠️  VA-API indisponível — usando libx264")
+
+    tmp, output_paths = tempfile.mkdtemp(), {}
+    try:
+        srt_content = build_srt(segments, start, end)
+        srt_path    = os.path.join(tmp, "sub.srt")
+        with open(srt_path, "w", encoding="utf-8") as f:
+            f.write(srt_content)
+
+        style = ("FontName=Arial,FontSize=22,PrimaryColour=&H00FFFFFF,"
+                 "OutlineColour=&H00000000,Bold=1,Outline=2,Shadow=1,"
+                 "Alignment=2,MarginV=60")
+
+        for platform in platforms:
+            cfg = PLATFORM_CONFIGS.get(platform)
+            if not cfg: continue
+            dur      = min(duration, cfg["max_dur"])
+            w, h     = cfg["w"], cfg["h"]
+            out_name = f"{safe_title}{cfg['suffix']}.mp4"
+            out_path = os.path.join(output_dir, platform, out_name)
+            os.makedirs(os.path.dirname(out_path), exist_ok=True)
+            log(f"  [{platform}] {out_name} ({fmt_time(dur)})")
+
+            raw_out = os.path.join(tmp, f"raw_{platform}.mp4")
+            ok      = False
+
+            if vaapi_ok:
+                # PASSO 1: Corte + escala via VA-API (SEM legenda)
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-hwaccel", "vaapi",
+                    "-hwaccel_device", "/dev/dri/renderD128",
+                    "-hwaccel_output_format", "vaapi",
+                    "-ss", str(start), "-i", video_path, "-t", str(dur),
+                    "-vf", f"scale_vaapi={w}:{h}",
+                    "-c:v", "h264_vaapi",
+                    "-c:a", "aac", "-b:a", cfg["abr"], "-ar", "44100",
+                    "-r", str(cfg["fps"]), "-movflags", "+faststart",
+                    "-map_metadata", "-1", raw_out,
+                ]
+                r = subprocess.run(cmd, capture_output=True, text=True)
+                ok = r.returncode == 0
+
+                if ok and srt_content.strip():
+                    # PASSO 2: Burn legenda em software
+                    sub2    = os.path.join(tmp, f"sub_{platform}.mp4")
+                    srt_esc = srt_path.replace("\\", "/").replace(":", "\\:")
+                    cmd2    = [
+                        "ffmpeg", "-y", "-i", raw_out,
+                        "-vf", f"subtitles='{srt_esc}':force_style='{style}'",
+                        "-c:v", "libx264", "-preset", cfg["preset"], "-crf", str(cfg["crf"]),
+                        "-c:a", "copy", "-r", str(cfg["fps"]), "-pix_fmt", "yuv420p", sub2,
+                    ]
+                    r2 = subprocess.run(cmd2, capture_output=True, text=True)
+                    if r2.returncode == 0:
+                        raw_out = sub2
+
+            if not ok:
+                scale = (f"scale={w}:{h}:force_original_aspect_ratio=decrease,"
+                         f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2:black")
+                if srt_content.strip():
+                    srt_esc = srt_path.replace("\\", "/").replace(":", "\\:")
+                    vf = f"{scale},subtitles='{srt_esc}':force_style='{style}'"
+                else:
+                    vf = scale
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-ss", str(start), "-i", video_path, "-t", str(dur),
+                    "-vf", vf,
+                    "-c:v", "libx264", "-preset", cfg["preset"], "-crf", str(cfg["crf"]),
+                    "-c:a", "aac", "-b:a", cfg["abr"], "-ar", "44100",
+                    "-r", str(cfg["fps"]), "-pix_fmt", "yuv420p",
+                    "-movflags", "+faststart", "-map_metadata", "-1", raw_out,
+                ]
+                r = subprocess.run(cmd, capture_output=True, text=True)
+                if r.returncode != 0:
+                    log(f"  ❌ Render falhou: {r.stderr[-100:]}")
+                    continue
+
+            if ace_level != "none":
+                from anti_copy_modules.core import (
+                    AntiCopyrightEngine, ProtectionConfig, ProtectionLevel)
+                lvl    = ProtectionLevel(ace_level)
+                engine = AntiCopyrightEngine(project_id, idx,
+                                             ProtectionConfig.from_level(lvl), log=log)
+                engine.process(raw_out, out_path)
+            else:
+                shutil.copy2(raw_out, out_path)
+
+            size = os.path.getsize(out_path) / (1024 * 1024)
+            log(f"  ✅ {platform}: {size:.1f} MB")
+            output_paths[platform] = out_path
+
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return output_paths
+
+
+def render_all(video_path: str, cuts: list, segments: list,
+               output_dir: str, project_id: str,
+               ace_level: str = "basic", use_vaapi: bool = True,
+               progress_cb=None) -> dict:
+    results = {}
+    for i, cut in enumerate(cuts):
+        if progress_cb:
+            progress_cb(f"\n[{i+1}/{len(cuts)}] {cut.get('title','Corte')}")
+        paths = render_cut(video_path, cut, segments, output_dir,
+                           project_id, ace_level, use_vaapi, progress_cb)
+        results[cut.get("id", cut.get("cut_index", i))] = paths
+        gc.collect()  # GC entre cortes — crucial para 8GB RAM
+    return results
+PYEOF
+
+# ── anti_copy_modules/ ────────────────────────────────────────────────────────
+echo "from .core import AntiCopyrightEngine, ProtectionConfig, ProtectionLevel" \
+  > "$APP_DIR/anti_copy_modules/__init__.py"
+
+cat > "$APP_DIR/anti_copy_modules/ai_evasion.py" << 'PYEOF'
+"""ClipFusion — AI Evasion. Perturba embeddings CNN e motion vectors."""
+import random
+
+class AIEvasion:
+    def __init__(self, seed: int):
+        self.rng = random.Random(seed)
+
+    def ffmpeg_filters(self) -> list:
+        filters = []
+        filters.append("vignette=angle=PI/5:mode=backward")
+        jitter = self.rng.uniform(0.0001, 0.0003)
+        filters.append(f"setpts=PTS+{jitter:.5f}*random(0)")
+        sigma = self.rng.uniform(0.2, 0.4)
+        filters.append(f"gblur=sigma={sigma:.2f}")
+        return filters
+PYEOF
+
+cat > "$APP_DIR/anti_copy_modules/audio_advanced.py" << 'PYEOF'
+"""ClipFusion — Audio: pitch ±0.05st + time stretch ±0.3% + EQ + reverb."""
+import random, subprocess, shutil
+
+class AudioProcessor:
+    def __init__(self, seed: int):
+        self.rng = random.Random(seed)
+
+    def process(self, inp: str, out: str,
+                basic: bool = True, advanced: bool = False, log=print) -> bool:
+        af = []
+        if basic:
+            semitones  = self.rng.uniform(-0.05, 0.05)
+            shifted_sr = int(44100 * (2 ** (semitones / 12)))
+            af += [f"asetrate={shifted_sr}", "aresample=44100",
+                   f"atempo={self.rng.uniform(0.997, 1.003):.5f}"]
+        if advanced:
+            for freq in self.rng.sample([200, 500, 1000, 3000, 6000, 10000], 3):
+                gain = self.rng.uniform(-0.5, 0.5)
+                af.append(f"equalizer=f={freq}:width_type=h:width={int(freq*0.3)}:g={gain:.2f}")
+            delay = self.rng.randint(4, 7)
+            decay = self.rng.uniform(0.008, 0.015)
+            af.append(f"aecho=0.8:{decay:.3f}:{delay}:0.1")
+        if not af:
+            shutil.copy2(inp, out); return True
+        r = subprocess.run(
+            ["ffmpeg", "-y", "-i", inp, "-af", ",".join(af),
+             "-c:v", "copy", "-c:a", "aac", "-b:a", "128k", out],
+            capture_output=True, text=True)
+        if r.returncode != 0:
+            log(f"ACE áudio: {r.stderr[-200:]}"); shutil.copy2(inp, out); return False
+        return True
+PYEOF
+
+cat > "$APP_DIR/anti_copy_modules/fingerprint_evasion.py" << 'PYEOF'
+"""ClipFusion — Fingerprint Evasion: cor, noise, chroma, frequency, metadados."""
+import random, hashlib
+from datetime import datetime, timedelta
+
+class FingerprintEvasion:
+    def __init__(self, seed: int):
+        self.rng = random.Random(seed)
+
+    def color_filters(self) -> list:
+        b = self.rng.uniform(-0.006, 0.006); c = self.rng.uniform(0.995, 1.005)
+        s = self.rng.uniform(0.996, 1.004);  g = self.rng.uniform(0.996, 1.004)
+        return [f"eq=brightness={b:.4f}:contrast={c:.4f}:saturation={s:.4f}:gamma={g:.4f}"]
+
+    def noise_filters(self) -> list:
+        return [f"noise=alls={self.rng.uniform(0.3, 0.6):.2f}:allf=t+u"]
+
+    def chroma_filters(self) -> list:
+        h = self.rng.uniform(-0.4, 0.4); s = self.rng.uniform(0.997, 1.003)
+        return [f"hue=h={h:.3f}:s={s:.4f}"]
+
+    def frequency_filters(self) -> list:
+        lx = self.rng.randint(3, 5); la = self.rng.uniform(-0.05, 0.05)
+        cx = self.rng.randint(3, 5); ca = self.rng.uniform(-0.03, 0.03)
+        return [f"unsharp=luma_msize_x={lx}:luma_msize_y={lx}:luma_amount={la:.3f}"
+                f":chroma_msize_x={cx}:chroma_msize_y={cx}:chroma_amount={ca:.3f}"]
+
+    def metadata_inject_args(self, project_id: str) -> list:
+        rng = random.Random(int(hashlib.md5(project_id.encode()).hexdigest()[:8], 16))
+        fake_date = datetime.now() - timedelta(
+            days=rng.randint(0,730), hours=rng.randint(0,23), minutes=rng.randint(0,59))
+        encoders = ["libx264 (High@L4.1)", "H.264/AVC Codec", "libx265 (Main@L4.0)"]
+        return [
+            "-metadata", f"creation_time={fake_date.isoformat()}",
+            "-metadata", f"encoder={rng.choice(encoders)}",
+            "-metadata", "copyright=", "-metadata", "description=",
+            "-metadata", "title=", "-metadata", "artist=",
+        ]
+PYEOF
+
+cat > "$APP_DIR/anti_copy_modules/geometric_transforms.py" << 'PYEOF'
+"""ClipFusion — Geometric: zoom 1–3%, micro-rotação, perspectiva."""
+import random
+
+class GeometricTransforms:
+    def __init__(self, seed: int):
+        self.rng = random.Random(seed)
+
+    def ffmpeg_filters(self, rotation: bool = False, perspective: bool = False) -> list:
+        zoom = self.rng.uniform(1.010, 1.030)
+        filters = [f"scale=iw*{zoom:.4f}:ih*{zoom:.4f},crop=iw/{zoom:.4f}:ih/{zoom:.4f}"]
+        if rotation:
+            rad = self.rng.uniform(-0.3, 0.3) * 3.14159 / 180
+            filters.append(f"rotate={rad:.5f}:fillcolor=black:expand=0")
+        if perspective:
+            ox = self.rng.uniform(0.001, 0.003); oy = self.rng.uniform(0.001, 0.003)
+            filters.append(
+                f"perspective=x0=iw*{ox:.4f}:y0=ih*{oy:.4f}:"
+                f"x1=iw*(1-{ox:.4f}):y1=ih*{oy:.4f}:"
+                f"x2=iw*{ox:.4f}:y2=ih*(1-{oy:.4f}):"
+                f"x3=iw*(1-{ox:.4f}):y3=ih*(1-{oy:.4f}):interpolation=linear")
+        return filters
+PYEOF
+
+cat > "$APP_DIR/anti_copy_modules/temporal_obfuscation.py" << 'PYEOF'
+"""ClipFusion — Temporal: speed variation ±0.5% (abaixo limiar humano ~3%)."""
+import random
+
+class TemporalObfuscation:
+    def __init__(self, seed: int):
+        self.rng = random.Random(seed)
+
+    def ffmpeg_filters(self) -> list:
+        speed = self.rng.uniform(0.995, 1.005)
+        return [f"setpts={1.0/speed:.5f}*PTS"]
+PYEOF
+
+cat > "$APP_DIR/anti_copy_modules/network_evasion.py" << 'PYEOF'
+"""ClipFusion — Network Evasion: agenda de upload com jitter ±20%."""
+import random
+from datetime import datetime, timedelta
+from typing import List
+
+class NetworkEvasion:
+    PLATFORM_CONFIGS = {
+        "tiktok":    {"peak": [(7,9),(12,14),(19,22)], "interval": (4,8),   "max_day": 5},
+        "instagram": {"peak": [(11,13),(19,21)],        "interval": (18,30), "max_day": 2},
+        "youtube":   {"peak": [(14,16),(19,21)],        "interval": (48,96), "max_day": 1},
+        "kwai":      {"peak": [(12,14),(20,23)],        "interval": (6,12),  "max_day": 4},
+    }
+
+    def __init__(self, seed: int = None):
+        self.rng = random.Random(seed)
+
+    def generate_schedule(self, count: int, platform: str = "tiktok") -> List[dict]:
+        cfg = self.PLATFORM_CONFIGS.get(platform, self.PLATFORM_CONFIGS["tiktok"])
+        current = datetime.now()
+        out = []
+        for i in range(count):
+            min_h, max_h = cfg["interval"]
+            hours   = self.rng.uniform(min_h, max_h)
+            jitter  = hours * self.rng.uniform(-0.20, 0.20)
+            current = current + timedelta(hours=hours + jitter)
+            window  = self.rng.choice(cfg["peak"])
+            current = current.replace(
+                hour=int(self.rng.uniform(*window)),
+                minute=self.rng.randint(0,59), second=self.rng.randint(0,59))
+            out.append({"index": i+1, "platform": platform,
+                        "datetime": current.strftime("%d/%m/%Y %H:%M")})
+        return out
+
+    def format_schedule(self, schedule: list) -> str:
+        lines = [f"📅 Agenda — {len(schedule)} vídeos\n"]
+        for s in schedule:
+            lines.append(f"  #{s['index']:02d}  {s['datetime']}  [{s['platform']}]")
+        return "\n".join(lines)
+PYEOF
+
+cat > "$APP_DIR/anti_copy_modules/core.py" << 'PYEOF'
+"""ClipFusion — Anti-Copyright Engine Core."""
+import hashlib, shutil, subprocess, tempfile, os
+from enum import Enum
+from dataclasses import dataclass
+from typing import Optional, Callable, Dict
+
+
+class ProtectionLevel(Enum):
+    NONE    = "none"
+    BASIC   = "basic"
+    ANTI_AI = "anti_ai"
+    MAXIMUM = "maximum"
+
+
+@dataclass
+class ProtectionConfig:
+    level:          ProtectionLevel
+    geometric:      bool = False
+    color:          bool = False
+    noise:          bool = False
+    chroma:         bool = False
+    frequency:      bool = False
+    temporal:       bool = False
+    ai_evasion:     bool = False
+    audio_basic:    bool = False
+    audio_advanced: bool = False
+    network:        bool = False
+    metadata:       bool = False
+
+    @classmethod
+    def from_level(cls, level: ProtectionLevel) -> "ProtectionConfig":
+        return {
+            ProtectionLevel.NONE: cls(level=level),
+            ProtectionLevel.BASIC: cls(
+                level=level, geometric=True, color=True,
+                temporal=True, audio_basic=True, metadata=True),
+            ProtectionLevel.ANTI_AI: cls(
+                level=level, geometric=True, color=True, noise=True, chroma=True,
+                temporal=True, ai_evasion=True, audio_basic=True, network=True, metadata=True),
+            ProtectionLevel.MAXIMUM: cls(
+                level=level, geometric=True, color=True, noise=True, chroma=True,
+                frequency=True, temporal=True, ai_evasion=True,
+                audio_basic=True, audio_advanced=True, network=True, metadata=True),
+        }.get(level, cls(level=ProtectionLevel.NONE))
+
+
+LEVEL_LABELS = {
+    "none":    "🟢 NENHUM — arquivo original intacto",
+    "basic":   "🟡 BÁSICO — zoom, cor, metadados, áudio",
+    "anti_ai": "🟠 ANTI-IA — + noise, chroma, anti-detecção IA",
+    "maximum": "🔴 MÁXIMO — todas as técnicas avançadas",
+}
+
+
+class AntiCopyrightEngine:
+    def __init__(self, project_id: str, cut_index: int = 0,
+                 config: Optional[ProtectionConfig] = None,
+                 log: Optional[Callable] = None):
+        self.project_id = project_id
+        self.cut_index  = cut_index
+        self.config     = config or ProtectionConfig.from_level(ProtectionLevel.BASIC)
+        self.log        = log or print
+        self.seed       = int(hashlib.md5(
+            f"{project_id}_{cut_index}".encode()).hexdigest()[:8], 16)
+        self.report: Dict = {
+            "project_id": project_id, "cut_index": cut_index,
+            "level": self.config.level.value, "seed": self.seed,
+            "techniques_applied": [],
+        }
+
+    def process(self, input_path: str, output_path: str) -> Dict:
+        if self.config.level == ProtectionLevel.NONE:
+            shutil.copy2(input_path, output_path)
+            return self.report
+        tmp = tempfile.mkdtemp()
+        try:
+            current = input_path
+            vf = self._collect_video_filters()
+            if vf:
+                out1 = os.path.join(tmp, "v1.mp4")
+                self._run_vf(current, out1, vf)
+                current = out1
+            if self.config.audio_basic or self.config.audio_advanced:
+                out2 = os.path.join(tmp, "v2.mp4")
+                from anti_copy_modules.audio_advanced import AudioProcessor
+                ok = AudioProcessor(self.seed).process(
+                    current, out2,
+                    basic=self.config.audio_basic, advanced=self.config.audio_advanced,
+                    log=self.log)
+                if ok:
+                    current = out2
+                    self.report["techniques_applied"].append("audio")
+            if self.config.metadata:
+                out3 = os.path.join(tmp, "v3.mp4")
+                from anti_copy_modules.fingerprint_evasion import FingerprintEvasion
+                meta = FingerprintEvasion(self.seed).metadata_inject_args(self.project_id)
+                r = subprocess.run(
+                    ["ffmpeg", "-y", "-i", current,
+                     "-map_metadata", "-1", *meta, "-c", "copy", out3],
+                    capture_output=True, text=True)
+                if r.returncode == 0:
+                    current = out3
+                    self.report["techniques_applied"].append("metadata")
+            shutil.copy2(current, output_path)
+            self.log(f"ACE ✅ {len(self.report['techniques_applied'])} técnicas [{self.config.level.value}]")
+        except Exception as e:
+            self.log(f"ACE ⚠️ erro: {e}")
+            shutil.copy2(input_path, output_path)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+        return self.report
+
+    def _collect_video_filters(self) -> list:
+        filters = []
+        is_max  = self.config.level == ProtectionLevel.MAXIMUM
+        is_anti = self.config.level in (ProtectionLevel.ANTI_AI, ProtectionLevel.MAXIMUM)
+        if self.config.geometric:
+            from anti_copy_modules.geometric_transforms import GeometricTransforms
+            filters += GeometricTransforms(self.seed).ffmpeg_filters(is_anti, is_max)
+            self.report["techniques_applied"].append("geometric")
+        if self.config.color:
+            from anti_copy_modules.fingerprint_evasion import FingerprintEvasion
+            filters += FingerprintEvasion(self.seed).color_filters()
+            self.report["techniques_applied"].append("color")
+        if self.config.noise:
+            from anti_copy_modules.fingerprint_evasion import FingerprintEvasion
+            filters += FingerprintEvasion(self.seed).noise_filters()
+            self.report["techniques_applied"].append("noise")
+        if self.config.chroma:
+            from anti_copy_modules.fingerprint_evasion import FingerprintEvasion
+            filters += FingerprintEvasion(self.seed).chroma_filters()
+            self.report["techniques_applied"].append("chroma")
+        if self.config.frequency:
+            from anti_copy_modules.fingerprint_evasion import FingerprintEvasion
+            filters += FingerprintEvasion(self.seed).frequency_filters()
+            self.report["techniques_applied"].append("frequency")
+        if self.config.temporal:
+            from anti_copy_modules.temporal_obfuscation import TemporalObfuscation
+            filters += TemporalObfuscation(self.seed).ffmpeg_filters()
+            self.report["techniques_applied"].append("temporal")
+        if self.config.ai_evasion:
+            from anti_copy_modules.ai_evasion import AIEvasion
+            filters += AIEvasion(self.seed).ffmpeg_filters()
+            self.report["techniques_applied"].append("ai_evasion")
+        return filters
+
+    def _run_vf(self, inp: str, out: str, filters: list):
+        r = subprocess.run(
+            ["ffmpeg", "-y", "-i", inp, "-vf", ",".join(filters),
+             "-c:v", "libx264", "-preset", "fast", "-crf", "18", "-c:a", "copy", out],
+            capture_output=True, text=True)
+        if r.returncode != 0:
+            shutil.copy2(inp, out)
+PYEOF
+
+# ── viral_engine/ ─────────────────────────────────────────────────────────────
+cat > "$APP_DIR/viral_engine/__init__.py" << 'PYEOF'
+from .archetypes import ARCHETYPES
+from .hook_engine import ViralHookEngine
+from .audience_analyzer import AudienceAnalyzer
+from .secondary_group import SecondaryGroupStrategy
+from .platform_optimizer import PlatformOptimizer
+PYEOF
+
+cat > "$APP_DIR/viral_engine/archetypes.py" << 'PYEOF'
+"""ClipFusion — 10 Arquétipos Emocionais para identificação de cortes virais."""
+
+ARCHETYPES = {
+    "01_despertar": {
+        "id": "01_despertar", "nome": "O Despertar", "emoji": "⚡",
+        "emocao": "Curiosidade + Urgência",
+        "descricao": "Algo que muda a percepção — o espectador descobre que estava errado sobre algo importante.",
+        "hook_template": ["Você sabia que {tema}? Quase ninguém sabe.",
+                          "{tema} — o que ninguém te contou."],
+        "gatilho": "novidade + quebra de crença", "cta": "Salva pra ver depois",
+        "cores": ["#FFD700", "#000000"], "musica": "Ambient crescente", "duracao_ideal": "15–30s",
+    },
+    "02_tensao": {
+        "id": "02_tensao", "nome": "A Tensão", "emoji": "⏰",
+        "emocao": "Medo + Antecipação",
+        "descricao": "Risco iminente, prazo, ameaça — o espectador sente urgência.",
+        "hook_template": ["Em {tempo} você vai {consequencia} se continuar assim.",
+                          "Cuidado: {tema} pode estar destruindo {algo}."],
+        "gatilho": "medo de perda + urgência", "cta": "Comenta se você faz isso",
+        "cores": ["#FF0000", "#1a1a1a"], "musica": "Suspense percussivo", "duracao_ideal": "20–45s",
+    },
+    "03_confronto": {
+        "id": "03_confronto", "nome": "O Confronto", "emoji": "🔥",
+        "emocao": "Raiva + Determinação",
+        "descricao": "Enfrentamento direto — opinião forte, posição clara, contra-narrativa.",
+        "hook_template": ["Chega de {estado_negativo}. Isso precisa parar.",
+                          "Todo mundo está errado sobre {tema}."],
+        "gatilho": "controvérsia + identidade", "cta": "Concorda ou discorda? Comenta",
+        "cores": ["#8B0000", "#000000"], "musica": "Rock/eletrônico", "duracao_ideal": "20–40s",
+    },
+    "04_virada": {
+        "id": "04_virada", "nome": "A Virada", "emoji": "✨",
+        "emocao": "Esperança + Empoderamento",
+        "descricao": "Mudança de perspectiva — existe um caminho melhor que poucos conhecem.",
+        "hook_template": ["Como {publico} transformou {problema} em {resultado}.",
+                          "O que mudou tudo na minha vida sobre {tema}."],
+        "gatilho": "transformação + esperança", "cta": "Compartilha com quem precisa",
+        "cores": ["#00AA44", "#000000"], "musica": "Motivacional crescente", "duracao_ideal": "30–60s",
+    },
+    "05_revelacao": {
+        "id": "05_revelacao", "nome": "A Revelação", "emoji": "🤯",
+        "emocao": "Surpresa + Fascínio",
+        "descricao": "Segredo revelado, dado inesperado — informação que poucos têm.",
+        "hook_template": ["O segredo que {industria} não quer que você saiba.",
+                          "Descobriram que {tema} — ninguém está falando sobre isso."],
+        "gatilho": "curiosidade + exclusividade", "cta": "Marca alguém que precisa saber",
+        "cores": ["#6B00CC", "#000000"], "musica": "Misterioso + build-up", "duracao_ideal": "20–45s",
+    },
+    "06_justo_engolido": {
+        "id": "06_justo_engolido", "nome": "O Justo Engolido", "emoji": "💢",
+        "emocao": "Injustiça + Revolta",
+        "descricao": "Alguém sendo prejudicado — o espectador quer justiça.",
+        "hook_template": ["Por que {publico} está sendo enganado sobre {tema}?",
+                          "{publico} trabalha {esforco} e ainda {injustica}."],
+        "gatilho": "revolta + identificação", "cta": "Compartilha para mais pessoas saberem",
+        "cores": ["#FF6600", "#000000"], "musica": "Dramática + intensa", "duracao_ideal": "25–50s",
+    },
+    "07_transformacao": {
+        "id": "07_transformacao", "nome": "A Transformação", "emoji": "🦋",
+        "emocao": "Superação + Inspiração",
+        "descricao": "Jornada antes/depois — prova social de que a mudança é possível.",
+        "hook_template": ["Antes e depois: como {publico} superou {problema}.",
+                          "{tempo} atrás eu era {estado_negativo}. Hoje sou {estado_positivo}."],
+        "gatilho": "inspiração + prova social", "cta": "Comenta sua história",
+        "cores": ["#00CED1", "#FFFFFF"], "musica": "Emocional + crescente", "duracao_ideal": "45–90s",
+    },
+    "08_resolucao": {
+        "id": "08_resolucao", "nome": "A Resolução", "emoji": "✅",
+        "emocao": "Alívio + Satisfação",
+        "descricao": "Solução entregue, problema resolvido — valor prático imediato.",
+        "hook_template": ["A solução definitiva para {problema} — em {tempo}.",
+                          "Pare de sofrer com {problema}. Faz isso:"],
+        "gatilho": "utilidade + alívio", "cta": "Salva esse vídeo",
+        "cores": ["#32CD32", "#000000"], "musica": "Calma + satisfatória", "duracao_ideal": "30–60s",
+    },
+    "09_impacto": {
+        "id": "09_impacto", "nome": "O Impacto", "emoji": "💥",
+        "emocao": "Choque + Admiração",
+        "descricao": "Número forte, resultado surpreendente, escala inesperada.",
+        "hook_template": ["{numero} pessoas {resultado} com {tema}. Isso é real.",
+                          "O impacto real de {tema} em números."],
+        "gatilho": "escala + credibilidade", "cta": "Comenta se acreditou nisso",
+        "cores": ["#FF1493", "#000000"], "musica": "Eletrônica impactante", "duracao_ideal": "15–30s",
+    },
+    "10_encerramento": {
+        "id": "10_encerramento", "nome": "O Encerramento", "emoji": "🎯",
+        "emocao": "Realização + Fechamento",
+        "descricao": "Lição aprendida, conclusão poderosa — o espectador sai com algo.",
+        "hook_template": ["A lição mais importante que aprendi sobre {tema}.",
+                          "Se eu pudesse voltar atrás sobre {tema}, faria isso diferente."],
+        "gatilho": "sabedoria + reflexão", "cta": "Salva e volta pra ler quando precisar",
+        "cores": ["#C0C0C0", "#000000"], "musica": "Orquestral suave", "duracao_ideal": "20–40s",
+    },
+}
+PYEOF
+
+cat > "$APP_DIR/viral_engine/audience_analyzer.py" << 'PYEOF'
+"""ClipFusion — Audience Analyzer. Perfis demográficos por nicho."""
+import json, os
+
+PERFIS_BUILTIN = {
+    "investimentos": {
+        "faixa_etaria": "25–40", "genero": "neutro",
+        "interesses": ["dinheiro", "liberdade financeira", "renda extra"],
+        "dores": ["medo de perder", "falta de tempo", "informação complexa"],
+        "palavras_chave": ["renda passiva", "primeiro milhão", "juros compostos"],
+        "tom": "motivacional, educativo, direto",
+        "exemplos_cta": ["Quer começar? Comenta 'EU QUERO'", "Salva pra ver depois"],
+    },
+    "fitness": {
+        "faixa_etaria": "18–35", "genero": "feminino predominante",
+        "interesses": ["emagrecimento", "saúde", "bem-estar"],
+        "dores": ["falta de tempo", "dieta restritiva", "resultados lentos"],
+        "palavras_chave": ["treino rápido", "queima de gordura", "antes e depois"],
+        "tom": "energético, encorajador",
+        "exemplos_cta": ["Marca uma amiga!", "Compartilha com quem está começando"],
+    },
+    "tecnologia": {
+        "faixa_etaria": "20–45", "genero": "masculino predominante",
+        "interesses": ["programação", "IA", "carreira tech"],
+        "dores": ["ficar desatualizado", "dificuldade de aprendizado"],
+        "palavras_chave": ["inteligência artificial", "carreira", "inovação"],
+        "tom": "analítico, inspirador, descontraído",
+        "exemplos_cta": ["Compartilha com um amigo dev!"],
+    },
+    "empreendedorismo": {
+        "faixa_etaria": "22–45", "genero": "neutro",
+        "interesses": ["negócios", "vendas", "crescimento"],
+        "dores": ["falta de clientes", "gestão de tempo", "competição"],
+        "palavras_chave": ["escalar", "faturamento", "estratégia"],
+        "tom": "direto, provocativo, inspirador",
+        "exemplos_cta": ["Comenta 'QUERO' pra receber mais", "Salva pra aplicar"],
+    },
+    "relacionamentos": {
+        "faixa_etaria": "18–40", "genero": "neutro",
+        "interesses": ["comunicação", "autoconhecimento", "amor"],
+        "dores": ["conflitos", "solidão", "comunicação difícil"],
+        "palavras_chave": ["casal", "autoestima", "relacionamento saudável"],
+        "tom": "empático, direto, acolhedor",
+        "exemplos_cta": ["Marca alguém que precisa ouvir isso", "Salva pra refletir"],
+    },
+}
+
+DEFAULT_PERFIL = {
+    "faixa_etaria": "18–45", "genero": "neutro",
+    "interesses": ["aprender", "entretenimento"],
+    "dores": ["falta de tempo", "informação complexa"],
+    "palavras_chave": ["viral", "dica", "rápido"],
+    "tom": "motivacional, direto",
+    "exemplos_cta": ["Compartilha com quem precisa!", "Salva pra ver depois"],
+}
+
+
+class AudienceAnalyzer:
+    def __init__(self):
+        self.perfis = dict(PERFIS_BUILTIN)
+        custom = os.path.join(os.path.dirname(__file__), "..", "config", "perfis_nicho.json")
+        if os.path.exists(custom):
+            with open(custom, encoding="utf-8") as f:
+                self.perfis.update(json.load(f))
+
+    def analyze(self, nicho: str, platform: str) -> dict:
+        nicho_low = nicho.lower()
+        perfil = next(
+            (v for k, v in self.perfis.items() if k in nicho_low or nicho_low in k),
+            DEFAULT_PERFIL)
+        grupo_sec = {"nome": "Interessados em produtividade",
+                     "angulo_gancho": "Como isso afeta sua rotina?",
+                     "expansao_potencial": "25%"}
+        timing = {"tiktok": ["18h–22h","12h–14h"], "instagram": ["19h–21h","11h–13h"],
+                  "youtube": ["14h–16h","19h–21h"]}.get(platform, ["18h–22h"])
+        return {
+            "perfil_primario": perfil, "grupo_secundario": grupo_sec,
+            "timing_otimo": timing,
+            "hashtags_sugeridas": [f"#{nicho.replace(' ','')}", "#viral", "#dica", "#conteudo", "#shorts"],
+        }
+PYEOF
+
+cat > "$APP_DIR/viral_engine/hook_engine.py" << 'PYEOF'
+"""ClipFusion — Hook Engine. Gerador de ganchos virais por arquétipo."""
+import random
+from viral_engine.archetypes import ARCHETYPES
+from viral_engine.audience_analyzer import AudienceAnalyzer
+from viral_engine.secondary_group import SecondaryGroupStrategy
+from viral_engine.platform_optimizer import PlatformOptimizer
+
+
+class ViralHookEngine:
+    def __init__(self):
+        self.analyzer  = AudienceAnalyzer()
+        self.secondary = SecondaryGroupStrategy()
+
+    def generate(self, tema: str, nicho: str, platform: str, archetype_id: str = None) -> dict:
+        audience     = self.analyzer.analyze(nicho, platform)
+        archetype_id = archetype_id or list(ARCHETYPES.keys())[0]
+        archetype    = ARCHETYPES[archetype_id]
+        perfil       = audience["perfil_primario"]
+        template     = random.choice(archetype["hook_template"])
+        hook_base    = template.format(
+            tema=tema, publico=perfil.get("faixa_etaria","público"),
+            problema=tema, resultado="sucesso",
+            estado_negativo="dificuldades", estado_positivo="resultados",
+            tempo="6 meses", consequencia="perder oportunidades",
+            algo="seu futuro", industria="o mercado",
+            numero="milhares de", esforco="muito", injustica="não consegue avançar",
+        )
+        enhanced = self.secondary.dual_hook(hook_base, nicho, audience["grupo_secundario"])
+        final    = PlatformOptimizer.optimize(enhanced, platform)
+        return {
+            "gancho_final": final, "gancho_original": hook_base, "archetype": archetype,
+            "publico": perfil, "expansao": audience["grupo_secundario"],
+            "timing": audience["timing_otimo"], "hashtags": audience["hashtags_sugeridas"],
+            "cta": archetype["cta"], "cores": archetype["cores"],
+            "musica": archetype["musica"], "duracao": archetype["duracao_ideal"],
+        }
+PYEOF
+
+cat > "$APP_DIR/viral_engine/platform_optimizer.py" << 'PYEOF'
+"""ClipFusion — Platform Optimizer."""
+
+PLATFORM_SPECS = {
+    "tiktok":    {"max_hook_chars": 100, "max_duration": 180, "ideal": (30,60),  "label": "TikTok"},
+    "instagram": {"max_hook_chars": 125, "max_duration": 90,  "ideal": (15,60),  "label": "Instagram Reels"},
+    "youtube":   {"max_hook_chars": 70,  "max_duration": 60,  "ideal": (15,60),  "label": "YouTube Shorts"},
+    "kwai":      {"max_hook_chars": 100, "max_duration": 60,  "ideal": (15,60),  "label": "Kwai"},
+}
+
+class PlatformOptimizer:
+    @staticmethod
+    def optimize(hook: str, platform: str) -> str:
+        limit = PLATFORM_SPECS.get(platform, {}).get("max_hook_chars", 100)
+        return hook[:limit-3]+"..." if len(hook) > limit else hook
+
+    @staticmethod
+    def specs(platform: str) -> dict:
+        return PLATFORM_SPECS.get(platform, PLATFORM_SPECS["tiktok"])
+PYEOF
+
+cat > "$APP_DIR/viral_engine/secondary_group.py" << 'PYEOF'
+"""ClipFusion — Secondary Group Strategy."""
+
+class SecondaryGroupStrategy:
+    def dual_hook(self, hook: str, primary: str, secondary: dict) -> str:
+        angle = secondary.get("angulo_gancho", "")
+        return f"{hook} ({angle})" if angle else hook
+
+    def expansion_report(self, primary: str, secondary: dict) -> str:
+        return (f"Público primário: {primary}\n"
+                f"Expansão: {secondary.get('nome','')} "
+                f"(+{secondary.get('expansao_potencial','?')} alcance estimado)")
+PYEOF
+
+# ── gui/ ──────────────────────────────────────────────────────────────────────
+echo "# gui" > "$APP_DIR/gui/__init__.py"
+
+cat > "$APP_DIR/gui/main_gui.py" << 'PYEOF'
+"""
+ClipFusion Viral Pro — Interface principal (Tkinter)
+7 abas: Projeto | Transcrição | IA Externa | Cortes | Render | Histórico | Agenda
+"""
+import tkinter as tk
+from tkinter import ttk, messagebox, filedialog, scrolledtext
+import threading, os, gc
+from pathlib import Path
+from datetime import datetime
+
+import db
+from utils.hardware import HardwareDetector, check_system
+from core.transcriber import WhisperTranscriber, fmt_time
+from core.prompt_builder import build_analysis_prompt, parse_ai_response
+from core.cut_engine import render_all, _detect_vaapi
+from anti_copy_modules.core import LEVEL_LABELS
+
+BG   = "#0d0d1a"; BG2  = "#151528"; BG3  = "#1e1e3a"
+ACC  = "#7c3aed"; GRN  = "#22c55e"; RED  = "#ef4444"
+YEL  = "#f59e0b"; WHT  = "#f1f5f9"; GRY  = "#64748b"
+FNT  = ("Segoe UI", 10); FNTB = ("Segoe UI", 10, "bold")
+FNTL = ("Segoe UI", 13, "bold"); MONO = ("Consolas", 9)
+
+ACE_LEVELS = [
+    ("🟢 NENHUM",  "none"),
+    ("🟡 BÁSICO",  "basic"),
+    ("🟠 ANTI-IA", "anti_ai"),
+    ("🔴 MÁXIMO",  "maximum"),
+]
+
+
+class ClipFusionApp:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("✂ ClipFusion Viral Pro")
+        self.root.geometry("1120x800")
+        self.root.configure(bg=BG)
+        self.root.resizable(True, True)
+        self.project_id = None; self.video_path = None
+        self.segments   = []; self.duration = 0.0
+        self.cut_vars   = {}; self.output_dir = None
+        self.hw = HardwareDetector()
+        self._build_ui()
+
+    def run(self):
+        self.root.mainloop()
+
+    def _build_ui(self):
+        hdr = tk.Frame(self.root, bg=ACC, height=54)
+        hdr.pack(fill="x")
+        tk.Label(hdr, text="✂  ClipFusion Viral Pro",
+                 font=("Segoe UI", 16, "bold"), bg=ACC, fg=WHT).pack(side="left", padx=20, pady=12)
+        tk.Label(hdr, text="vídeo longo → cortes virais prontos pra postar",
+                 font=FNT, bg=ACC, fg="#c4b5fd").pack(side="left")
+        self.lbl_hw = tk.Label(hdr, text=self.hw.get_status_string(),
+                                font=("Segoe UI", 8), bg=ACC, fg="#c4b5fd")
+        self.lbl_hw.pack(side="right", padx=16)
+
+        s = ttk.Style(); s.theme_use("clam")
+        s.configure("TNotebook", background=BG2, borderwidth=0)
+        s.configure("TNotebook.Tab", background=BG3, foreground=GRY, padding=[14,7], font=FNT)
+        s.map("TNotebook.Tab", background=[("selected", ACC)], foreground=[("selected", WHT)])
+
+        self.nb = ttk.Notebook(self.root)
+        self.nb.pack(fill="both", expand=True)
+        self._tab_projeto(); self._tab_transcricao(); self._tab_ia()
+        self._tab_cortes();  self._tab_render();      self._tab_historico()
+        self._tab_agenda()
+
+    def _tab_projeto(self):
+        f = tk.Frame(self.nb, bg=BG2); self.nb.add(f, text="📁  Projeto")
+        self._lbl(f, "Novo projeto", font=FNTL).pack(anchor="w", padx=30, pady=(28,4))
+        self._lbl(f, "Selecione o vídeo longo e configure as opções.", color=GRY).pack(anchor="w", padx=30)
+        self._sep(f)
+        r1 = tk.Frame(f, bg=BG2); r1.pack(fill="x", padx=30, pady=6)
+        self._lbl(r1, "Nome:").pack(side="left")
+        self.v_name = tk.StringVar(value=f"Projeto {datetime.now().strftime('%d/%m %H:%M')}")
+        tk.Entry(r1, textvariable=self.v_name, width=44,
+                 bg=BG3, fg=WHT, insertbackground=WHT, relief="flat", font=FNT).pack(side="left", padx=10)
+        self._lbl(f, "Contexto (opcional — ajuda a IA entender o tema):").pack(anchor="w", padx=30, pady=(12,4))
+        self.ctx_box = tk.Text(f, height=3, bg=BG3, fg=WHT,
+                               insertbackground=WHT, relief="flat", font=FNT, wrap="word")
+        self.ctx_box.pack(fill="x", padx=30)
+        self.ctx_box.insert("1.0", "Ex: Podcast sobre vendas — episódio sobre prospecção de clientes.")
+        self._sep(f)
+        vr = tk.Frame(f, bg=BG2); vr.pack(fill="x", padx=30, pady=6)
+        self._btn(vr, "📂 Selecionar vídeo", self._select_video, ACC).pack(side="left")
+        self.lbl_video = self._lbl(vr, "Nenhum vídeo selecionado", color=GRY)
+        self.lbl_video.pack(side="left", padx=14)
+        op = tk.Frame(f, bg=BG2); op.pack(fill="x", padx=30, pady=10)
+        self.v_vaapi = tk.BooleanVar(value=True)
+        self._chk(op, "Usar VA-API (Intel HD 520) — recomendado", self.v_vaapi).pack(anchor="w")
+        acef = tk.Frame(f, bg=BG2); acef.pack(fill="x", padx=30, pady=4)
+        self._lbl(acef, "Anti-Copyright:").pack(side="left")
+        self.v_ace = tk.StringVar(value="basic")
+        for lbl, val in ACE_LEVELS:
+            tk.Radiobutton(acef, text=lbl, variable=self.v_ace, value=val,
+                           bg=BG2, fg=WHT, selectcolor=ACC,
+                           activebackground=BG2, font=FNT).pack(side="left", padx=8)
+        wf = tk.Frame(f, bg=BG2); wf.pack(fill="x", padx=30, pady=4)
+        self._lbl(wf, "Whisper:").pack(side="left")
+        self.v_whisper = tk.StringVar(value="tiny")
+        for m in ["tiny", "base", "small"]:
+            tk.Radiobutton(wf, text=m, variable=self.v_whisper, value=m,
+                           bg=BG2, fg=WHT, selectcolor=ACC,
+                           activebackground=BG2, font=FNT).pack(side="left", padx=8)
+        self._sep(f)
+        self._btn(f, "▶  Iniciar Transcrição", self._start_transcription, GRN, wide=True).pack(padx=30, pady=8)
+        self.lbl_status = self._lbl(f, "", color=GRY)
+        self.lbl_status.pack(padx=30, pady=4)
+
+    def _tab_transcricao(self):
+        f = tk.Frame(self.nb, bg=BG2); self.nb.add(f, text="📝  Transcrição")
+        self._lbl(f, "Transcrição com timestamps", font=FNTL).pack(anchor="w", padx=30, pady=(20,4))
+        self._lbl(f, "Gerada pelo Whisper. Revise se necessário.", color=GRY).pack(anchor="w", padx=30)
+        self.box_transcript = scrolledtext.ScrolledText(
+            f, bg=BG3, fg=WHT, font=MONO, relief="flat", insertbackground=WHT)
+        self.box_transcript.pack(fill="both", expand=True, padx=30, pady=12)
+        self._btn(f, "▶  Gerar Prompt para IA  →", self._goto_ia, ACC, wide=True).pack(padx=30, pady=(0,20))
+
+    def _tab_ia(self):
+        f = tk.Frame(self.nb, bg=BG2); self.nb.add(f, text="🤖  IA Externa")
+        top = tk.Frame(f, bg=BG2); top.pack(fill="x", padx=30, pady=(20,4))
+        self._lbl(top, "Prompt para copiar", font=FNTL).pack(side="left")
+        self._btn(top, "📋 Copiar", self._copy_prompt, ACC).pack(side="right")
+        self._lbl(f, "Cole no Claude.ai, ChatGPT ou qualquer IA. Traga o JSON de resposta abaixo.",
+                  color=GRY).pack(anchor="w", padx=30)
+        self.box_prompt = scrolledtext.ScrolledText(
+            f, height=11, bg=BG3, fg="#a5b4fc", font=MONO, relief="flat", insertbackground=WHT)
+        self.box_prompt.pack(fill="x", padx=30, pady=(4,14))
+        self._lbl(f, "Resposta da IA (cole o JSON aqui):", font=FNTB).pack(anchor="w", padx=30)
+        self.box_resp = scrolledtext.ScrolledText(
+            f, height=13, bg=BG3, fg=GRN, font=MONO, relief="flat", insertbackground=WHT)
+        self.box_resp.pack(fill="both", expand=True, padx=30, pady=4)
+        self._btn(f, "✅  Processar resposta  →  Ver Cortes",
+                  self._process_resp, GRN, wide=True).pack(padx=30, pady=(4,20))
+
+    def _tab_cortes(self):
+        f = tk.Frame(self.nb, bg=BG2); self.nb.add(f, text="✂  Cortes")
+        top = tk.Frame(f, bg=BG2); top.pack(fill="x", padx=30, pady=(20,4))
+        self._lbl(top, "Cortes sugeridos pela IA", font=FNTL).pack(side="left")
+        self._btn(top, "✅ Todos",  self._approve_all, GRN).pack(side="right", padx=4)
+        self._btn(top, "❌ Nenhum", self._reject_all,  RED).pack(side="right")
+        self._lbl(f, "Marque os cortes que deseja renderizar.", color=GRY).pack(anchor="w", padx=30)
+        outer = tk.Frame(f, bg=BG2); outer.pack(fill="both", expand=True, padx=30, pady=8)
+        cv = tk.Canvas(outer, bg=BG2, highlightthickness=0)
+        sb = ttk.Scrollbar(outer, orient="vertical", command=cv.yview)
+        self.cuts_frame = tk.Frame(cv, bg=BG2)
+        self.cuts_frame.bind("<Configure>",
+            lambda e: cv.configure(scrollregion=cv.bbox("all")))
+        cv.create_window((0,0), window=self.cuts_frame, anchor="nw")
+        cv.configure(yscrollcommand=sb.set)
+        cv.pack(side="left", fill="both", expand=True)
+        sb.pack(side="right", fill="y")
+        cv.bind_all("<MouseWheel>", lambda e: cv.yview_scroll(-1*(e.delta//120), "units"))
+        self._btn(f, "🎬  Renderizar cortes aprovados",
+                  self._start_render, ACC, wide=True).pack(padx=30, pady=(4,20))
+
+    def _tab_render(self):
+        f = tk.Frame(self.nb, bg=BG2); self.nb.add(f, text="🎬  Render")
+        self._lbl(f, "Progresso do render", font=FNTL).pack(anchor="w", padx=30, pady=(20,4))
+        self.box_log = scrolledtext.ScrolledText(
+            f, bg=BG3, fg=GRN, font=MONO, relief="flat", insertbackground=WHT)
+        self.box_log.pack(fill="both", expand=True, padx=30, pady=10)
+        self._btn(f, "📂  Abrir pasta de saída",
+                  self._open_output, GRY, wide=True).pack(padx=30, pady=(0,20))
+
+    def _tab_historico(self):
+        f = tk.Frame(self.nb, bg=BG2); self.nb.add(f, text="📋  Histórico")
+        self._lbl(f, "Projetos anteriores", font=FNTL).pack(anchor="w", padx=30, pady=(20,4))
+        cols = ("ID", "Nome", "Status", "Criado em")
+        st = ttk.Style()
+        st.configure("Treeview", background=BG3, foreground=WHT, fieldbackground=BG3, rowheight=28)
+        st.configure("Treeview.Heading", background=ACC, foreground=WHT)
+        self.tree = ttk.Treeview(f, columns=cols, show="headings", selectmode="browse")
+        for c in cols:
+            self.tree.heading(c, text=c)
+            self.tree.column(c, width=50 if c=="ID" else 200)
+        self.tree.pack(fill="both", expand=True, padx=30, pady=10)
+        self._btn(f, "🔄  Carregar projeto selecionado",
+                  self._load_project, ACC, wide=True).pack(padx=30, pady=(0,20))
+        self._refresh_tree()
+
+    def _tab_agenda(self):
+        f = tk.Frame(self.nb, bg=BG2); self.nb.add(f, text="📅  Agenda")
+        self._lbl(f, "Agenda de Upload", font=FNTL).pack(anchor="w", padx=30, pady=(20,4))
+        self._lbl(f, "Gera horários ideais com jitter anti-padrão para evitar detecção.",
+                  color=GRY).pack(anchor="w", padx=30)
+        self._sep(f)
+        cfg = tk.Frame(f, bg=BG2); cfg.pack(fill="x", padx=30, pady=8)
+        self._lbl(cfg, "Plataforma:").pack(side="left")
+        self.v_platform = tk.StringVar(value="tiktok")
+        for p in ["tiktok", "instagram", "youtube", "kwai"]:
+            tk.Radiobutton(cfg, text=p, variable=self.v_platform, value=p,
+                           bg=BG2, fg=WHT, selectcolor=ACC,
+                           activebackground=BG2, font=FNT).pack(side="left", padx=8)
+        cfg2 = tk.Frame(f, bg=BG2); cfg2.pack(fill="x", padx=30, pady=4)
+        self._lbl(cfg2, "Quantidade:").pack(side="left")
+        self.v_count = tk.StringVar(value="10")
+        tk.Entry(cfg2, textvariable=self.v_count, width=6,
+                 bg=BG3, fg=WHT, insertbackground=WHT, relief="flat", font=FNT).pack(side="left", padx=10)
+        self._btn(f, "📅  Gerar Agenda", self._generate_schedule, ACC, wide=True).pack(padx=30, pady=10)
+        self.box_agenda = scrolledtext.ScrolledText(
+            f, bg=BG3, fg=GRN, font=MONO, relief="flat", insertbackground=WHT)
+        self.box_agenda.pack(fill="both", expand=True, padx=30, pady=10)
+
+    def _select_video(self):
+        p = filedialog.askopenfilename(
+            title="Selecionar vídeo",
+            filetypes=[("Vídeos", "*.mp4 *.mkv *.mov *.avi *.webm"), ("Todos", "*.*")])
+        if p:
+            self.video_path = p
+            self.lbl_video.config(text=f"✅ {os.path.basename(p)}", fg=GRN)
+
+    def _start_transcription(self):
+        if not self.video_path:
+            messagebox.showwarning("Atenção", "Selecione um vídeo primeiro."); return
+        name = self.v_name.get().strip() or "Sem nome"
+        pid  = db.create_project(name, self.video_path)
+        self.project_id = pid
+        self._status(f"Projeto #{pid} criado. Transcrevendo...", YEL)
+        def run():
+            def log(m): self.root.after(0, lambda msg=m: self._status(msg, YEL))
+            try:
+                transcriber = WhisperTranscriber(model=self.v_whisper.get(), language="pt")
+                res = transcriber.transcribe(self.video_path, progress_callback=log)
+                self.segments = res["segments"]
+                self.duration = self.segments[-1]["end"] if self.segments else 0
+                db.save_transcription(pid, res["full_text"], self.segments)
+                db.update_project_status(pid, "transcrito")
+                ctx = self.ctx_box.get("1.0","end").strip()
+                ctx = "" if ctx.startswith("Ex:") else ctx
+                prompt = build_analysis_prompt(self.segments, self.duration, ctx)
+                def update():
+                    self.box_transcript.delete("1.0","end")
+                    for s in self.segments:
+                        self.box_transcript.insert("end", f"[{fmt_time(s['start'])}] {s['text']}\n")
+                    self.box_prompt.delete("1.0","end")
+                    self.box_prompt.insert("1.0", prompt)
+                    self._status(f"✅ {len(self.segments)} segmentos. Vá para 🤖 IA Externa.", GRN)
+                    self.nb.select(1)
+                self.root.after(0, update)
+            except Exception as e:
+                self.root.after(0, lambda: messagebox.showerror("Erro", str(e)))
+                self.root.after(0, lambda: self._status(f"Erro: {e}", RED))
+        threading.Thread(target=run, daemon=True).start()
+
+    def _goto_ia(self):
+        if not self.segments:
+            messagebox.showwarning("Atenção", "Transcreva primeiro."); return
+        self.nb.select(2)
+
+    def _copy_prompt(self):
+        p = self.box_prompt.get("1.0","end-1c")
+        if not p.strip():
+            messagebox.showwarning("Atenção", "Prompt vazio. Transcreva primeiro."); return
+        self.root.clipboard_clear(); self.root.clipboard_append(p)
+        messagebox.showinfo("Copiado!", "Cole no Claude.ai, ChatGPT ou outra IA.\nCopie o JSON e cole abaixo.")
+
+    def _process_resp(self):
+        resp = self.box_resp.get("1.0","end-1c").strip()
+        if not resp:
+            messagebox.showwarning("Atenção", "Cole a resposta da IA primeiro."); return
+        if not self.project_id:
+            messagebox.showwarning("Atenção", "Nenhum projeto ativo."); return
+        try:
+            cuts = parse_ai_response(resp)
+        except Exception as e:
+            messagebox.showerror("Erro ao processar", str(e)); return
+        if not cuts:
+            messagebox.showwarning("Atenção", "Nenhum corte válido encontrado."); return
+        db.save_cuts(self.project_id, cuts)
+        db.update_project_status(self.project_id, "cortes_prontos")
+        self._draw_cuts(cuts)
+        self.nb.select(3)
+
+    def _draw_cuts(self, cuts: list):
+        for w in self.cuts_frame.winfo_children(): w.destroy()
+        self.cut_vars = {}
+        try:
+            from viral_engine.archetypes import ARCHETYPES
+            archetypes = ARCHETYPES
+        except: archetypes = {}
+        for cut in cuts:
+            cid = cut.get("id", cut.get("cut_index", 0))
+            self._draw_cut_card(cut, cid, archetypes)
+
+    def _draw_cut_card(self, cut: dict, cid, archetypes: dict):
+        card = tk.Frame(self.cuts_frame, bg=BG3)
+        card.pack(fill="x", pady=3, padx=2)
+        var = tk.BooleanVar(value=True); self.cut_vars[cid] = var
+        hdr = tk.Frame(card, bg=BG3); hdr.pack(fill="x", padx=10, pady=(8,3))
+        tk.Checkbutton(hdr, variable=var, bg=BG3, fg=WHT,
+                       selectcolor=ACC, activebackground=BG3, font=FNTB).pack(side="left")
+        dur = cut["end"] - cut["start"]
+        arch_id   = cut.get("archetype", "")
+        arch_info = archetypes.get(arch_id, {})
+        emoji     = arch_info.get("emoji", "✂️")
+        tk.Label(hdr, text=f"{emoji} {cut.get('title','Corte')}",
+                 bg=BG3, fg=WHT, font=FNTB).pack(side="left", padx=4)
+        tk.Label(hdr, text=f"  {fmt_time(cut['start'])} → {fmt_time(cut['end'])}  ({fmt_time(dur)})",
+                 bg=BG3, fg=GRY, font=FNT).pack(side="left")
+        tk.Label(hdr, text=f" {arch_id} ", bg=ACC, fg=WHT,
+                 font=("Segoe UI",8,"bold"), padx=5, pady=1).pack(side="right")
+        tk.Label(hdr, text=", ".join(cut.get("platforms",[])),
+                 bg=BG3, fg=YEL, font=("Segoe UI",9)).pack(side="right", padx=8)
+        if cut.get("hook"):
+            tk.Label(card, text=f"🎣  {cut['hook']}",
+                     bg=BG3, fg="#a5b4fc", font=FNT,
+                     wraplength=960, justify="left", anchor="w").pack(fill="x", padx=22, pady=2)
+        if cut.get("reason"):
+            tk.Label(card, text=f"💡  {cut['reason']}",
+                     bg=BG3, fg=GRY, font=FNT,
+                     wraplength=960, justify="left", anchor="w").pack(fill="x", padx=22, pady=(0,8))
+        tk.Frame(card, bg=BG, height=1).pack(fill="x")
+
+    def _approve_all(self):
+        for v in self.cut_vars.values(): v.set(True)
+
+    def _reject_all(self):
+        for v in self.cut_vars.values(): v.set(False)
+
+    def _start_render(self):
+        if not self.project_id:
+            messagebox.showwarning("Atenção", "Nenhum projeto ativo."); return
+        all_cuts = db.get_cuts(self.project_id)
+        approved = []
+        for cut in all_cuts:
+            cid = cut.get("id"); idx = cut.get("cut_index", 0)
+            key = cid if cid in self.cut_vars else idx
+            if self.cut_vars.get(key, tk.BooleanVar(value=True)).get():
+                db.update_cut_status(cid, "aprovado")
+                approved.append(cut)
+        if not approved:
+            messagebox.showwarning("Atenção", "Nenhum corte aprovado."); return
+        proj    = db.get_project(self.project_id)
+        vid_dir = str(Path(self.video_path).parent)
+        safe    = "".join(c for c in proj["name"]
+                          if c.isalnum() or c in " _-").strip().replace(" ","_")
+        out_dir = os.path.join(vid_dir, f"clipfusion_{safe}")
+        os.makedirs(out_dir, exist_ok=True)
+        self.output_dir = out_dir
+        self.nb.select(4); self.box_log.delete("1.0","end")
+        vaapi_ok = _detect_vaapi() and self.v_vaapi.get()
+        self._log(f"Renderizando {len(approved)} cortes...")
+        self._log(f"Saída: {out_dir}")
+        self._log(f"Anti-copyright: {LEVEL_LABELS.get(self.v_ace.get(),'')}")
+        self._log(f"Encoder: {'VA-API 2-pass ✅' if vaapi_ok else 'libx264 (CPU)'}\n")
+        ace = self.v_ace.get(); vaapi = self.v_vaapi.get()
+        segs = self.segments; vid = self.video_path; pid = str(self.project_id)
+        def run():
+            try:
+                for cut in approved:
+                    if cut.get('archetype') and cut.get('title'):
+                        try:
+                            from viral_engine.hook_engine import ViralHookEngine
+                            hook_data = ViralHookEngine().generate(
+                                tema=cut['title'], nicho='geral',
+                                platform='tiktok', archetype_id=cut['archetype'])
+                            self.root.after(0, lambda m=f"🎯 Gancho: {hook_data['gancho_final'][:50]}": self._log(m))
+                        except: pass
+                results = render_all(vid, approved, segs, out_dir, pid,
+                                     ace_level=ace, use_vaapi=vaapi,
+                                     progress_cb=lambda m: self.root.after(
+                                         0, lambda msg=m: self._log(msg)))
+                for cut_id, paths in results.items():
+                    db.update_cut_output(cut_id, paths)
+                db.update_project_status(self.project_id, "concluido")
+                gc.collect()
+                self.root.after(0, lambda: self._log(
+                    f"\n✅ PRONTO! {len(results)} cortes em:\n{out_dir}"))
+                self.root.after(0, lambda: messagebox.showinfo(
+                    "✅ Concluído", f"{len(results)} cortes gerados!\n\nPasta: {out_dir}"))
+            except Exception as e:
+                self.root.after(0, lambda: self._log(f"\n❌ ERRO: {e}"))
+        threading.Thread(target=run, daemon=True).start()
+
+    def _open_output(self):
+        d = self.output_dir
+        if d and os.path.exists(d):
+            os.system(f'xdg-open "{d}"')
+        else:
+            messagebox.showinfo("Info", "Pasta de saída ainda não criada.")
+
+    def _generate_schedule(self):
+        try:
+            count    = int(self.v_count.get())
+            platform = self.v_platform.get()
+            from anti_copy_modules.network_evasion import NetworkEvasion
+            ne       = NetworkEvasion(seed=int(datetime.now().timestamp()))
+            schedule = ne.generate_schedule(count, platform)
+            text     = ne.format_schedule(schedule)
+            try:
+                from viral_engine.audience_analyzer import AudienceAnalyzer
+                audience = AudienceAnalyzer().analyze('geral', platform)
+                timing   = audience.get('timing_otimo', [])
+                if timing:
+                    text += f"\n⏰ Melhores horários: {', '.join(timing)}"
+            except: pass
+            self.box_agenda.delete("1.0","end")
+            self.box_agenda.insert("1.0", text)
+        except ValueError:
+            messagebox.showerror("Erro", "Quantidade inválida. Use número inteiro.")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao gerar agenda: {e}")
+
+    def _load_project(self):
+        sel = self.tree.selection()
+        if not sel: return
+        pid  = int(self.tree.item(sel[0])["values"][0])
+        proj = db.get_project(pid)
+        if not proj: return
+        self.project_id = pid
+        self.video_path = proj["video_path"]
+        t = db.get_transcription(pid)
+        if t:
+            self.segments = t["segments"]
+            self.duration = self.segments[-1]["end"] if self.segments else 0
+            self.box_transcript.delete("1.0","end")
+            for s in self.segments:
+                self.box_transcript.insert("end", f"[{fmt_time(s['start'])}] {s['text']}\n")
+            self.box_prompt.delete("1.0","end")
+            self.box_prompt.insert("1.0", build_analysis_prompt(self.segments, self.duration, ""))
+        cuts = db.get_cuts(pid)
+        if cuts: self._draw_cuts(cuts)
+        self.v_name.set(proj["name"])
+        self.lbl_video.config(text=f"✅ {os.path.basename(proj['video_path'])}", fg=GRN)
+        messagebox.showinfo("Carregado", f"Projeto '{proj['name']}' carregado.\nStatus: {proj['status']}")
+        self.nb.select(0)
+
+    def _refresh_tree(self):
+        for r in self.tree.get_children(): self.tree.delete(r)
+        for p in db.list_projects():
+            self.tree.insert("","end", values=(p["id"], p["name"], p["status"], p["created_at"]))
+
+    def _log(self, m):
+        self.box_log.insert("end", m+"\n"); self.box_log.see("end")
+
+    def _status(self, m, color=GRY):
+        self.lbl_status.config(text=m, fg=color)
+
+    def _lbl(self, p, text="", font=None, color=None):
+        return tk.Label(p, text=text,
+                        bg=p.cget("bg") if hasattr(p,"cget") else BG2,
+                        fg=color or WHT, font=font or FNT)
+
+    def _btn(self, p, text, cmd, color=BG3, wide=False):
+        return tk.Button(p, text=text, command=cmd,
+                         bg=color, fg=WHT, font=FNTB, relief="flat",
+                         cursor="hand2", padx=20 if wide else 14, pady=8,
+                         activebackground=color, activeforeground=WHT,
+                         width=50 if wide else None)
+
+    def _chk(self, p, text, var):
+        return tk.Checkbutton(p, text=text, variable=var,
+                              bg=p.cget("bg"), fg=WHT, selectcolor=ACC,
+                              activebackground=p.cget("bg"), font=FNT)
+
+    def _sep(self, p):
+        tk.Frame(p, bg=BG3, height=1).pack(fill="x", padx=30, pady=16)
+PYEOF
+
+ok "Todos os arquivos Python escritos"
+
+# ── 6. run.sh ────────────────────────────────────────────────────────────────
+cat > "$APP_DIR/run.sh" << 'SHEOF'
+#!/bin/bash
+set -e
+cd "$(dirname "$0")"
+export LIBVA_DRIVER_NAME=iHD
+export LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
+source venv/bin/activate
+echo ""
+echo "🔍 Verificando sistema..."
+python3 -c "from utils.hardware import check_system; check_system()" 2>/dev/null || true
+echo ""
+echo "🚀 Iniciando ClipFusion Viral Pro..."
+python3 main.py
+SHEOF
+chmod +x "$APP_DIR/run.sh"
+
+# ── 7. Ambiente virtual Python ───────────────────────────────────────────────
+info "Criando ambiente virtual Python..."
+python3 -m venv "$APP_DIR/venv"
+# shellcheck disable=SC1091
+source "$APP_DIR/venv/bin/activate"
+pip install --quiet --upgrade pip setuptools wheel
+pip install --quiet -r "$APP_DIR/requirements.txt"
+ok "Pacotes Python instalados"
+
+# ── 8. Validação dos imports ──────────────────────────────────────────────────
+info "Validando imports..."
+python3 - << 'PYEOF'
+import yaml, whisper, numpy
+from PIL import Image
+print("  yaml ✅  whisper ✅  numpy ✅  pillow ✅")
+PYEOF
+ok "Imports validados"
+
+# ── 9. Validação VA-API final ─────────────────────────────────────────────────
+info "Smoke test VA-API..."
+export LIBVA_DRIVER_NAME=iHD
+if vainfo 2>&1 | grep -q "VAEntrypointEncSlice"; then
+  ok "VA-API iHD encode H.264 — pronto"
+else
+  warn "VA-API encode não confirmado — render CPU como fallback"
+fi
+
+# ── 10. Compilar arquivos Python ──────────────────────────────────────────────
+info "Compilando código-base..."
+python3 -m compileall -q "$APP_DIR"
+ok "Compilação OK"
+
+# ── 11. Permissões ────────────────────────────────────────────────────────────
+chown -R "$TARGET_USER:$TARGET_USER" "$APP_DIR" "$DB_DIR" 2>/dev/null || true
+ok "Permissões ajustadas"
+
+echo ""
+echo "╔══════════════════════════════════════════════════════════╗"
+echo "║  ✅ CLIPFUSION VIRAL PRO — INSTALAÇÃO CONCLUÍDA        ║"
+echo "╠══════════════════════════════════════════════════════════╣"
+echo "║  Projeto:  $APP_DIR"
+echo "║  Iniciar:  cd ~/clipfusion && ./run.sh"
+echo "╚══════════════════════════════════════════════════════════╝"
+echo ""

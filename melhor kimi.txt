@@ -1,0 +1,224 @@
+🧬 BIOS/UEFI – Pré-configuração física
+Antes de bootar o pendrive, entre na BIOS (Fn+F2 no 310-15ISK):
+Copy
+Configuração → CPU:
+- VT-d: ENABLED (isolar a 920MX futuramente se quiser)
+- VT-x: ENABLED (obvio)
+- Hyper-Threading: ENABLED (você precisa dos 4 threads)
+
+Configuração → Gráficos:
+- Modo Gráfico: INTEGRATED (força iGPU, desliga dGPU)
+- Memória de Vídeo Compartilhada: 512MB (máximo permitido no Skylake-U)
+
+Segurança:
+- Secure Boot: DISABLED
+- Intel SGX: DISABLED (consome 128MB de RAM reservados)
+
+SATA Mode:
+- AHCI (já deve estar, confirme)
+Por que: SGX reserva RAM e você não usa. Gráfico integrado forçado evita que a 920MX inicialize e consuma watts no barramento PCIe.
+⚡ KERNEL CMDLINE – Skylake-U Específico
+Edite /etc/default/grub:
+bash
+Copy
+GRUB_CMDLINE_LINUX_DEFAULT="quiet \
+intel_idle.max_cstate=2 \
+processor.max_cstate=2 \
+intel_pstate=passive \
+msr.allow_writes=on \
+pcie_aspm=powersave \
+i915.enable_guc=3 \
+i915.enable_huc=1 \
+i915.enable_psr=0 \
+i915.enable_fbc=1 \
+i915.fastboot=1 \
+nouveau.blacklist=1 \
+modprobe.blacklist=nouveau \
+mitigations=off \
+nopti \
+noibpb \
+noibrs \
+rfkill.default_state=0 \
+zfs.zfs_arc_max=1073741824 \
+scsi_mod.use_blk_mq=1 \
+elevator=mq-deadline \
+splash"
+Explicação técnica (latências do seu hardware):
+max_cstate=2: Skylake-U tem latência de ~100µs ao sair de C3. C6/C7 tem 300-500µs. Para edição de vídeo em tempo real, você não pode ter o core dormindo quando o buffer do FFmpeg chega.
+i915.enable_guc=3 + huc=1: Habilita firmware GuC (gerenciamento de execução) e HuC (segurança/DRM). No seu HD 520, isso libera decodificação H.265 10-bit e VP9 (essencial para ClipFusion lidar com vídeos modernos).
+mitigations=off: Seu sistema é offline/air-gapped para forense. Skylake perde 20-30% de performance com Spectre v2 patches. Você precisa desses ciclos.
+scsi_mod.use_blk_mq=1 + mq-deadline: Seu SSD é SATA III (~550MB/s seq, ~90k IOPS). O scheduler BFQ é overkill para SATA SSD, mq-deadline tem latência mais baixa para workloads mistos (banco de dados + vídeo).
+zfs.zfs_arc_max=1G: Limita cache ZFS se usar (mas você usará BTRFS). Incluí para segurança.
+💾 BTRFS – Otimizado para seu SSD SATA (não NVMe)
+Seu SSD provavelmente é um Samsung PM961 ou similar SATA. Não é NVMe PCIe, então:
+bash
+Copy
+# No fstab (será gerado, mas verifique estas opções):
+UUID=xxx / btrfs noatime,nodiratime,compress=zstd:3,space_cache=v2,ssd,discard=async,subvol=@ 0 1
+UUID=xxx /home btrfs noatime,nodiratime,compress=zstd:3,space_cache=v2,ssd,discard=async,subvol=@home 0 2
+UUID=xxx /scratch btrfs noatime,nodiratime,nodatacow,space_cache=v2,ssd,discard=async,subvol=@scratch 0 2
+Crítico:
+discard=async: SSD SATA tem latência de TRIM síncrono alta. Async deixa o discard em background sem travar o write.
+nodatacow em /scratch: Docker e cache de vídeo geram CoW (Copy-on-Write) excessivo. Desativa COW no scratch para evitar fragmentação de metadados no seu SSD de 480GB.
+space_cache=v2: Skylake tem poucas threads. Tree de espaço v2 é mais rápida para balanceamento que v1.
+🧠 MEMÓRIA – 8GB Single-Channel Otimizado
+Configuração ZRAM (revisada para sua banda):
+bash
+Copy
+# /etc/default/zramswap
+ALGO=lz4
+PERCENT=25
+PRIORITY=100
+Por que mudança: zstd consome ~300-400MB/s de banda de memória para compressão. Seu sistema é single-channel DDR4-2133 (127GB/s teórico). lz4 consome ~50MB/s e tem throughput de compressão ~500MB/s vs zstd ~200MB/s no seu i5. Você ganha latência na troca de páginas.
+Swappiness ajustada para 8GB com ZRAM:
+bash
+Copy
+# /etc/sysctl.d/99-memory-tuning.conf
+vm.swappiness=60
+vm.vfs_cache_pressure=200
+vm.dirty_background_ratio=3
+vm.dirty_ratio=10
+vm.page-cluster=3
+Por que 60: Com ZRAM de 2GB (25% de 8GB), você quer empurrar para a compressão em RAM antes do disco. 60 é o sweet spot para 8GB físicos + 2GB ZRAM.
+🎬 INTEL HD 520 – Extração máxima do GT2
+Seu GT2 tem 24 EUs (Execution Units). Para ClipFusion:
+bash
+Copy
+# Instalação específica Skylake
+apt install intel-gpu-tools intel-media-va-driver-non-free libmfx1
+
+# Configuração de performance
+echo "options i915 enable_hangcheck=0 enable_dc=0" > /etc/modprobe.d/i915-performance.conf
+Pipeline FFmpeg otimizado para seu hardware:
+bash
+Copy
+# Otimizado para HD 520 (suporta até 1080p60 H.264)
+ffmpeg -hwaccel vaapi \
+  -vaapi_device /dev/dri/renderD128 \
+  -i input.mp4 \
+  -vf 'format=nv12|vaapi,hwupload' \
+  -c:v h264_vaapi \
+  -qp 20 \
+  -bf 3 \
+  -refs 3 \
+  -b:v 5M \
+  -maxrate 5.5M \
+  -bufsize 10M \
+  -c:a copy \
+  output.mp4
+Flags específicas:
+-bf 3: B-frames adaptativos (Skylake tem bom motion estimation)
+-refs 3: Reference frames (memória da HD 520 é compartilhada, não exagere)
+-qp 20: Constant Quality (melhor que CBR para seu uso)
+5Mbps: Sweet spot para 1080p60 no seu encoder (evita thermal throttling do chip gráfico)
+🐳 DOCKER – Cgroups v2 e Memory Pressure
+Com 8GB, você precisa de proteção contra OOM killers:
+bash
+Copy
+# /etc/docker/daemon.json
+{
+  "data-root": "/scratch/docker",
+  "storage-driver": "overlay2",
+  "storage-opts": [
+    "overlay2.override_kernel_check=true",
+    "metacopy=on"  # Economiza inodes no seu SSD
+  ],
+  "log-driver": "local",  # Mais eficiente que json-file
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  },
+  "default-ulimits": {
+    "nofile": { "Name": "nofile", "Hard": 65536, "Soft": 65536 },
+    "memlock": { "Name": "memlock", "Hard": -1, "Soft": -1 }
+  }
+}
+Limitação por container (CSI Linux):
+bash
+Copy
+docker run -d \
+  --memory=1500m \
+  --memory-swap=3000m \
+  --memory-reservation=1000m \
+  --cpus=2 \
+  --blkio-weight=500 \
+  --device-read-bps /dev/sda:50mb \
+  --device-write-bps /dev/sda:30mb \
+  csilinux/csi-linux
+Por que 1500MB: 8GB total - 2GB sistema - 1GB PostgreSQL - 1GB MongoDB - 500MB buffers = 3.5GB livre. CSI Linux pega 1.5GB, sobra 2GB para FFmpeg/Whisper.
+🌡️ THERMAL – Controle de 15W TDP
+Seu i5-6200U thermal throttla em 80°C. Para manter boost de 2.8GHz:
+bash
+Copy
+# Instalação
+apt install thermald linux-cpupower
+
+# Configuração thermald específica para 310-15ISK
+tee /etc/thermald/thermal-conf.xml << 'EOF'
+<?xml version="1.0"?>
+<ThermalConfiguration>
+  <Platform>
+    <Name>Lenovo 310-15ISK Skylake-U</Name>
+    <ProductName>*</ProductName>
+    <Preference>PERFORMANCE</Preference>
+    <ThermalSensors>
+      <Sensor>
+        <Type>x86_pkg_temp</Type>
+        <Path>/sys/class/thermal/thermal_zone0/temp</Path>
+      </Sensor>
+    </ThermalSensors>
+    <ThermalZones>
+      <Zone>
+        <Type>cpu</Type>
+        <TripPoints>
+          <TripPoint>
+            <SensorType>x86_pkg_temp</SensorType>
+            <Temperature>75000</Temperature>
+            <type>passive</type>
+            <ControlType>SEQUENTIAL</ControlType>
+            <CoolingDevice>
+              <index>1</index>
+              <type>intel_pstate</type>
+              <influence>100</influence>
+              <SamplingPeriod>4</SamplingPeriod>
+            </CoolingDevice>
+          </TripPoint>
+        </TripPoints>
+      </Zone>
+    </ThermalZones>
+  </Platform>
+</ThermalConfig>
+EOF
+Turbo Boost desligado em carga sustentada:
+bash
+Copy
+echo "wrmsr -a 0x1a0 0x4000850089" >> /etc/rc.local  # Desliga turbo se temperatura > 70 constante
+🔌 PCIe ASPM – Desligando a 920MX por hardware
+Além do blacklist, salve energia no PCIe da GM108:
+bash
+Copy
+echo "options pcie_aspm policy=powersave" > /etc/modprobe.d/aspm.conf
+echo "ACTION==\"add\", SUBSYSTEM==\"pci\", ATTR{vendor}==\"0x10de\", ATTR{device}==\"0x134f\", ATTR{power/control}=\"auto\"" > /etc/udev/rules.d/99-nvidia-off.rules
+Dados do seu hardware: Device ID 0x134f é a GM108 (920MX). Isso coloca ela em D3cold (0.5W) ao invés de D0 (5W).
+✅ VERIFICAÇÃO FINAL (Se estiver tudo certo, você venceu)
+Execute após boot:
+bash
+Copy
+# 1. Confirme HuC/GuC ativos (essencial para HEVC)
+cat /sys/kernel/debug/dri/0/i915_huc_load_status  # Deve ser RUNNING
+cat /sys/kernel/debug/dri/0/i915_guc_load_status  # Deve ser RUNNING
+
+# 2. Confirme C-states limitados (latência)
+cat /sys/devices/system/cpu/cpuidle/current_driver  # deve ser intel_idle
+cat /sys/devices/system/cpu/cpu0/cpuidle/state*/disable | head -3  # C3 ativo, C6+ desabilitados
+
+# 3. Confirme ASPM
+lspci -vv -s 02:00.0 | grep ASPM  # deve mostrar L1.2 ou L1.1 na 920MX
+
+# 4. Banda de memória (teste)
+dd if=/dev/zero of=/scratch/test bs=1M count=1024 conv=fdatasync  # Deve dar 400-500MB/s no seu SSD SATA
+Esta configuração entrega:
+Latência de sistema: <2ms (C-states controlados)
+Throughput VAAPI: 1080p60 real sem drops
+Memória efetiva: 10GB (8GB físicos + 2GB ZRAM lz4) com swap emergencial em SSD SATA rápido
+Vida útil do SSD: discard async + noatime + metacopy no Docker

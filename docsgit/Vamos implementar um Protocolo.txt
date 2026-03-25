@@ -1,0 +1,8 @@
+Vamos implementar um Protocolo de Telemetria Único. Campos como retention_score, shareability e commentability serão padronizados em todo o pipeline (IA -> Local Ranker -> DB). Isso garante que o sistema tome decisões baseadas em dados reais, e não em "campos zerados"
+
+
+A Mudança: Vou unificar o esquema de dados no db.py. O viral_analyzer vai salvar exatamente o que o prompt_builder precisa ler. Isso significa que o seu Ranking Local deixará de ser uma "meia telemetria" e passará a escolher os vídeos baseado em retenção real e shareability, não apenas em palavras soltas.
+
+Vamos mover todos os marcadores de hook, emoção e nicho para arquivos de configuração externos (locales/en.yaml, locales/pt.yaml). O motor viral deixará de ser "PT-BR heavy" para ser agnóstico ao idioma, permitindo que eu consiga melhor alternancia de idiomas, principalmente pq quero postar em varios idiomas o mesmo corte, se a analise for que ele pode ser viral em espanhol, alemçao, inlges ectmais pra frente.
+
+A Mudança: O novo motor de seleção passará a buscar micro-candidatos de 18 a 35 segundos dentro das janelas maiores. Isso garante que o gancho seja imediato e que o vídeo não tenha "gordura", aumentando drasticamente a chance de o espectador assistir até o fim e o algoritmo te impulsionar.

@@ -1,0 +1,5 @@
+719600865550
+
+
+Uma ferramenta que vai ter n sei se cabe nessa estritura é kubernet fazendo um orquestrador em producao, auto-scaling, self-healing pensando ja na escala horisontal
+e REDIS 	
