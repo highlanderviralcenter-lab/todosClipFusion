@@ -1,0 +1,259 @@
+Manual de Engenharia Viral Consolidado: Sistema SignalCut Hybrid (ClipFusion V2)
+Este manual estabelece o padrão arquitetural e os procedimentos operacionais para o  SignalCut Hybrid , uma plataforma de engenharia de conteúdo projetada para a extração de alta performance de cortes virais. O sistema é otimizado especificamente para ambientes de hardware limitado (Intel i5-6200U / HD 520) e utiliza uma abordagem de inteligência híbrida para garantir precisão editorial e blindagem técnica.
+1. Fundamentos e Filosofia SignalCut Hybrid
+A tese central do sistema é o fluxo  "Local → IA Externa → Local" . Sistemas que dependem exclusivamente de IAs externas falham por desconhecerem o contexto técnico (bitrate, metadados, limites de hardware), enquanto heurísticas puramente locais falham na interpretação semântica e no "timing" humano.Os Três Pilares Técnicos:
+Otimização de Hardware:  Extração de 14GB de memória efetiva em sistemas de 8GB via compressão de kernel.
+Consistência de Dados (Schema Unificado):  Eliminação do erro de "notas zeradas" através de tipagem estrita e valores padrão.
+Precisão Editorial:  Micro-segmentação cirúrgica (18-35s) focada na "joia viral" em vez de blocos diluídos.Objetivos Estratégicos:
+Eliminação do Vácuo de Dados:  Garantir que nenhum módulo leia campos nulos.
+Micro-segmentação (18-35s):  Foco em retenção máxima e arco narrativo enxuto.
+Blindagem Anti-Copyright:  Implementação via VA-API para invalidar assinaturas digitais (Hashes) e redes neurais de similaridade.
+2. Infraestrutura e Otimização de Hardware (Intel i5-6200U / HD 520)
+Para operar com estabilidade em um i5 de 6ª geração com apenas 8GB de RAM, o sistema utiliza uma  Hierarquia de Memória Escalonada .
+Cálculo de Memória Efetiva (14GB)
+A capacidade total de 14GB é atingida via:
+8GB RAM Física:  Base do sistema.
+zRAM (75% - LZ4):  Compressão em tempo real de páginas de memória volátil, permitindo alocação virtual expandida com baixa latência.
+2GB Swapfile (Prioridade 50):  Rede de segurança para picos de processamento do Whisper.
+Configurações de Kernel e System-Tuning
+Parâmetro,Configuração,Objetivo
+i915.enable_guc,3,Ativa GuC/HuC para aceleração máxima via VA-API na HD 520.
+vm.swappiness,150,Força agressivamente o uso de zRAM antes de tocar no disco.
+vm.dirty_ratio,30,Otimiza o buffer de escrita para evitar travamentos em renderizações longas.
+vm.min_free_kbytes,131072,Garante reserva de 128MB para funções críticas do sistema.
+Gerenciamento Proativo:  O sistema utiliza  Lazy Loading  de módulos pesados (Torch/Whisper) e chamadas explícitas de gc.collect() entre as fases de Transcrição e Render para evitar estouro de pilha de memória.
+3. Arquitetura de Dados: O Fim das "Notas Zeradas" (src/db.py)
+O schema unificado garante que scoring_engine e decision_engine compartilhem a mesma ontologia, resolvendo a desconexão de dados.
+import sqlite3
+import json
+import os
+from pathlib import Path
+from contextlib import contextmanager
+
+
+DB_PATH = Path(os.path.expanduser("~")) / ".clipfusion" / "clipfusion.db"
+
+
+@contextmanager
+def get_db():
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+
+def init_db():
+    with get_db() as conn:
+        conn.executescript("""
+        CREATE TABLE IF NOT EXISTS projects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            video_path TEXT NOT NULL,
+            language TEXT DEFAULT 'pt',
+            status TEXT DEFAULT 'created'
+        );
+
+
+        CREATE TABLE IF NOT EXISTS transcripts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            full_text TEXT,
+            segments_json TEXT,
+            quality_score REAL DEFAULT 0.0,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+        );
+
+
+        CREATE TABLE IF NOT EXISTS candidates (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            transcript_id INTEGER NOT NULL,
+            start_time REAL NOT NULL,
+            end_time REAL NOT NULL,
+            text TEXT NOT NULL,
+            hook_strength REAL DEFAULT 0.0,
+            retention_score REAL DEFAULT 0.0,
+            moment_strength REAL DEFAULT 0.0,
+            shareability REAL DEFAULT 0.0,
+            platform_fit_tiktok REAL DEFAULT 0.0,
+            platform_fit_reels REAL DEFAULT 0.0,
+            platform_fit_shorts REAL DEFAULT 0.0,
+            combined_score REAL DEFAULT 0.0,
+            status TEXT DEFAULT 'pending',
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+        );
+
+
+        CREATE TABLE IF NOT EXISTS cuts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            candidate_id INTEGER UNIQUE,
+            start_time REAL NOT NULL,
+            end_time REAL NOT NULL,
+            title TEXT,
+            hook TEXT,
+            archetype TEXT,
+            platforms TEXT,
+            protection_level TEXT DEFAULT 'none',
+            viral_score REAL DEFAULT 0.0,
+            decision TEXT,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+        );
+
+
+        CREATE TABLE IF NOT EXISTS learning_weights (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            module TEXT NOT NULL,
+            subkey TEXT,
+            weight REAL NOT NULL
+        );
+        """)
+        conn.commit()
+
+
+def save_transcript(project_id, full_text, segments, quality_score=0.0):
+    with get_db() as conn:
+        conn.execute("INSERT INTO transcripts (project_id, full_text, segments_json, quality_score) VALUES (?, ?, ?, ?)",
+                    (project_id, full_text, json.dumps(segments), quality_score))
+        conn.commit()
+
+
+def save_candidate(project_id, transcript_id, start, end, text, scores=None):
+    s = scores or {}
+    with get_db() as conn:
+        conn.execute("""INSERT INTO candidates (project_id, transcript_id, start_time, end_time, text, 
+                     hook_strength, retention_score, moment_strength, shareability, combined_score) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                     (project_id, transcript_id, start, end, text, 
+                      s.get('hook', 0.0), s.get('retention', 0.0), s.get('moment', 0.0), 
+                      s.get('shareability', 0.0), s.get('combined', 0.0)))
+        conn.commit()
+
+
+4. Motor de Micro-Segmentação (src/core/segment.py)
+O motor ignora janelas fixas em favor de  Pausas Naturais  (VAD - Voice Activity Detection). O foco é o intervalo de 18 a 35 segundos, evitando "cortes grossos" que diluem o impacto.
+def segment_by_pauses(segments, min_duration=18, max_duration=35, pause_threshold=0.5):
+    """
+    Segmentação baseada em silêncio e fim de frase.
+    Prioriza a 'joia' entre 18-35s conforme a tese de retenção máxima.
+    """
+    candidates = []
+    current_start = None
+    current_text = []
+    last_end = 0
+
+
+    for seg in segments:
+        if current_start is None:
+            current_start = seg['start']
+            current_text = [seg['text']]
+            last_end = seg['end']
+            continue
+
+
+        gap = seg['start'] - last_end
+        duration = seg['end'] - current_start
+
+
+        # Força quebra se pausa > threshold ou se atingir o limite de segurança de 35s
+        if gap > pause_threshold or duration > max_duration:
+            actual_duration = last_end - current_start
+            if actual_duration >= min_duration:
+                candidates.append({
+                    'start': current_start,
+                    'end': last_end,
+                    'text': ' '.join(current_text)
+                })
+            current_start = seg['start']
+            current_text = [seg['text']]
+        else:
+            current_text.append(seg['text'])
+        
+        last_end = seg['end']
+
+
+    return candidates
+
+
+5. Análise Viral e Scoring Multilíngue (src/viral_engine/viral_analyzer.py)
+O sistema trata Inglês e Português como "First-Class Citizens", utilizando análise léxica baseada em Regex para identificar arquétipos emocionais.
+import re
+
+
+class ViralAnalyzer:
+    ARCHETYPES = {
+        "Curiosidade": {
+            "pt": [r"segredo", r"você sabia", r"revelado", r"descobri"],
+            "en": [r"secret", r"did you know", r"revealed", r"discovered", r"hidden"]
+        },
+        "Medo/Urgência": {
+            "pt": [r"cuidado", r"pare agora", r"perigo", r"urgente", r"ameaça"],
+            "en": [r"warning", r"stop now", r"danger", r"urgent", r"threat", r"don't do"]
+        },
+        "Ganância": {
+            "pt": [r"lucro", r"dinheiro", r"multiplique", r"riqueza"],
+            "en": [r"profit", r"money", r"multiply", r"wealth", r"rich"]
+        }
+        # Outros arquétipos seguem o mesmo padrão multilíngue...
+    }
+
+
+    def analyze_text(self, text, lang='pt'):
+        scores = {
+            "hook_strength": 0.0,
+            "retention_score": 0.0,
+            "moment_strength": 0.0,
+            "shareability": 0.0
+        }
+        
+        # Lógica de Regex para calcular pontuação local
+        for arch, patterns in self.ARCHETYPES.items():
+            for pattern in patterns.get(lang, []):
+                if re.search(pattern, text.lower()):
+                    scores["hook_strength"] += 0.25
+        
+        # Normalização e Limitação
+        for key in scores:
+            scores[key] = min(scores[key], 10.0)
+            
+        return scores
+
+
+6. O Fluxo da Regra de Ouro (Decision Engine)
+A decisão final não é subjetiva; é o resultado da fórmula ponderada que equilibra a precisão técnica local com o julgamento editorial da IA.
+Fórmula de Cálculo (final_score)
+score = (local * 0.50) + (external * 0.30) + (platform_fit * 0.10) + (duration_fit * 0.05) + (transcription_quality * 0.05)Diretrizes de Decisão Automática:
+Aprovado (≥ 9.0):  Enviar para fila de renderização imediata.
+Refinar (7.0 - 8.9):  Sugerir otimização de título ou re-análise editorial.
+Descartar (< 7.0):  Remover para evitar contaminação do banco de dados.
+7. Pipeline de Renderização 2-Pass e Blindagem VA-API
+Para contornar limitações do driver Intel i915, o processamento é dividido em duas etapas que não competem pelo mesmo buffer de hardware simultaneamente.
+Passo 1 (VA-API - Hardware):  Redimensionamento vertical (1080x1920) e aplicação de filtros de proteção.
+Passo 2 (libx264 - Software):  Queima de legendas (Subtitles) e codificação final de compatibilidade.
+8. Módulos de Proteção Anti-Copyright (Fábrica de Blindagem)
+A protection_factory.py gera strings dinâmicas de filtros para invalidar sistemas de detecção automatizada.| Módulo | Técnica FFmpeg | Objetivo || ------ | ------ | ------ || Zoom Dinâmico | scale=1.02iw:-2,crop=iw/1.02:ih/1.02 | Quebra de assinatura de bordas (1-3%). || Colorimetria | eq=brightness=0.02:contrast=1.05 | Altera histograma de cor sem perder visual. || Metadados | -map_metadata -1 | Remoção completa de rastros digitais. || Audio Shift | asetrate=441001.01,atempo=0.99 | Altera Pitch e Tempo em ±1%. || Ruído Síncrono | noise=alls=2:allf=t+u | Confunde redes neurais de similaridade. || Chroma Shift | format=yuv444p | Altera amostragem para inviabilizar hash de cor. || Micro-Rotação | rotate=0.1*PI/180 | Anti-IA via inclinação imperceptível. |
+Níveis de Proteção:
+BÁSICO:  Filtros 1-4 (Uso geral).
+ANTI-IA:  Filtros 1-6 (Para conteúdos verificados por IA).
+MÁXIMO:  Todos os filtros + Horizontal Flip (Conteúdo sensível).
+9. Integração com IA Externa e Pacote Social
+O sistema gera um prompt ultra-estruturado para garantir que a IA externa (Claude/GPT) retorne dados compatíveis com o hybrid_parser.py.Template de Prompt (Trecho):"Analise estes candidatos virais. Retorne APENAS um JSON: [{ "cut_id": "X", "editorial_mode": "moment", "title": "...", "hook": "...", "viral_score_external": 9.5, "platforms": "tiktok", "shorts" }]"Post Pack (Output):  Após a aprovação, o sistema gera na pasta output:
+Vídeo Blindado (MP4).
+post_pack.json: Título, 3 Hooks, Descrição, Hashtags, e Comentário Fixado.
+10. Guia de Instalação e Execução Definitiva
+A instalação é automatizada pelo script clipfusion_v2_final.sh para garantir a aplicação das otimizações de kernel.
+Instalação:  sudo bash clipfusion_v2_final.sh (Configura venv, zRAM, e i915).
+Reinicialização:  Obrigatória para ativar parâmetros de kernel.
+Execução:  ./run.shFluxo de Trabalho Recomendado (7 Abas):
+Projeto:  Define vídeo e idioma.
+Transcrição:  Revisão Whisper (CPU-mode).
+IA Externa:  Ponte manual para análise editorial.
+Cortes:  Aplicação da Regra de Ouro.
+Render:  Processamento 2-pass VA-API.
+Histórico:  Gestão de metadados.
+Agenda:  Planejamento de postagem anti-padrão.
+
+

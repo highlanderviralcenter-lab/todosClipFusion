@@ -1,0 +1,38 @@
+Anderson, para atender ao seu pedido de "pente fino" e entregar as soluções de nível técnico máximo que o seu projeto exige, analisei detalhadamente os seus repositórios (denovoclip e ClipFusion-a-arte-viral-), sua documentação de versionamento e os logs de erro fornecidos.
+Aqui está o relatório técnico definitivo para evitar que o sistema SignalCut Hybrid (v3.2) quebre e para que ele rode exatamente como planejado no seu hardware (i5-6200U + 8GB RAM).
+1. Relatório de Erros Críticos (O que vai fazer o sistema crashar)
+Além dos erros que você já reportou, identifiquei falhas estruturais que causarão falhas silenciosas ou "crashes" de sistema:
+Incompatibilidade de Schema (O Defeito mais Grave): O prompt_builder.py busca campos como retention_score, mas o viral_analyzer.py (motor viral) devolve retencao_estimada 1, 2.
+Resultado: O sistema zera as notas, o decision_engine.py recebe dados nulos e o veredito final é sempre "Rejected".
+Solução: Unificar o db.py. Todos os módulos devem ler e escrever nos mesmos campos definidos no seu Schema Unificado 3, 4.
+Bug de Escopo na GUI: No arquivo main_gui.py, há um lambda no bloco de erro do render que usa a variável e fora do escopo seguro 5.
+Resultado: O programa fecha sozinho (crash) toda vez que um render falha, em vez de mostrar o erro.
+Solução: Substituir o lambda por uma função de callback nomeada com tratamento de exceção explícito.
+Buffer Overflow no VA-API: Tentar aplicar os 7 módulos de proteção (anti-copyright) e as legendas em um único comando FFmpeg via hardware na Intel HD 520 6.
+Resultado: Travamento do driver i915 ou vídeo corrompido.
+Solução: Implementar o Render 2-pass obrigatoriamente. Passo 1 (Hardware/VA-API) para proteção e Passo 2 (Software/libx264) para legendas 6.
+2. Otimização de Memória e Transcrição (Sua Dúvida)
+Você perguntou: "Precisa mesmo rodar transcrição de uma vez? Baixar o áudio e transcrever não ficaria menos impactante para a memória?"
+A resposta técnica é: Sim, extrair o áudio é vital.As fontes indicam que o seu transcriber já deve extrair um WAV mono de 16 kHz antes de chamar o Whisper 1. Para otimização máxima:
+Não carregue o vídeo na RAM: Use o FFmpeg para extrair apenas o stream de áudio para um arquivo temporário em /dev/shm (RAM disk) ou SSD.
+Transcrição Fragmentada: Em vez de transcrever 1 hora de uma vez, segmente o áudio em blocos de 10 minutos, transcreva e limpe a memória com gc.collect() entre os blocos 7.
+compute_type: Utilize compute_type="int8" no faster-whisper. Isso reduz o uso de RAM em quase 50% sem perda significativa de precisão 8.
+3. Ajustes de Código "Linha a Linha" (Exemplos de Correção)
+Ambuidade do Executável:
+Erro: O sistema chama python em alguns scripts e python3 em outros.
+Solução: No seu run.sh, defina PYTHON_EXEC=$(pwd)/venv/bin/python3. Garanta que todos os módulos usem o caminho absoluto do ambiente virtual.
+Gerenciamento de Módulos (Lazy Loading):
+Erro: import pandas, import cv2 e import whisper no topo do arquivo.
+Solução: Mova esses imports para dentro das funções onde são usados. Isso economiza ~300MB de RAM em repouso 7, 9.
+Filtro de Qualidade de Transcrição:
+Ação: No core/transcription_quality.py, adicione uma linha para descartar trechos onde confidence < 0.7. Isso impede que a IA externa analise "alucinações" de áudio sujo 2, 10.
+4. O Laboratório de Testes (Como rodar 100% do Planejado)
+Para que o código no seu Git reflita o planejamento de 100% da documentação, siga este protocolo de laboratório:
+Estabilização do Solo: Rode seu instalador "full" 11. Verifique se o ZRAM está ativo (6GB) e se o i915.enable_guc=3 está no /etc/default/grub. Sem esse "chão", o motor vai quebrar.
+Micro-Segmentação (O Coração): Ajuste o candidate_engine.py para gerar janelas de 18 a 35 segundos. Abandone as janelas de 55s que diluem o gancho viral 5, 12.
+A Regra de Ouro: No decision_engine.py, implemente a fórmula exata:
+final_score = (local * 0.50) + (external * 0.30) + (platform_fit * 0.10) + (transcription_quality * 0.10) 13, 14.
+Base de Conhecimento: Ative o script de log que criamos. Se o sistema crashar, o erro será capturado em logs/kb_errors/ com timestamp, permitindo que o seu learning_engine.py identifique padrões de falha 15.
+Conclusão do Pente Fino:O seu código no Git tem a lógica correta (o "céu"), mas ele quebra porque a comunicação entre os módulos está "muda" (nomes de campos diferentes) e o hardware não tem respiro. Corrigindo o Schema no db.py, aplicando o Render 2-pass e garantindo o ZRAM de 6GB, o sistema deixará de ser um "gerador de prompt" e passará a ser o descobridor de cortes virais autônomo que você projetou 1, 16.
+
+
