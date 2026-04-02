@@ -441,8 +441,7 @@ class ClipFusionApp:
                 self.root.after(0, lambda: messagebox.showinfo(
                     "✅ Concluído", f"{len(results)} cortes gerados!\n\nPasta: {out_dir}"))
             except Exception as e:
-                err_msg = str(e)
-                self.root.after(0, lambda msg=err_msg: self._log(f"\n❌ ERRO: {msg}"))
+                self.root.after(0, lambda err=e: self._log_error(err))
 
         threading.Thread(target=run, daemon=True).start()
 
@@ -510,6 +509,9 @@ class ClipFusionApp:
 
     def _log(self, m):
         self.box_log.insert("end", m+"\n"); self.box_log.see("end")
+
+    def _log_error(self, err: Exception):
+        self._log(f"\n❌ ERRO: {str(err)}")
 
     def _status(self, m, color=GRY):
         self.lbl_status.config(text=m, fg=color)

@@ -120,13 +120,26 @@ Analise agora:"""
 
 def parse_ai_response(text: str) -> list:
     text  = re.sub(r"```json\s*|```\s*", "", text.strip())
-    match = re.search(r'\{[\s\S]*\}', text)
-    if not match:
+    blob = None
+    obj_match = re.search(r"\{[\s\S]*\}", text)
+    arr_match = re.search(r"\[[\s\S]*\]", text)
+    if obj_match:
+        blob = obj_match.group()
+    elif arr_match:
+        blob = arr_match.group()
+    if not blob:
         raise ValueError("Nenhum JSON encontrado.")
-    cortes = json.loads(match.group()).get("cortes", [])
+
+    parsed = json.loads(blob)
+    if isinstance(parsed, list):
+        cortes = parsed
+    elif isinstance(parsed, dict):
+        cortes = parsed.get("cortes", [])
+    else:
+        cortes = []
     result = []
     for i, c in enumerate(cortes):
-        s, e = float(c.get("start", 0)), float(c.get("end", 0))
+        s, e = float(c.get("start", 0) or 0), float(c.get("end", 0) or 0)
         if e > s and (e - s) >= 10:
             result.append({
                 "cut_index": i, "title": c.get("titulo", f"Corte {i+1}"),
