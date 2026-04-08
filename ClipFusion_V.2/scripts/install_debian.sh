@@ -8,6 +8,7 @@ if ! grep -q "i915.enable_guc=3" /etc/default/grub; then
   sudo update-grub
 fi
 
+<<<<<<< HEAD
 ZRAM_ALGO="lz4"
 if ! grep -q -w "lz4" /proc/crypto 2>/dev/null; then
   ZRAM_ALGO="zstd"
@@ -24,6 +25,15 @@ sudo systemctl daemon-reload || true
 sudo systemctl enable zramswap
 sudo systemctl restart zramswap
 sudo systemctl --no-pager --full status zramswap || true
+=======
+sudo tee /etc/default/zramswap >/dev/null <<'EOF'
+ALGO=lz4
+PERCENT=75
+SIZE=6144
+PRIORITY=100
+EOF
+sudo systemctl enable --now zramswap || true
+>>>>>>> origin/main
 
 if [ ! -f /swapfile ]; then
   sudo fallocate -l 2G /swapfile
