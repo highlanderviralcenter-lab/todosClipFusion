@@ -119,7 +119,7 @@ Analise agora:"""
 
 
 def parse_ai_response(text: str) -> list:
-    text  = re.sub(r"```json\s*|```\s*", "", text.strip())
+    text = re.sub(r"```json\s*|```\s*", "", text.strip())
     blob = None
     obj_match = re.search(r"\{[\s\S]*\}", text)
     arr_match = re.search(r"\[[\s\S]*\]", text)
