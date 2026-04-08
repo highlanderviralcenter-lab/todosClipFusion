@@ -534,4 +534,8 @@ class ClipFusionApp:
                               activebackground=p.cget("bg"), font=FNT)
 
     def _sep(self, p):
+<<<<<<< HEAD
         tk.Frame(p, bg=BG3, height=1).pack(fill="x", padx=30, pady=16)
+=======
+        tk.Frame(p, bg=BG3, height=1).pack(fill="x", padx=30, pady=16)
+>>>>>>> origin/main
