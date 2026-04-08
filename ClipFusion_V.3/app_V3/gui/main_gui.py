@@ -10,7 +10,7 @@ import threading, os, gc
 from pathlib import Path
 from datetime import datetime
 
-import db
+import db_V3 as db
 from utils.hardware import HardwareDetector, check_system
 from core.transcriber import WhisperTranscriber, fmt_time
 from core.prompt_builder import build_analysis_prompt, parse_ai_response
@@ -534,8 +534,4 @@ class ClipFusionApp:
                               activebackground=p.cget("bg"), font=FNT)
 
     def _sep(self, p):
-<<<<<<< HEAD
         tk.Frame(p, bg=BG3, height=1).pack(fill="x", padx=30, pady=16)
-=======
-        tk.Frame(p, bg=BG3, height=1).pack(fill="x", padx=30, pady=16)
->>>>>>> origin/main
