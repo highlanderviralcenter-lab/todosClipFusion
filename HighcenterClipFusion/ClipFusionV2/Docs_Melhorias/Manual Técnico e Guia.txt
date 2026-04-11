@@ -1,0 +1,280 @@
+Manual Técnico e Guia de Integração: ClipFusion Viral Pro
+
+1. Visão Geral do Sistema e Proposta de Valor
+
+O ClipFusion Viral Pro é uma solução de engenharia de software de ponta, baseada em IA Híbrida, projetada especificamente para a extração e otimização de cortes virais de alto impacto. Diferente de soluções genéricas, o ClipFusion foi arquitetado como um sistema de baixo consumo, otimizado para hardware legado e de entrada, especificamente o processador Intel i5-6200U com gráficos Intel HD 520.
+
+O diferencial técnico reside no uso de Lazy Loading, onde módulos pesados de processamento de imagem e modelos de linguagem são carregados na memória apenas no momento da execução, resultando em uma economia crítica de aproximadamente 300MB de RAM.
+
+Funcionalidades Core
+
+* Transcrição Whisper API: Implementação via biblioteca Python para transcrição acelerada, evitando o overhead do CLI tradicional.
+* Render 2-pass: Pipeline de renderização segregado para máxima fidelidade e compatibilidade de hardware.
+* Sistema Anti-Copyright Multinível: Conjunto de 7 módulos de proteção para contornar algoritmos de Content ID.
+* Motor Viral (Viral Engine): Análise baseada em 10 arquétipos emocionais com scoring automatizado.
+* Interface de 7 Abas: Fluxo de trabalho linear e intuitivo para gestão total do projeto.
+
+
+--------------------------------------------------------------------------------
+
+
+2. Arquitetura Híbrida e Persistência de Dados
+
+A arquitetura do ClipFusion prioriza a persistência e a flexibilidade. O sistema utiliza SQLite gerenciado via SQLAlchemy para garantir que metadados, tempos de corte e scores de viralidade sobrevivam a reinicializações e falhas de processo.
+
+Modos de Operação
+
+* Standalone: Processamento local completo utilizando modelos integrados.
+* Online: Conexão com LLMs externos (Claude 3.5 Sonnet / GPT-4o) para análise lógica profunda.
+* Híbrido: Transcrição local com exportação de dados via JSON para análise externa e reimportação para renderização local protegida.
+
+Boilerplate: database.py
+
+from sqlalchemy import create_engine, Column, Integer, String, Float, Text, ForeignKey
+from sqlalchemy.orm import sessionmaker, declarative_base, relationship
+
+Base = declarative_base()
+
+class Project(Base):
+    __tablename__ = 'projects'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(255), nullable=False)
+    video_path = Column(String(512))
+    niche = Column(String(100))
+    status = Column(String(50), default='pending')
+    clips = relationship("VideoClip", back_populates="project")
+
+class VideoClip(Base):
+    __tablename__ = 'video_clips'
+    id = Column(Integer, primary_key=True)
+    project_id = Column(Integer, ForeignKey('projects.id'))
+    start_time = Column(Float)
+    end_time = Column(Float)
+    hook_text = Column(String(255))
+    viral_score = Column(Float)
+    archetype = Column(String(100))
+    protection_level = Column(String(50))
+    project = relationship("Project", back_populates="clips")
+
+# Configuração da Engine com suporte a concorrência básica via SQLite
+engine = create_engine('sqlite:///clipfusion_vpro.db', echo=False)
+SessionLocal = sessionmaker(bind=engine)
+
+def init_db():
+    Base.metadata.create_all(engine)
+
+
+
+--------------------------------------------------------------------------------
+
+
+3. Motor de Análise Viral e Scoring Emocional
+
+O sistema utiliza um motor de análise que mapeia o conteúdo contra 10 Arquétipos Emocionais validados para retenção em plataformas de vídeos curtos.
+
+Matriz de Impacto de Viralidade
+
+Arquétipo	Impacto Principal	Métrica de Sucesso (KPI)
+Urgência	Retenção Imediata	Watch Time (Primeiros 3s)
+Inspiracional	Compartilhamento	Shares / Directs
+Curiosidade	Retenção Média	Duração Média de Visualização
+Autoridade	Salvamentos	Saves / Bookmarks
+Humor	Comentários	Engagement Rate
+Controvérsia	Discussão	Volume de Comentários / Debates
+Empatia	Conexão Emocional	Likes / Reações
+Utilidade	Re-watch	Watch Time > 100%
+FOMO	Clique/Ação	CTR (Click-Through Rate)
+Prova Social	Credibilidade	Follow Conversion
+
+Boilerplate: viral_analyzer.py
+
+import gc
+
+class ViralAnalyzer:
+    def __init__(self):
+        self.niches = ["investimentos", "fitness", "tecnologia", "relacionamentos", "empreendedorismo"]
+        self.archetypes = ["Urgência", "Inspiracional", "Curiosidade", "Autoridade", 
+                          "Humor", "Controvérsia", "Empatia", "Utilidade", "FOMO", "Prova Social"]
+
+    def detect_niche(self, transcription_text):
+        """Identifica o nicho com base em palavras-chave do Source Context."""
+        text_lower = transcription_text.lower()
+        found_niches = [n for n in self.niches if n in text_lower]
+        return found_niches[0] if found_niches else "geral"
+
+    def generate_hooks(self, clip_segment_text):
+        """Gera 3 variações de ganchos focados em retenção extrema."""
+        return {
+            "hook_direct": f"Por que você falha em {clip_segment_text[:20]}...",
+            "hook_curiosity": f"O segredo que ninguém te conta sobre...",
+            "hook_challenge": "Pare de fazer isso se você quer ter sucesso!"
+        }
+
+    def scoring_completo(self, metrics):
+        # Lógica de pesos: Watch Time (0.4) + Shares (0.3) + Comments (0.2) + Likes (0.1)
+        score = (metrics.get('watch_time', 0) * 0.4) + (metrics.get('shares', 0) * 0.3)
+        gc.collect() # Limpeza de memória após análise pesada de strings
+        return min(score, 100.0)
+
+
+Boilerplate: hybrid_prompt.py
+
+def generate_viral_prompt(transcription_text, niche):
+    return f"""
+    [ROLE: VIRAL ENGINEERING SPECIALIST]
+    Analise a transcrição para o nicho: {niche}.
+    Identifique os 3 melhores pontos de corte (máx 60s).
+    Aplique os 10 arquétipos do ClipFusion para justificar.
+    
+    RETORNE APENAS JSON:
+    {{
+        "clips": [
+            {{"start": 0.0, "end": 45.0, "archetype": "Curiosidade", "hook": "..."}}
+        ]
+    }}
+    Transcrição: {transcription_text}
+    """
+
+
+
+--------------------------------------------------------------------------------
+
+
+4. Módulos Anti-Copyright e Processamento de Vídeo
+
+O ClipFusion integra uma hierarquia de proteção composta por 7 módulos técnicos: Zoom Dinâmico, Alteração de Colorimetria, Limpeza de Metadados, Normalização de Áudio, Sobreposição de Ruído (Noise), Ajuste de Chroma e Anti-detecção IA.
+
+Níveis de Proteção
+
+1. Nenhum: Preserva a integridade original (apenas corte).
+2. Básico: Aplica Zoom (1.1x), ajuste de contraste/brilho, strip de metadados e normalização de áudio.
+3. Anti-IA: Nível Básico + injeção de ruído randômico imperceptível e alteração de chroma para quebrar a assinatura digital do frame.
+4. Máximo: Combinação de todos os 7 módulos com variação de parâmetros a cada 5 segundos para inviabilizar o "Content ID hashing".
+
+Estratégia Render 2-pass (Hardware Optimized)
+
+Para evitar falhas de driver "Resource Busy" comuns na Intel HD 520, utilizamos:
+
+* Passo 1 (VA-API): O encoder h264_vaapi realiza o corte físico e o redimensionamento direto no hardware da GPU.
+* Passo 2 (libx264): A CPU processa o filtergraph complexo (legendas, overlays e anti-copyright), garantindo estabilidade e evitando conflitos de acesso simultâneo ao buffer da GPU.
+
+
+--------------------------------------------------------------------------------
+
+
+5. Otimização de Hardware e Ambiente Linux
+
+Em sistemas com o processador i5-6200U e 8GB de RAM, o gerenciamento de recursos é a diferença entre o sucesso e o kernel panic.
+
+Kernel Tuning: O parâmetro i915.enable_guc=3
+
+Este parâmetro é mandatório. Ele habilita o suporte ao GuC (Graphics MicroController) e HuC (HEVC/H.264 MicroController). Ao ativar o carregamento desses firmwares, descarregamos tarefas de agendamento e decodificação que antes sobrecarregavam os dois núcleos físicos da CPU, liberando ciclos de processamento para a lógica de IA e reduzindo a latência do pipeline de vídeo.
+
+Gestão de Memória e Estabilidade
+
+* zRAM: Configuração obrigatória de 6GB de zRAM para lidar com picos de consumo durante a transcrição Whisper.
+* Garbage Collection: Chamadas explícitas de gc.collect() são inseridas entre cada processamento de corte para liberar buffers de vídeo da memória física de forma agressiva.
+
+
+--------------------------------------------------------------------------------
+
+
+6. Implementação do Script de Instalação e Automação
+
+O script install.sh prepara o ambiente Debian 12 para performance máxima.
+
+#!/bin/bash
+# ClipFusion Viral Pro - Enterprise Installer (Debian 12 Target)
+
+set -e
+
+echo "[1/5] Atualizando sistema e dependências de vídeo..."
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y python3-pip ffmpeg intel-media-va-driver-non-free python3-venv \
+                    vav-tools libva-drm2 mesa-va-drivers
+
+echo "[2/5] Criando estrutura de diretórios do Learning Engine..."
+mkdir -p ./core/learning_engine ./projects ./exports ./logs
+
+echo "[3/5] Configurando Kernel Intel HD 520 (GuC/HuC)..."
+if ! grep -q "i915.enable_guc=3" /etc/default/grub; then
+    sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="i915.enable_guc=3 /' /etc/default/grub
+    sudo update-grub
+    echo "MUDANÇA DE KERNEL APLICADA. Reinicie após a instalação."
+fi
+
+echo "[4/5] Instalando ambiente Python e dependências..."
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install sqlalchemy moviepy openai-whisper torch --extra-index-url https://download.pytorch.org/whl/cpu
+
+echo "[5/5] Otimizando prioridades de sistema..."
+sudo sysctl -w kernel.sched_rt_runtime_us=950000
+
+echo "Instalação concluída com sucesso. Estrutura ClipFusion pronta."
+
+
+
+--------------------------------------------------------------------------------
+
+
+7. Agendamento e Gestão de Fluxo
+
+O módulo schedulyzer.py utiliza lógica de jitter para evitar que as plataformas identifiquem padrões de automação (spam).
+
+Boilerplate: schedulyzer.py
+
+import random
+from datetime import datetime, timedelta
+
+class Schedulyzer:
+    def __init__(self):
+        self.standard_slots = ["09:00", "12:00", "18:00", "21:00"]
+
+    def generate_anti_pattern_schedule(self, target_date):
+        """Gera horários fragmentados para evitar detecção de bot."""
+        schedules = []
+        for slot in self.standard_slots:
+            h, m = map(int, slot.split(':'))
+            # Adiciona jitter de minutos e segundos aleatórios
+            jitter_m = random.randint(3, 14)
+            jitter_s = random.randint(1, 59)
+            
+            post_time = datetime.strptime(f"{target_date} {h}:{m}", "%Y-%m-%d %H:%M")
+            post_time += timedelta(minutes=jitter_m, seconds=jitter_s)
+            schedules.append(post_time.strftime("%H:%M:%S"))
+        
+        return schedules
+
+    def recommend_platform(self, niche, viral_score):
+        """Sugestão baseada em performance histórica por nicho."""
+        if niche == "investimentos" and viral_score > 80:
+            return "Reels / LinkedIn"
+        return "TikTok / Shorts"
+
+
+
+--------------------------------------------------------------------------------
+
+
+8. Guia de Operação da Interface (GUI)
+
+O fluxo operacional é executado através de 7 abas funcionais:
+
+1. Aba Projeto: Carregamento do arquivo .mp4 e definição do nome do projeto no SQLite.
+2. Aba Transcrição: Execução do Whisper. O progresso é exibido via terminal integrado.
+3. Aba IA Externa: Gera o prompt técnico. Copie para o Claude/ChatGPT e aguarde o JSON.
+4. Aba Cortes: Interface para colar o JSON da IA. O sistema valida os timestamps e popula a fila.
+5. Aba Render: Seleção do nível Anti-Copyright (Nenhum a Máximo) e início do Render 2-pass.
+6. Aba Histórico: Consulta de projetos antigos e exportação de relatórios de scoring.
+7. Aba Agenda: Geração de cronogramas via Schedulyzer com suporte a exportação CSV.
+
+Ponte de Dados JSON
+
+Para realizar a ponte com IAs externas com sucesso:
+
+* Clique em "Gerar Prompt" na Aba 3.
+* No Claude/ChatGPT, utilize o modo de resposta "Strict JSON".
+* Cole a resposta bruta na caixa de entrada do ClipFusion. O sistema filtrará automaticamente as justificativas e manterá apenas os parâmetros de corte para a Aba 4.
+

@@ -1,0 +1,80 @@
+FASE 1: Estabilização do "Solo" (Sistema Operacional)
+Antes do código, o ambiente precisa ser imune a quedas de desempenho.
+
+    Formatação Limpa: Reinstalar o Debian com BTRFS (zstd) para garantir compressão nativa
+
+.
+Kernel de Elite: Configurar permanentemente i915.enable_guc=3 no GRUB para habilitar aceleração total da Intel HD 520
+.
+Hierarquia de 14GB: Configurar o zRAM (6GB) com algoritmo lz4 e prioridade 100 sobre o swap de disco
+
+    .
+    Interface Minimalista: Configurar o i3wm para que o sistema operacional consuma o mínimo de RAM, deixando o fôlego para o Whisper e o Render [Conversa].
+
+
+--------------------------------------------------------------------------------
+FASE 2: O Coração dos Dados (Cérebro e Memória)
+Resolver o "defeito técnico mais grave" (desconexão de dados) de uma vez por todas
+.
+
+    Schema Unificado (db.py): Criar as tabelas com campos explícitos (hook_strength, retention_score, moment_strength) usando DEFAULT 0.0
+
+    .
+    Base de Conhecimento de Erros: Implementar a tabela system_errors no SQLite para registrar falhas sem exclusão automática [Conversa].
+    O "Catcher" de Terminal: Instalar o script capture_errors.sh para salvar logs diários com carimbo de tempo e status da memória (ZRAM/Swap) [Conversa].
+
+
+--------------------------------------------------------------------------------
+FASE 3: Motor de Descoberta (Pipeline Viral)
+Transformar a ferramenta de um "gerador de prompt" em um "descobridor de cenas"
+.
+
+    Transcrição Otimizada (transcribe.py): Extrair áudio WAV mono 16kHz e rodar o faster-whisper com compute_type="int8" para economizar RAM [51, Conversa].
+    Filtro de Confiança (transcription_quality.py): Descartar automaticamente trechos com pontuação de qualidade abaixo de 0.7 para não contaminar a IA
+
+.
+Micro-Segmentação (candidate_engine.py): Forçar janelas de 18 a 35 segundos baseadas em pausas naturais, abandonando as janelas "grossas" de 55s
+.
+Scoring Multilingue: Ajustar os marcadores de nicho e hook para reconhecer conteúdos em inglês e português
+
+    .
+
+
+--------------------------------------------------------------------------------
+FASE 4: Decisão e Blindagem (Músculos e Veredito)
+Garantir que apenas o "ouro" seja processado e monetizado.
+
+    Prompt Híbrido de Elite: Enviar apenas o shortlist dos melhores candidatos locais para a IA externa
+
+.
+Regra de Ouro (decision_engine.py): Aplicar o veredito automático: Nota ≥ 9.0 = Aprovado
+.
+Fábrica de Blindagem (protection_factory.py): Aplicar os 7 níveis de proteção (zoom, cor, ruído, etc.) via hardware
+.
+Renderização 2-Pass: Obrigatoriamente usar Passo 1 (VA-API) para proteção e Passo 2 (libx264) para legendas, evitando travamento de drivers
+
+    .
+
+
+--------------------------------------------------------------------------------
+FASE 5: Entrega e Aprendizado (Postagem e Evolução)
+Organizar a saída e preparar o futuro.
+
+    Pacote Social (post_pack.py): Gerar automaticamente títulos, hooks, descrição e hashtags para cada corte
+
+.
+Agenda Anti-Padrão: Usar o mecanismo de jitter para sugerir horários de postagem orgânicos
+.
+Ciclo de Aprendizado (learning_engine.py): Após postar, registrar o desempenho real para que o sistema reajuste os pesos dos arquétipos no scoring.yaml
+
+    .
+
+Ação Imediata:
+
+    Rode o seu instalador "full" (instalar_clipfusion_v2_completo.sh) para garantir o "solo" operacional
+
+    .
+    Aplique o patch do capture_errors.sh para começar a documentar a sua Base de Conhecimento a partir do primeiro minuto de uso [Conversa].
+
+Este plano garante que cada "momento cinematográfico" descoberto pelo seu sistema seja blindado e entregue com nota de confiança real
+

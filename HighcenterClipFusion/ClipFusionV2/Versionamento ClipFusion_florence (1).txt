@@ -1,0 +1,312 @@
+Especificação Técnica e de Requisitos do ClipFusion Viral Pro
+
+Versão: 2.0
+Data: 15 de março de 2026
+Autor: Highlander (com suporte de engenharia)
+Propósito: Este documento define os requisitos, regras de negócio, arquitetura e pontos de função do sistema ClipFusion Viral Pro, servindo como baseline para versionamento, desenvolvimento e manutenção futura.
+1. Visão Geral do Produto
+
+O ClipFusion Viral Pro é uma plataforma de engenharia de conteúdo viral que transforma vídeos longos em cortes curtos otimizados para TikTok, Instagram Reels e YouTube Shorts. O sistema opera de forma híbrida, combinando processamento local de alta eficiência (otimizado para hardware Intel i5‑6200U, 8GB RAM, Intel HD 520) com inteligência artificial externa (Claude, ChatGPT) para refinar a seleção de cortes e gerar metadados de postagem.
+1.1 Objetivos de Negócio
+
+    Democratizar a criação de conteúdo viral, permitindo que usuários com hardware modesto produzam cortes de alta qualidade.
+
+    Reduzir o tempo de edição manual por meio de automação inteligente.
+
+    Proteger o conteúdo contra detecção de copyright através de técnicas de evasão algorítmica.
+
+    Aprender continuamente com os resultados reais para melhorar a assertividade dos cortes.
+
+2. Requisitos do Sistema
+2.1 Requisitos Funcionais (por módulo)
+Módulo de Ingestão e Transcrição
+ID	Requisito	Prioridade
+RF01	O sistema deve permitir ao usuário selecionar um arquivo de vídeo local.	Alta
+RF02	O sistema deve criar uma estrutura de pastas única para cada projeto (source/, work/, output/, state/).	Alta
+RF03	O sistema deve extrair o áudio do vídeo e transcrevê‑lo usando faster-whisper, gerando timestamps precisos.	Alta
+RF04	O sistema deve calcular um score de qualidade da transcrição (baseado em densidade de palavras) e descartar segmentos com qualidade inferior a 0,75.	Média
+Módulo de Geração de Candidatos
+ID	Requisito	Prioridade
+RF05	O sistema deve segmentar a transcrição em micro‑candidatos de 18 a 35 segundos baseados em pausas naturais da fala (gap > 0,5s).	Alta
+RF06	O sistema deve calcular, para cada candidato, as seguintes subnotas locais: hook_strength, retention_score, moment_strength, shareability, platform_fit_tiktok, platform_fit_reels, platform_fit_shorts.	Alta
+RF07	O sistema deve armazenar os candidatos e suas notas no banco de dados SQLite.	Alta
+Módulo de Integração com IA Externa
+ID	Requisito	Prioridade
+RF08	O sistema deve gerar um prompt estruturado contendo os melhores candidatos (até 12) e contexto do projeto.	Alta
+RF09	O sistema deve permitir que o usuário copie o prompt e cole a resposta JSON da IA externa.	Alta
+RF10	O sistema deve validar a estrutura do JSON retornado e extrair os cortes refinados.	Alta
+Módulo de Decisão e Veredito
+ID	Requisito	Prioridade
+RF11	O sistema deve combinar a nota local de cada candidato com a nota da IA externa usando a fórmula: (local * 0.5) + (externa * 0.3) + (platform_fit * 0.1) + (duration_fit * 0.05) + (transcription_quality * 0.05).	Alta
+RF12	O sistema deve classificar cada corte como Aprovado (score ≥ 9,0), Revisar (7,0 ≤ score < 9,0) ou Descartado (score < 7,0).	Alta
+Módulo de Proteção e Render
+ID	Requisito	Prioridade
+RF13	O sistema deve oferecer 4 níveis de proteção anti‑copyright: Nenhum, Básico (zoom, cor, metadados, áudio), Anti‑IA (+ ruído, croma), Máximo (+ flip, jitter).	Alta
+RF14	O sistema deve renderizar cada corte aprovado utilizando um pipeline de duas passagens: (1) VA‑API para filtros de proteção, (2) libx264 para legendas e elementos gráficos.	Alta
+RF15	O sistema deve organizar os arquivos gerados em pastas por projeto e plataforma (output/plataforma/).	Alta
+Módulo de Aprendizado e Analytics
+ID	Requisito	Prioridade
+RF16	O sistema deve permitir o registro manual de desempenho de cada corte postado (views, likes, shares, comments).	Média
+RF17	O sistema deve, periodicamente, recalcular os pesos dos arquétipos com base na performance real e atualizar a configuração.	Baixa
+2.2 Requisitos Não Funcionais
+ID	Requisito	Métrica
+RNF01	O sistema deve operar em hardware com Intel i5‑6200U, 8GB RAM, Intel HD 520, SSD 480GB.	–
+RNF02	O consumo de memória RAM não deve exceder 6 GB durante a transcrição (com modelo base).	< 6 GB
+RNF03	O tempo de renderização de um corte de 60 segundos (nível Básico) deve ser inferior a 50 segundos.	< 50 s
+RNF04	A interface gráfica deve responder a cliques em menos de 200 ms.	< 200 ms
+RNF05	O sistema deve ser compatível com Debian 12 (bookworm) e utilizar drivers VA‑API para aceleração de vídeo.	–
+RNF06	O código deve ser modular, permitindo a substituição de componentes (ex.: trocar o motor de transcrição) sem impacto no resto do sistema.	–
+3. Regras de Negócio
+ID	Regra	Descrição
+RN01	Regra de Ouro	Um corte só é aprovado se sua nota combinada for ≥ 9,0.
+RN02	Despriorização de trechos ruidosos	Segmentos com qualidade de transcrição < 0,75 são descartados antes da geração de candidatos.
+RN03	Limite de candidatos por projeto	O prompt para IA externa não deve conter mais de 12 candidatos para evitar estouro de tokens.
+RN04	Jitter anti‑padrão	Horários de postagem sugeridos devem incluir variação aleatória de minutos/segundos para evitar padronização.
+RN05	Proteção progressiva	O nível de proteção anti‑copyright é cumulativo; níveis superiores incluem todas as técnicas dos níveis inferiores.
+RN06	Aprendizado por reforço	A cada 20 cortes postados, o sistema recalcula os pesos dos arquétipos baseado nas views médias.
+4. Pontos de Função (Estimativa Inicial)
+Tipo	Descrição	Quantidade	Complexidade
+Entrada	Seleção de arquivo de vídeo	1	Baixa
+Entrada	Configuração de projeto (nome, idioma, modelo Whisper)	1	Baixa
+Entrada	Colagem de JSON da IA	1	Baixa
+Entrada	Registro manual de performance	1	Baixa
+Saída	Exibição de transcrição com timestamps	1	Média
+Saída	Exibição de lista de cortes com scores	1	Média
+Saída	Geração de prompt para IA	1	Média
+Saída	Renderização de cortes (arquivos de vídeo)	1	Alta
+Saída	Agenda de postagens (texto/CSV)	1	Baixa
+Consulta	Histórico de projetos	1	Baixa
+Consulta	Relatórios de analytics	1	Média
+Armazenamento	Banco de dados SQLite com todas as tabelas	1	Alta
+
+Total estimado de pontos de função: ~12 a 15 PF (ajustar conforme detalhamento).
+5. Arquitetura de Módulos
+
+O sistema é dividido em três camadas lógicas:
+5.1 Camada de Fundação (Alicerces)
+Módulo	Responsabilidade
+ingest.py	Criação da estrutura de pastas e registro do projeto.
+transcribe.py	Transcrição com faster-whisper.
+transcription_quality.py	Filtro de qualidade da transcrição.
+scoring_engine.py	Cálculo de subnotas locais (hook, retenção, momento, compartilhamento).
+5.2 Camada de Seleção e Decisão (Coração)
+Módulo	Responsabilidade
+candidate_engine.py	Micro‑segmentação baseada em pausas naturais.
+hybrid_prompt.py	Geração de prompt estruturado para IA externa.
+hybrid_parser.py	Validação e parsing do JSON retornado pela IA.
+decision_engine.py	Combinação de scores e aplicação da Regra de Ouro.
+platform_engine.py	Cálculo de adequação a cada plataforma.
+5.3 Camada de Proteção e Entrega (Músculos)
+Módulo	Responsabilidade
+protection_factory.py	Aplicação de filtros anti‑copyright via VA‑API.
+post_pack.py	Geração de título, hooks, descrição e hashtags.
+output_manager.py	Organização de arquivos por projeto/plataforma.
+posting_schedule.py	Geração de agenda com jitter anti‑padrão.
+learning_engine.py	Coleta de performance real e reajuste de pesos.
+6. Considerações de Hardware e Otimizações
+
+    Kernel: i915.enable_guc=3 obrigatório para ativar GuC/HuC e offload de vídeo.
+
+    Memória: Uso de zRAM (4GB, zstd, prioridade 100) + swapfile (2GB, prioridade 50) para estender memória efetiva a ~14GB.
+
+    Garbage Collection: Chamadas explícitas de gc.collect() entre etapas para evitar OOM.
+
+    Lazy Loading: Módulos pesados (Whisper, bibliotecas de IA) são carregados apenas quando necessário.
+
+7. Versionamento e Evolução
+
+Este documento será versionado juntamente com o código no repositório GitHub. Cada alteração significativa na arquitetura ou nas regras de negócio deve ser refletida aqui, com incremento do número de versão e registro no histórico de alterações.
+Histórico de Versões
+Versão	Data	Descrição
+1.0	10/03/2026	Versão inicial (Debian Tunado 3.0)
+2.0	15/03/2026	Arquitetura híbrida, schema unificado, regra de ouro, módulos refinados
+8. Detalhamento dos Módulos
+8.1 ingest.py
+
+    Entrada: Nome do projeto, caminho do vídeo, idioma.
+
+    Saída: ID do projeto no banco, estrutura de pastas criada.
+
+    Lógica: Gera um timestamp, cria uma pasta única em workspace/projects/ com as subpastas source, work, output, state. Copia o vídeo para source/. Registra o projeto no banco com status created.
+
+8.2 transcribe.py
+
+    Entrada: ID do projeto, caminho do vídeo, modelo Whisper, idioma.
+
+    Saída: ID da transcrição, dicionário com segmentos e texto completo.
+
+    Lógica: Extrai áudio com FFmpeg, carrega o modelo faster-whisper (lazy loading), transcreve, destrói o modelo e chama GC. Retorna segmentos com timestamps.
+
+8.3 transcription_quality.py
+
+    Entrada: Lista de segmentos.
+
+    Saída: Score de qualidade (0-1) e lista filtrada.
+
+    Lógica: Calcula média de palavras por segmento; normaliza. Remove segmentos com menos de 3 palavras.
+
+8.4 scoring_engine.py
+
+    Entrada: Dicionário do candidato (texto, start).
+
+    Saída: Dicionário com todas as subnotas.
+
+    Lógica: Usa palavras-chave dos arquivos YAML para calcular hook_strength, retention_score, moment_strength, shareability e platform_fit_*. Aplica pesos.
+
+8.5 candidate_engine.py
+
+    Entrada: ID do projeto, ID da transcrição, lista de segmentos.
+
+    Saída: Lista de IDs dos candidatos criados.
+
+    Lógica: Agrupa segmentos consecutivos até atingir max_duration ou encontrar pausa > pause_threshold. Para cada grupo, insere um candidato no banco.
+
+8.6 hybrid_prompt.py
+
+    Entrada: Lista de candidatos (até 12), contexto.
+
+    Saída: String do prompt.
+
+    Lógica: Constrói um prompt com instruções, exemplo de JSON e lista os candidatos com timestamps e texto.
+
+8.7 hybrid_parser.py
+
+    Entrada: String JSON (resposta da IA).
+
+    Saída: Lista de dicionários com campos validados ou None.
+
+    Lógica: Remove marcações Markdown, extrai JSON, valida campos obrigatórios.
+
+8.8 decision_engine.py
+
+    Entrada: Score local, score da IA (opcional), platform_fit, trans_quality.
+
+    Saída: Decisão (approved, retry, rejected) e justificativa.
+
+    Lógica: Aplica fórmula combinada e compara com thresholds.
+
+8.9 platform_engine.py
+
+    Entrada: Nome da plataforma.
+
+    Saída: Especificações (duração ideal, etc.)
+
+    Lógica: Carrega platforms.yaml e retorna dados.
+
+8.10 protection_factory.py
+
+    Entrada: Caminho do vídeo, nível de proteção.
+
+    Saída: Vídeo processado.
+
+    Lógica: Constrói string de filtros FFmpeg baseada no nível, executa em subprocess. Usa anti_copy_modules.core.
+
+8.11 post_pack.py
+
+    Entrada: Título do corte, arquétipo, nicho.
+
+    Saída: Dicionário com título, descrição, hashtags, comentário fixado.
+
+    Lógica: Seleciona templates baseados no arquétipo e substitui placeholders.
+
+8.12 posting_schedule.py
+
+    Entrada: Plataforma, quantidade, data inicial.
+
+    Saída: Lista de datetimes.
+
+    Lógica: Gera horários base com jitter aleatório.
+
+8.13 learning_engine.py
+
+    Entrada: (Opcional) ID do projeto.
+
+    Saída: (Futuro) Atualização de pesos.
+
+    Lógica: Consulta tabela performances, calcula médias por arquétipo, ajusta pesos e salva em learning_weights.
+
+9. Fluxo de Dados e Diagrama de Sequência (Descritivo)
+
+    Usuário seleciona vídeo na aba Projeto. O sistema chama ingest.py para criar estrutura e registrar projeto.
+
+    Transcrição é iniciada: transcribe.py extrai áudio e transcreve. transcription_quality.py filtra segmentos de baixa qualidade.
+
+    Geração de candidatos: candidate_engine.py agrupa segmentos em microcandidatos (18-35s) baseado em pausas. Cada candidato é armazenado no banco.
+
+    Scoring local: scoring_engine.py percorre os candidatos, calcula subnotas e atualiza o banco.
+
+    Integração com IA externa: hybrid_prompt.py gera um prompt com os 12 melhores candidatos. O usuário copia, cola na IA e retorna o JSON. hybrid_parser.py valida e converte.
+
+    Decisão final: decision_engine.py combina scores locais com os da IA e aplica a Regra de Ouro. Cortes aprovados são marcados.
+
+    Renderização: Para cada corte aprovado, protection_factory.py aplica os filtros anti‑copyright via FFmpeg em duas passagens. Os arquivos são salvos em output/plataforma/ pelo output_manager.py.
+
+    Pós‑processamento: post_pack.py gera metadados de postagem. posting_schedule.py sugere horários. (Opcional) Usuário registra desempenho real, alimentando learning_engine.py.
+
+10. Plano de Testes
+10.1 Testes Unitários (por módulo)
+
+    Ingest: Verificar criação de pastas, cópia de vídeo, registro no banco.
+
+    Transcrição: Testar com áudio curto; verificar se segmentos são gerados.
+
+    Qualidade: Validar score com segmentos limpos e ruidosos.
+
+    Scoring: Simular textos e verificar se as notas estão dentro dos intervalos esperados.
+
+    Candidate Engine: Garantir que candidatos respeitem os limites de duração e pausas.
+
+    Hybrid Prompt/Parser: Testar com JSON válido e inválido.
+
+    Decision Engine: Verificar decisões para diferentes combinações de scores.
+
+    Protection Factory: Testar cada nível de proteção com vídeo de teste; conferir se o arquivo de saída é gerado.
+
+    Post Pack: Verificar substituição de placeholders.
+
+    Schedule: Confirmar que horários gerados têm jitter.
+
+10.2 Testes de Integração
+
+    Fluxo completo com um vídeo de 2 minutos, modelo tiny, nível de proteção Básico. Verificar se o corte final é gerado e está dentro das expectativas.
+
+    Testar com e sem IA externa (modo standalone vs híbrido).
+
+10.3 Testes de Aceitação
+
+    Usuário final consegue realizar um projeto do início ao fim sem intervenção do desenvolvedor.
+
+    Tempos de resposta dentro dos limites especificados (RNF03, RNF04).
+
+    Consumo de memória monitorado durante transcrição e render.
+
+11. Considerações de Segurança
+
+    Privacidade: Todos os processamentos são locais; nenhum dado do usuário é enviado para servidores externos (exceto quando o usuário voluntariamente copia o prompt para uma IA externa). O sistema não armazena informações pessoais.
+
+    Proteção contra cópia não autorizada: Os níveis anti‑copyright dificultam a extração de hashes exatos, mas não impedem totalmente a cópia manual. O sistema é para proteção contra detecção automática, não contra pirataria deliberada.
+
+    Atualizações: Scripts de patch devem ser assinados ou verificados pelo usuário antes da aplicação; recomenda-se manter cópias de segurança.
+
+12. Glossário
+Termo	Definição
+VA-API	Video Acceleration API, interface para aceleração de vídeo por hardware em GPUs Intel.
+zRAM	Dispositivo de bloco na RAM que comprime dados, usado como swap rápido.
+GuC/HuC	Microcontroladores na GPU Intel que auxiliam no agendamento e decodificação.
+Lazy Loading	Técnica de carregar módulos apenas quando são necessários, economizando memória.
+Regra de Ouro	Critério de decisão: nota final ≥ 9.0 aprova o corte.
+Jitter	Variação aleatória aplicada a horários de postagem para evitar padronização.
+Arquétipo	Padrão emocional (ex.: Curiosidade, Medo) usado para classificar o conteúdo.
+13. Referências
+
+    faster-whisper – Implementação otimizada do Whisper.
+
+    FFmpeg VA-API – Documentação sobre aceleração de vídeo.
+
+    Debian 12 (Bookworm) – Sistema operacional alvo.
+
+    SQLAlchemy – ORM utilizado para abstração do banco de dados (embora o código atual use SQLite puro, a documentação menciona SQLAlchemy para futuras migrações).
+
+    Tkinter – Biblioteca para interface gráfica.
+
+Documento aprovado para início da implementação da versão 2.0.

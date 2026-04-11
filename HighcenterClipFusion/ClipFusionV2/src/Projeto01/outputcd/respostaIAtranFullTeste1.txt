@@ -1,0 +1,88 @@
+{
+  "cortes": [
+    {
+      "titulo": "Escrevi 1h de material 19 vezes — eles vão desistir",
+      "start": 2841.0,
+      "end": 2873.0,
+      "archetype": "09_impacto",
+      "hook": "Afirmação de que forçou comediantes a parar de fazer o mesmo set há 10 anos",
+      "reason": "Declaração de dominância absurda com número concreto (19 horas de material) gera incredulidade e compartilhamento imediato. O tom frio e calculado amplifica o choque.",
+      "platforms": ["tiktok", "reels", "shorts"],
+      "metadata": {
+        "titulo_post": "19 horas de material novo. Por que você acha que eles pararam?",
+        "descricao": "Ele não veio brincar. Enquanto outros fazem o mesmo set há 10 anos, ele já escreveu 19 horas de material original. Isso não é talento — é guerra.",
+        "hashtags": ["#comédia", "#comediante", "#standup", "#motivação", "#disciplina"]
+      }
+    },
+    {
+      "titulo": "Como destruir alguém sem ofender ninguém",
+      "start": 4078.0,
+      "end": 4102.0,
+      "archetype": "03_confronto",
+      "hook": "\"Sou qualificado para fazer tudo isso e ainda te eviscerarei\"",
+      "reason": "Revela uma técnica de roast cirúrgico — usar palavras que o alvo não entende para humilhar sem reação possível. Gera fascínio e debate intenso nos comentários.",
+      "platforms": ["tiktok", "reels", "shorts"],
+      "metadata": {
+        "titulo_post": "A técnica mais cruel do roast que ninguém fala abertamente",
+        "descricao": "Não precisa ofender. Não precisa xingar. Basta ser mais inteligente que seu alvo — e escolher as palavras certas. Ele explica exatamente como.",
+        "hashtags": ["#standup", "#roast", "#comédia", "#inteligência", "#debate"]
+      }
+    },
+    {
+      "titulo": "Tyler Perry não coloca ninguém — e o motivo é claro",
+      "start": 8486.0,
+      "end": 8525.0,
+      "archetype": "06_justo_engolido",
+      "hook": "\"Os atores do elenco dele passam sem segurança — ele não coloca ninguém\"",
+      "reason": "Crítica direta a uma figura polarizadora da cultura negra americana. Gatilho forte de injustiça + identidade de grupo que vai explodir em comentários divididos.",
+      "platforms": ["tiktok", "reels"],
+      "metadata": {
+        "titulo_post": "Por que Tyler Perry não coloca ninguém no mercado?",
+        "descricao": "Trabalha com dezenas de artistas, mas os rostos continuam desconhecidos. A crítica é simples, cirúrgica e impossível de ignorar.",
+        "hashtags": ["#tylerperry", "#hollywood", "#representatividade", "#entretenimento", "#polêmica"]
+      }
+    },
+    {
+      "titulo": "Ele mentiu sobre o papel — e todo mundo no set sabia",
+      "start": 333.0,
+      "end": 383.0,
+      "archetype": "05_revelacao",
+      "hook": "\"Por que nenhum membro do elenco disse que ele poderia ter feito aquele papel?\"",
+      "reason": "Drama de bastidores de Hollywood com nomes reais (Terry Cruz, Ricky Smiley) — formula clássica de fofoca de alto nível que viraliza organicamente por curiosidade.",
+      "platforms": ["tiktok", "reels", "shorts"],
+      "metadata": {
+        "titulo_post": "O papel que ele disse que roubaram — e a verdade que todo set sabia",
+        "descricao": "Nenhum colega de elenco saiu em defesa. Ninguém confirmou a versão dele. E tem um motivo muito claro para isso.",
+        "hashtags": ["#hollywood", "#bastidores", "#drama", "#fofoca", "#comédia"]
+      }
+    },
+    {
+      "titulo": "Cedric roubou a piada — e tem prova em vídeo",
+      "start": 540.0,
+      "end": 592.0,
+      "archetype": "03_confronto",
+      "hook": "\"Está no contrato que ele usaria vestido\" — e ele nega tudo",
+      "reason": "Acusação direta de plágio com data, local e evidência em vídeo. Conflito público com figura conhecida gera indignação e posicionamento nos comentários.",
+      "platforms": ["tiktok", "reels", "shorts"],
+      "metadata": {
+        "titulo_post": "Fiz em 2018 ao vivo. Ele fez em 2019. E ainda negou.",
+        "descricao": "Quando alguém mente sobre algo que está gravado, só tem um nome: falta de vergonha. Ele expõe tudo com data, local e contexto.",
+        "hashtags": ["#plágio", "#standup", "#comédia", "#exposição", "#verdade"]
+      }
+    },
+    {
+      "titulo": "O horário secreto que destrói o corpo do comediante",
+      "start": 9055.0,
+      "end": 9082.0,
+      "archetype": "05_revelacao",
+      "hook": "\"Seu dia de trabalho começa às 20h e termina às 3h — e o corpo não aceita\"",
+      "reason": "Revela o custo físico invisível da carreira cômica com uma lógica simples e universal. Alta identificação de quem trabalha fora do horário convencional — potencial enorme de salvamento.",
+      "platforms": ["tiktok", "reels", "shorts"],
+      "metadata": {
+        "titulo_post": "O que ninguém te conta sobre a vida real de um comediante",
+        "descricao": "Palco às 20h, endorfina até a meia-noite, dormir às 3h. O corpo não foi programado para isso — e tem um preço alto.",
+        "hashtags": ["#comediante", "#standup", "#rotina", "#saúde", "#vidareal"]
+      }
+    }
+  ]
+}

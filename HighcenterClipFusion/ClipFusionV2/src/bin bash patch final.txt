@@ -1,0 +1,313 @@
+#!/bin/bash
+# patch_final.sh - Aplica as correções finais no ClipFusion 2.0
+
+set -e
+
+CLIP_DIR="$HOME/clipfusion"
+BACKUP_DIR="$HOME/clipfusion_backup_$(date +%Y%m%d_%H%M%S)"
+
+echo "📦 Criando backup em $BACKUP_DIR"
+mkdir -p "$BACKUP_DIR"
+cp -r "$CLIP_DIR" "$BACKUP_DIR/"
+
+echo "🔧 Aplicando correções..."
+
+# ---------- 1. Correção do gui/main_gui.py ----------
+MAIN_GUI="$CLIP_DIR/gui/main_gui.py"
+if [ -f "$MAIN_GUI" ]; then
+    # Adiciona métodos _lbl e _status se não existirem
+    if ! grep -q "def _lbl" "$MAIN_GUI"; then
+        # Insere os métodos antes do _start_transcription (procurando um local adequado)
+        # Vamos inserir após a classe ClipFusionApp, antes dos métodos
+        sed -i '/class ClipFusionApp/,/def run/ s/def run/    # --- MÉTODOS AUXILIARES ---\n    def _lbl(self, master, text, font=None, **kwargs):\n        return tk.Label(master, text=text, font=font, **kwargs)\n\n    def _status(self, text, color="black"):\n        print(f"\[\*\] {text}")\n        if hasattr(self, "status_var"):\n            self.status_var.set(text)\n\n    def run/' "$MAIN_GUI"
+        echo "   ✅ Métodos _lbl e _status adicionados"
+    else
+        echo "   ⏩ Métodos _lbl e _status já existem"
+    fi
+
+    # Corrige a indentação do except na _start_transcription
+    # Substitui o bloco except problemático
+    # Vamos procurar por um padrão: except Exception as e: seguido de self.root.after...
+    # e substituir por uma versão indentada corretamente com try abrangente
+    # Como é complexo, vamos sugerir ao usuário editar manualmente ou usar um bloco de substituição
+    echo "   ⚠️  Verifique a indentação do except manualmente. O patch automático não consegue garantir a estrutura correta."
+    echo "      Por favor, edite $MAIN_GUI e ajuste o bloco except conforme a orientação anterior."
+else
+    echo "   ❌ Arquivo $MAIN_GUI não encontrado!"
+fi
+
+# ---------- 2. Correção do db.py ----------
+DB_PY="$CLIP_DIR/db.py"
+if [ -f "$DB_PY" ]; then
+    # Substitui a função init_db para usar DEFAULT 0.0
+    # Vamos usar um here document para substituir o conteúdo
+    cat > "$DB_PY.new" << 'EOF'
+import sqlite3
+import json
+import os
+from pathlib import Path
+from datetime import datetime
+from contextlib import contextmanager
+
+DB_PATH = Path(os.path.expanduser("~")) / ".clipfusion" / "clipfusion.db"
+
+def _get_connection():
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    return conn
+
+@contextmanager
+def get_db():
+    conn = _get_connection()
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+def init_db():
+    with get_db() as conn:
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS projects (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                video_path TEXT NOT NULL,
+                language TEXT,
+                status TEXT DEFAULT 'created',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS transcripts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL,
+                full_text TEXT,
+                segments_json TEXT,
+                quality_score REAL DEFAULT 0.0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+            );
+            CREATE TABLE IF NOT EXISTS candidates (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL,
+                transcript_id INTEGER NOT NULL,
+                start_time REAL NOT NULL,
+                end_time REAL NOT NULL,
+                text TEXT NOT NULL,
+                hook_strength REAL DEFAULT 0.0,
+                retention_score REAL DEFAULT 0.0,
+                moment_strength REAL DEFAULT 0.0,
+                shareability REAL DEFAULT 0.0,
+                platform_fit_tiktok REAL DEFAULT 0.0,
+                platform_fit_reels REAL DEFAULT 0.0,
+                platform_fit_shorts REAL DEFAULT 0.0,
+                combined_score REAL DEFAULT 0.0,
+                status TEXT DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+                FOREIGN KEY (transcript_id) REFERENCES transcripts(id) ON DELETE CASCADE
+            );
+            CREATE TABLE IF NOT EXISTS cuts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL,
+                candidate_id INTEGER UNIQUE,
+                start_time REAL NOT NULL,
+                end_time REAL NOT NULL,
+                title TEXT,
+                hook TEXT,
+                archetype TEXT,
+                platforms TEXT,
+                protection_level TEXT DEFAULT 'none',
+                output_paths TEXT,
+                viral_score REAL DEFAULT 0.0,
+                decision TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+                FOREIGN KEY (candidate_id) REFERENCES candidates(id) ON DELETE SET NULL
+            );
+            CREATE TABLE IF NOT EXISTS performances (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                cut_id INTEGER NOT NULL,
+                platform TEXT NOT NULL,
+                views INTEGER DEFAULT 0,
+                likes INTEGER DEFAULT 0,
+                shares INTEGER DEFAULT 0,
+                comments INTEGER DEFAULT 0,
+                posted_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (cut_id) REFERENCES cuts(id) ON DELETE CASCADE
+            );
+            CREATE TABLE IF NOT EXISTS learning_weights (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                module TEXT NOT NULL,
+                subkey TEXT,
+                weight REAL NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        conn.commit()
+
+def segments_to_json(segments):
+    return json.dumps(segments, ensure_ascii=False)
+
+def json_to_segments(json_str):
+    return json.loads(json_str) if json_str else []
+
+def platforms_to_json(platforms):
+    return json.dumps(platforms)
+
+def json_to_platforms(json_str):
+    return json.loads(json_str) if json_str else []
+
+def output_paths_to_json(paths):
+    return json.dumps(paths)
+
+def json_to_output_paths(json_str):
+    return json.loads(json_str) if json_str else {}
+
+def create_project(name, video_path, language='pt'):
+    with get_db() as conn:
+        cur = conn.execute(
+            "INSERT INTO projects (name, video_path, language) VALUES (?, ?, ?)",
+            (name, video_path, language)
+        )
+        conn.commit()
+        return cur.lastrowid
+
+def get_project(project_id):
+    with get_db() as conn:
+        row = conn.execute("SELECT * FROM projects WHERE id = ?", (project_id,)).fetchone()
+        return dict(row) if row else None
+
+def save_transcript(project_id, full_text, segments, quality_score=None):
+    segments_json = segments_to_json(segments)
+    with get_db() as conn:
+        cur = conn.execute(
+            "INSERT INTO transcripts (project_id, full_text, segments_json, quality_score) VALUES (?, ?, ?, ?)",
+            (project_id, full_text, segments_json, quality_score)
+        )
+        conn.commit()
+        return cur.lastrowid
+
+def get_transcript(project_id):
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT * FROM transcripts WHERE project_id = ? ORDER BY id DESC LIMIT 1",
+            (project_id,)
+        ).fetchone()
+        if row:
+            d = dict(row)
+            d['segments'] = json_to_segments(d['segments_json'])
+            return d
+        return None
+
+def save_candidate(project_id, transcript_id, start, end, text, scores=None):
+    with get_db() as conn:
+        cur = conn.execute("""
+            INSERT INTO candidates
+            (project_id, transcript_id, start_time, end_time, text,
+             hook_strength, retention_score, moment_strength, shareability,
+             platform_fit_tiktok, platform_fit_reels, platform_fit_shorts, combined_score)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            project_id, transcript_id, start, end, text,
+            scores.get('hook', 0.0) if scores else 0.0,
+            scores.get('retention', 0.0) if scores else 0.0,
+            scores.get('moment', 0.0) if scores else 0.0,
+            scores.get('shareability', 0.0) if scores else 0.0,
+            scores.get('platform_fit_tiktok', 0.0) if scores else 0.0,
+            scores.get('platform_fit_reels', 0.0) if scores else 0.0,
+            scores.get('platform_fit_shorts', 0.0) if scores else 0.0,
+            scores.get('combined', 0.0) if scores else 0.0
+        ))
+        conn.commit()
+        return cur.lastrowid
+
+def get_candidates(project_id, status=None):
+    with get_db() as conn:
+        if status:
+            rows = conn.execute(
+                "SELECT * FROM candidates WHERE project_id = ? AND status = ? ORDER BY combined_score DESC",
+                (project_id, status)
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM candidates WHERE project_id = ? ORDER BY combined_score DESC",
+                (project_id,)
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+def update_candidate_status(candidate_id, status):
+    with get_db() as conn:
+        conn.execute("UPDATE candidates SET status = ? WHERE id = ?", (status, candidate_id))
+        conn.commit()
+
+def save_cut(project_id, candidate_id, start, end, title, hook, archetype, platforms, protection_level, output_paths, viral_score, decision):
+    platforms_json = platforms_to_json(platforms)
+    output_paths_json = output_paths_to_json(output_paths)
+    with get_db() as conn:
+        cur = conn.execute("""
+            INSERT INTO cuts
+            (project_id, candidate_id, start_time, end_time, title, hook, archetype,
+             platforms, protection_level, output_paths, viral_score, decision)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            project_id, candidate_id, start, end, title, hook, archetype,
+            platforms_json, protection_level, output_paths_json, viral_score, decision
+        ))
+        conn.commit()
+        return cur.lastrowid
+
+def save_performance(cut_id, platform, views=0, likes=0, shares=0, comments=0, posted_at=None):
+    with get_db() as conn:
+        cur = conn.execute("""
+            INSERT INTO performances
+            (cut_id, platform, views, likes, shares, comments, posted_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (cut_id, platform, views, likes, shares, comments, posted_at))
+        conn.commit()
+        return cur.lastrowid
+
+init_db()
+EOF
+    mv "$DB_PY.new" "$DB_PY"
+    echo "   ✅ db.py atualizado com DEFAULT 0.0"
+else
+    echo "   ❌ db.py não encontrado"
+fi
+
+# ---------- 3. Criar core/decision_engine.py ----------
+DECISION_ENGINE="$CLIP_DIR/core/decision_engine.py"
+mkdir -p "$CLIP_DIR/core"
+cat > "$DECISION_ENGINE" << 'EOF'
+# decision_engine.py
+# Aplica a Regra de Ouro para decisão final
+
+def evaluate_decision(local_score, external_score, platform_fit, trans_quality):
+    """
+    Fórmula proposta: final_score = (local * 0.50) + (external * 0.30) + 
+                                   (platform * 0.10) + (quality * 0.10)
+    """
+    final_score = (local_score * 0.5) + (external_score * 0.3) + (platform_fit * 0.1) + (trans_quality * 0.1)
+    
+    if final_score >= 9.0:
+        return "approved", round(final_score, 2)
+    elif final_score >= 7.0:
+        return "retry", round(final_score, 2)
+    else:
+        return "rejected", round(final_score, 2)
+
+# Exemplo de uso (opcional)
+if __name__ == "__main__":
+    print(evaluate_decision(8.5, 9.0, 0.9, 0.8))
+EOF
+echo "   ✅ core/decision_engine.py criado"
+
+echo ""
+echo "✅ Patch aplicado com sucesso!"
+echo "📌 Backup salvo em: $BACKUP_DIR"
+echo ""
+echo "Agora execute:"
+echo "  cd ~/clipfusion"
+echo "  ./run.sh"
+echo ""
+echo "Se ainda houver erros, verifique a indentação do except em gui/main_gui.py manualmente."

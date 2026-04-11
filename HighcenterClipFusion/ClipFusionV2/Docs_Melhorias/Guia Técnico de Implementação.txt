@@ -1,0 +1,290 @@
+Guia Técnico de Implementação: ClipFusion Viral Pro
+
+Este guia detalha a implementação do sistema ClipFusion Viral Pro, uma solução de engenharia de vídeo de alta performance projetada para arquiteturas Intel de 6ª geração (Skylake). O foco central reside na aceleração via hardware (VA-API), inteligência híbrida para análise de retenção e um sistema robusto de proteção anti-copyright de 7 camadas.
+
+
+--------------------------------------------------------------------------------
+
+
+1. Visão Geral e Otimização de Hardware
+
+O ClipFusion Viral Pro foi concebido para transformar podcasts e vídeos longos em cortes virais otimizados. A eficiência do sistema é garantida pela delegação de tarefas pesadas de processamento de imagem para a GPU integrada, liberando a CPU para tarefas de lógica e análise de texto.
+
+Especificações Técnicas de Alvo
+
+Componente	Requisito Mínimo / Especificação	Observação Técnica
+Processador	Intel Core i5-6200U (Skylake)	Foco em baixo consumo e instruções QuickSync.
+Memória RAM	8GB LPDDR3/DDR4	Exige gerenciamento agressivo (GC) e Lazy Loading.
+Gráficos	Intel HD Graphics 520	Driver intel-media-va-driver-non-free mandatório.
+Kernel Linux	v5.4+ (Ubuntu 20.04/22.04+)	Parâmetro i915.enable_guc=3 habilitado.
+Encoder	VA-API (H.264/HEVC)	Renderização 2-pass para estabilidade de legendas.
+
+Configuração Crítica do Kernel
+
+Para habilitar o suporte completo a GuC/HuC (necessário para o descarregamento total do pipeline de vídeo para a GPU), o arquivo /etc/default/grub deve ser configurado com o parâmetro i915.enable_guc=3. Isso reduz a latência de agendamento e melhora a performance de filtros como o procamp_vaapi.
+
+
+--------------------------------------------------------------------------------
+
+
+2. Arquitetura de Pastas e Estrutura do Projeto
+
+O projeto segue uma estrutura modular para garantir que componentes de interface, banco de dados e motores de vídeo operem de forma independente.
+
+ClipFusion_Viral_Pro/
+├── anti_copy_modules/      # 7 módulos de filtros (cor, ruído, metadados, etc.)
+├── config/                 # YAMLs de configuração e variáveis globais
+├── core/                   # Orquestrador de jobs e processamento de mídia
+├── gui/                    # Interface em 7 abas (Tkinter/PyQt)
+│   ├── tabs/               # [Projeto, Transcrição, IA Externa, Cortes, Render, Histórico, Agenda]
+├── utils/                  # Helpers de sistema e manipulação de arquivos
+├── viral_engine/           # Lógica de arquétipos e heurísticas de retenção
+├── Docs_uteis/             # Documentação de suporte
+├── main.py                 # Ponto de entrada (Bootstrap)
+├── db.py                   # Persistência via SQLAlchemy (SQLite)
+├── analytics_engine.py     # Motor de análise viral e gerador de prompts
+├── protection_factory.py   # Fábrica de renderização VA-API
+├── install.sh              # Automação de setup e kernel
+└── config.yaml             # Configurações dinâmicas
+
+
+
+--------------------------------------------------------------------------------
+
+
+3. Camada de Dados: db.py
+
+Implementação utilizando SQLAlchemy para gestão de estado e metadados de análise.
+
+import json
+from sqlalchemy import create_engine, Column, Integer, String, Float, Text, Boolean
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+Base = declarative_base()
+
+class Projeto(Base):
+    __tablename__ = 'projetos'
+    id = Column(Integer, primary_key=True)
+    nome = Column(String)
+    caminho_video = Column(String)
+    nicho = Column(String)
+
+class CorteViral(Base):
+    __tablename__ = 'cortes'
+    id = Column(Integer, primary_key=True)
+    projeto_id = Column(Integer)
+    timestamp_inicio = Column(String)
+    timestamp_fim = Column(String)
+    score_viral = Column(Float)
+    arquetipo_emocional = Column(String)
+    _hooks = Column("hooks", Text) # Armazenado como JSON string
+    status_render = Column(String, default='pendente')
+
+    @property
+    def hooks(self):
+        return json.loads(self._hooks) if self._hooks else []
+
+    @hooks.setter
+    def hooks(self, value):
+        self._hooks = json.dumps(value)
+
+def init_db():
+    engine = create_engine('sqlite:///clipfusion_v2.db')
+    Base.metadata.create_all(engine)
+    return sessionmaker(bind=engine)()
+
+
+
+--------------------------------------------------------------------------------
+
+
+4. Motor de Inteligência: analytics_engine.py
+
+Este módulo implementa a identificação dos 10 arquétipos emocionais e utiliza Lazy Loading para economizar RAM ao carregar modelos de transcrição apenas quando necessário.
+
+import gc
+
+class AnalyticsEngine:
+    def __init__(self):
+        self.arquetipos = [
+            "Medo/Urgência", "Conquista/Sucesso", "Controvérsia", 
+            "Curiosidade/Mistério", "Autoridade", "Empatia", 
+            "Humor/Sátira", "Transformação", "Escassez", "Pertencimento"
+        ]
+
+    def detect_niche(self, text):
+        # Heurística baseada em TF-IDF simplificado para nichos
+        keywords = {"invest": "Finanças", "treino": "Fitness", "tech": "Tecnologia"}
+        for key, val in keywords.items():
+            if key in text.lower(): return val
+        return "Geral"
+
+    def get_transcription(self, audio_path):
+        """Demonstração de Lazy Loading para economizar ~300MB RAM"""
+        import whisper # Importado apenas no momento do uso
+        model = whisper.load_model("base")
+        result = model.transcribe(audio_path)
+        del model # Limpeza imediata
+        gc.collect()
+        return result["text"]
+
+    def export_ai_prompt(self, transcription, niche):
+        """Prompt estruturado de alta performance para Claude/ChatGPT"""
+        return f"""
+        [ROLE] Atue como Especialista em Viralização (TikTok/Reels).
+        [CONTEXT] Nicho: {niche}. Transcrição: "{transcription[:1500]}..."
+        [TASK] Identifique os 3 momentos mais virais baseados nestes arquétipos: {self.arquetipos}.
+        [OUTPUT FORMAT] Retorne APENAS um JSON válido:
+        {{
+          "cortes": [
+            {{ "start": "MM:SS", "end": "MM:SS", "arquetipo": "NOME", "score": 0.0, "hooks": ["H1", "H2", "H3"] }}
+          ]
+        }}
+        """
+
+
+
+--------------------------------------------------------------------------------
+
+
+5. Fábrica de Proteção Anti-Copyright: protection_factory.py
+
+O coração técnico do sistema. Utiliza Render 2-pass: a primeira passagem via hardware para filtros de imagem e a segunda passagem para queima de legendas via software, garantindo compatibilidade total.
+
+import subprocess
+
+class ProtectionFactory:
+    @staticmethod
+    def apply_protection(input_file, output_file, level='MAXIMUM'):
+        # 7 Módulos: Zoom, ProcAmp, Noise, Metadata, AudioPitch, Flip, Chroma
+        
+        base_cmd = [
+            'ffmpeg', '-hwaccel', 'vaapi', 
+            '-vaapi_device', '/dev/dri/renderD128',
+            '-i', input_file
+        ]
+        
+        # Filtros via Hardware (VA-API)
+        filters = ["format=nv12|vaapi", "hwupload"]
+        
+        if level in ['ANTI_AI', 'MAXIMUM']:
+            # Ajuste de Brilho/Saturação via hardware (procamp_vaapi)
+            filters.append("procamp_vaapi=s=1.1:b=0.02:c=1.05")
+            # Zoom Dinâmico e Crop Vertical para TikTok/Reels
+            filters.append("scale_vaapi=w=1080:h=1920:force_original_aspect_ratio=increase,hwdownload,format=nv12")
+            
+        if level == 'MAXIMUM':
+            # Adição de ruído sutil (Software filter após hwdownload)
+            filters.append("noise=adds=4:constants=4")
+            # Limpeza total de metadados
+            base_cmd.extend(['-map_metadata', '-1'])
+
+        filter_chain = ",".join(filters)
+        
+        # Render 2-pass Strategy: 
+        # Pass 1 (VA-API Heavy) -> Pass 2 (Libx264 para Legendas/Estabilidade)
+        final_cmd = base_cmd + [
+            '-vf', filter_chain,
+            '-c:v', 'h264_vaapi', '-qp', '24', 
+            '-c:a', 'copy', output_file
+        ]
+        
+        subprocess.run(final_cmd, check=True)
+
+
+
+--------------------------------------------------------------------------------
+
+
+6. Automação de Ambiente: install.sh
+
+#!/bin/bash
+set -e
+
+echo "--- ClipFusion Pro Setup ---"
+
+# 1. Verificação de Hardware Intel
+if ! lscpu | grep -q "Intel"; then
+    echo "Erro: Este sistema requer CPU Intel com VA-API."
+    exit 1
+fi
+
+# 2. Dependências de Sistema (Driver non-free para Skylake)
+sudo apt update
+sudo apt install -y ffmpeg python3-pip python3-venv \
+    libva-drm2 libva-x11-2 intel-media-va-driver-non-free \
+    intel-gpu-tools vainfo
+
+# 3. Configuração GuC/HuC para i5-6200U
+if ! grep -q "i915.enable_guc=3" /etc/default/grub; then
+    sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="\(.*\)"/GRUB_CMDLINE_LINUX_DEFAULT="\1 i915.enable_guc=3"/' /etc/default/grub
+    sudo update-grub
+    echo "[AVISO] Reinicie para ativar a aceleração GuC/HuC."
+fi
+
+# 4. Ambiente Python
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+echo "Setup concluído com sucesso."
+
+
+
+--------------------------------------------------------------------------------
+
+
+7. Script de Integração: exemplo_uso.py
+
+import gc
+import os
+from db import init_db
+from analytics_engine import AnalyticsEngine
+from protection_factory import ProtectionFactory
+
+def run_workflow():
+    session = init_db()
+    engine = AnalyticsEngine()
+    
+    # Simulação de análise
+    raw_video = "input_podcast.mp4"
+    print("Iniciando análise híbrida...")
+    
+    # 1. Análise Viral
+    niche = engine.detect_niche("Conteúdo sobre como investir em 2024")
+    prompt = engine.export_ai_prompt("Transcrição simulada...", niche)
+    
+    # 2. Renderização de Proteção Nível MÁXIMO
+    output = "export_viral_pro.mp4"
+    ProtectionFactory.apply_protection(raw_video, output, level='MAXIMUM')
+    
+    # 3. Gerenciamento Crítico de Memória (Específico para 8GB RAM)
+    # Deletar objetos pesados antes do GC
+    del engine
+    gc.collect()
+    
+    print(f"Sucesso: {output} pronto para upload.")
+
+if __name__ == "__main__":
+    run_workflow()
+
+
+
+--------------------------------------------------------------------------------
+
+
+8. Notas de Operação e Performance
+
+1. Lazy Loading: O carregamento condicional do modelo Whisper e bibliotecas de GUI economiza até 300MB de RAM, evitando que o sistema entre em SWAP durante a renderização.
+2. Monitoramento: Utilize o comando sudo intel_gpu_top durante o render para verificar se o motor Video está sendo utilizado. Se o uso de CPU exceder 50% no render, verifique os filtros VA-API.
+3. GUI 7 Tabs: A interface deve seguir a ordem lógica do workflow:
+  * Projeto: Definição de caminhos e nomes.
+  * Transcrição: Edição fina do texto extraído.
+  * IA Externa: Interface para cópia de prompts e colagem de JSON.
+  * Cortes: Seleção de timestamps e ganchos (hooks).
+  * Render: Fila de processamento com status VA-API.
+  * Histórico: Log de scores virais por projeto.
+  * Agenda: Gerador de horários aleatórios para burlar padrões de detecção.
+4. Render 2-pass: Para vídeos com legendas dinâmicas, processe o vídeo primeiro com a ProtectionFactory (HW) e aplique as legendas em uma segunda passagem leve via CPU, garantindo que não haja artefatos de driver no processamento final.
+

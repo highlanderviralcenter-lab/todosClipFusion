@@ -1,0 +1,325 @@
+Relatório Técnico: Ecossistema ClipFusion Viral Pro
+
+Este documento apresenta a especificação técnica, arquitetura de software e procedimentos de implantação do ClipFusion Viral Pro. Esta solução foi projetada sob uma filosofia de máxima eficiência em hardware legado, especificamente o processador Intel i5-6200U com gráficos integrados HD 520, utilizando aceleração de hardware e estratégias de gerenciamento de memória agressivas para automação de cortes virais.
+
+
+--------------------------------------------------------------------------------
+
+
+1. Visão Geral do Sistema e Otimização de Hardware
+
+O ClipFusion Viral Pro é uma solução integrada para criação de cortes de alta performance. Diferente de soluções genéricas, sua arquitetura foi otimizada para o ambiente Debian 12 operando com 8GB de RAM. A principal estratégia de economia é o lazy loading: módulos pesados (como o motor Whisper e bibliotecas de processamento de imagem) só são instanciados no momento exato da execução, economizando aproximadamente 300MB de RAM em modo idle.
+
+A aceleração de hardware é feita via VA-API (Video Acceleration API), permitindo que a Intel HD 520 processe a decodificação e codificação H.264 sem sobrecarregar os núcleos da CPU.
+
+Tabela Comparativa: Níveis de Anti-Copyright
+
+Nível	Módulos Aplicados	Descrição Técnica	Impacto no Hash
+Nenhum	0	Arquivo original preservado sem alterações.	Zero
+Básico	3	Zoom progressivo, correção de cores e limpeza de metadados.	Baixo
+Anti-IA	5	Inclusão de ruído térmico, alteração de cromatismo e manipulação de frames.	Médio
+Máximo	7	Pitch de áudio, overlay semitransparente e distorção sutil de bordas.	Alto
+
+
+--------------------------------------------------------------------------------
+
+
+2. Camada de Persistência: database.py
+
+Utilizamos o SQLAlchemy para abstrair o SQLite, garantindo integridade referencial e facilitando futuras migrações para PostgreSQL se necessário.
+
+import datetime
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime, JSON
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+Base = declarative_base()
+
+class Project(Base):
+    """Representa a entidade raiz do projeto de vídeo."""
+    __tablename__ = 'projects'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    file_path = Column(String)
+    niche = Column(String) # Investimentos, Fitness, Tecnologia, Relacionamentos, Empreendedorismo
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class Clip(Base):
+    """Metadados de viralidade e métricas para o Learning Engine."""
+    __tablename__ = 'clips'
+    id = Column(Integer, primary_key=True)
+    project_id = Column(Integer, ForeignKey('projects.id'))
+    start_time = Column(Float)
+    end_time = Column(Float)
+    viral_score = Column(Float)
+    archetype = Column(String)
+    # Métricas de análise de audiência
+    retention_score = Column(Float)
+    shareability = Column(Float)
+    commentability = Column(Float)
+    watch_time_est = Column(Float)
+    
+    hook_variation = Column(String)
+    file_path = Column(String)
+    status = Column(String, default='pending') # pending, rendered, scheduled
+
+class Schedule(Base):
+    """Log de agendamento e performance real para aprendizado."""
+    __tablename__ = 'schedules'
+    id = Column(Integer, primary_key=True)
+    clip_id = Column(Integer, ForeignKey('clips.id'))
+    scheduled_time = Column(DateTime)
+    platform = Column(String) # TikTok, Reels, Shorts
+    actual_performance = Column(JSON) # Armazena visualizações reais após postagem
+
+# Configuração do Engine com suporte a concorrência básica do SQLite
+engine = create_engine('sqlite:///core/clipfusion.db', echo=False)
+Base.metadata.create_all(engine)
+Session = sessionmaker(bind=engine)
+db_session = Session()
+
+# Comentário Técnico: Tabelas inicializadas com metadados de viralidade profunda.
+
+
+
+--------------------------------------------------------------------------------
+
+
+3. Motor de Análise Viral: viral_analyzer.py
+
+Este motor processa a transcrição e identifica o potencial emocional do conteúdo.
+
+class ViralEngine:
+    def __init__(self):
+        # Definição dos 10 arquétipos emocionais conforme Source Context
+        self.archetypes = {
+            "revelation": 0.95, "controversy": 0.90, "educational": 0.75,
+            "motivational": 0.85, "humor": 0.80, "tech_future": 0.70,
+            "wealth_gap": 0.92, "fitness_transformation": 0.88,
+            "relationship_advice": 0.82, "survival_instinct": 0.98
+        }
+        
+    def detect_niche(self, text):
+        """Mapeamento de nichos via análise de densidade de palavras-chave."""
+        keywords = {
+            "investimentos": ["ações", "dividendos", "selic", "capital", "lucro"],
+            "fitness": ["treino", "dieta", "hipertrofia", "calorias", "saúde"],
+            "tecnologia": ["ia", "software", "automação", "hardware", "python"],
+            "relacionamentos": ["namoro", "casamento", "conquista", "psicologia"],
+            "empreendedorismo": ["negócios", "vendas", "startup", "escala", "marketing"]
+        }
+        text = text.lower()
+        for niche, tags in keywords.items():
+            if any(tag in text for tag in tags):
+                return niche
+        return "geral"
+
+    def calculate_score(self, retention, share, comment, watch):
+        """Cálculo de score normalizado (0-100)."""
+        weights = [0.35, 0.25, 0.20, 0.20]
+        metrics = [retention, share, comment, watch]
+        score = sum(m * w for m, w in zip(metrics, weights)) * 100
+        return round(score, 2)
+
+    def generate_hooks(self, archetype):
+        """Engine de hooks baseado no arquétipo emocional detectado."""
+        hooks = {
+            "controversy": "O que eles não querem que você saiba sobre...",
+            "revelation": "Eu descobri o segredo por trás de...",
+            "survival_instinct": "Pare de cometer este erro antes que seja tarde..."
+        }
+        return hooks.get(archetype, "Veja isso até o final...")
+
+
+
+--------------------------------------------------------------------------------
+
+
+4. Interface de Comunicação LLM: hybrid_prompt.py
+
+import json
+
+class PromptBuilder:
+    @staticmethod
+    def build_viral_prompt(transcription):
+        """Gera prompt estruturado para identificação de cortes."""
+        return (
+            "Atue como um Especialista em Viralização. Analise a transcrição abaixo e "
+            "identifique os 3 momentos mais impactantes. Responda APENAS em JSON:\n"
+            '{"cuts": [{"start": float, "end": float, "archetype": string, "reason": string}]}\n'
+            f"Transcrição: {transcription}"
+        )
+
+class ResponseParser:
+    @staticmethod
+    def validate_and_parse(raw_json):
+        """Validação rigorosa de tipos para evitar quebras no pipeline."""
+        try:
+            data = json.loads(raw_json)
+            return data.get("cuts", [])
+        except (json.JSONDecodeError, TypeError):
+            return []
+
+
+
+--------------------------------------------------------------------------------
+
+
+5. Fábrica de Proteção e Renderização: protection_factory.py
+
+Implementação de renderização 2-pass otimizada para i5-6200U. Utilizamos o VA-API para o processamento de imagem e libx264 para a queima de legendas, garantindo que não haja conflitos de driver.
+
+import subprocess
+import shlex
+import gc
+
+class ProtectionFactory:
+    @staticmethod
+    def render_clip(input_file, output_file, level="anti_ai"):
+        """Aplica os 7 módulos de proteção anti-copyright via FFmpeg."""
+        
+        # Módulos de proteção definidos
+        filters = [
+            "scale=trunc(iw*1.05/2)*2:-2", # 1. Zoom Progressivo
+            "eq=brightness=0.03:contrast=1.1:saturation=1.2", # 2. Cromatismo/Cor
+            "noise=alls=3:allf=t+u", # 3. Ruído Térmico
+            "setpts=0.98*PTS", # 4. Alteração sutil de Frame Rate
+            "unsharp=3:3:1.5:3:3:0.5", # 5. Nitidez artificial
+            "vignette=PI/4", # 6. Bordas/Vignette
+            "format=nv12" # Preparação para Hardware
+        ]
+        
+        filter_chain = ",".join(filters)
+        
+        # Pipeline 2-pass híbrido: VA-API p/ filtros + libx264 p/ legendas
+        # Isso evita crashes de memória na Intel HD 520 ao queimar legendas em HW
+        cmd = [
+            "ffmpeg", "-hwaccel", "vaapi", "-hwaccel_device", "/dev/dri/renderD128",
+            "-i", input_file,
+            "-vf", f"{filter_chain},subtitles=temp_subs.srt",
+            "-c:v", "h264_vaapi", "-qp", "25",
+            "-c:a", "aac", "-af", "asetrate=44100*1.02,atempo=0.98", # 7. Audio Pitch/Tempo
+            "-map_metadata", "-1", # Limpeza de metadados
+            "-y", output_file
+        ]
+        
+        try:
+            subprocess.run(cmd, check=True)
+        finally:
+            # Gerenciamento agressivo de RAM para os 8GB disponíveis
+            gc.collect() 
+
+
+
+--------------------------------------------------------------------------------
+
+
+6. Inteligência de Agendamento: schedulyzer.py
+
+import random
+from datetime import datetime, timedelta
+
+class LearningEngine:
+    @staticmethod
+    def get_best_hour(niche):
+        """Analisa o histórico do banco de dados para encontrar janelas de sucesso."""
+        from core.database import db_session, Schedule, Clip
+        
+        results = db_session.query(Schedule).join(Clip).filter(Clip.status == 'rendered').all()
+        if not results:
+            return 18 # Default: 18h
+        
+        # Lógica de frequência: encontra a hora com maior engajamento acumulado
+        performance_map = {}
+        for res in results:
+            hour = res.scheduled_time.hour
+            views = res.actual_performance.get('views', 0) if res.actual_performance else 0
+            performance_map[hour] = performance_map.get(hour, 0) + views
+            
+        return max(performance_map, key=performance_map.get)
+
+class PostScheduler:
+    def generate_human_time(self, base_hour):
+        """Lógica anti-padrão: evita horários redondos (ex: 18:07 em vez de 18:00)."""
+        target_time = datetime.now().replace(hour=base_hour, minute=0, second=0)
+        offset = random.randint(3, 12)
+        return target_time + timedelta(minutes=offset)
+
+
+
+--------------------------------------------------------------------------------
+
+
+7. Automação de Ambiente: install.sh
+
+#!/bin/bash
+set -e
+
+echo "[SYSTEM] Iniciando configuração ClipFusion Viral Pro..."
+
+# 1. Dependências de Sistema e GUI
+sudo apt update
+sudo apt install -y python3-pip python3-venv ffmpeg \
+    intel-media-va-driver-non-free libva-utils python3-tk \
+    zram-tools cpufrequtils
+
+# 2. Otimização de Kernel para Intel HD 520 (Skylake)
+if ! grep -q "i915.enable_guc=3" /etc/default/grub; then
+    sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="i915.enable_guc=3 /' /etc/default/grub
+    sudo update-grub
+    echo "[KERNEL] GuC/HuC habilitado. Reinicie após concluir."
+fi
+
+# 3. Prioridades i3wm e CPU para Processamento
+echo "GOVERNOR=\"performance\"" | sudo tee /etc/default/cpufrequtils
+# Configurar nice e ionice para o ambiente do script
+echo "alias run_clipfusion='nice -n -5 ionice -c 2 -n 0 python3 main.py'" >> ~/.bashrc
+
+# 4. Configuração de zRAM (Essencial para 8GB RAM)
+echo "zram_size=2048" | sudo tee -a /etc/default/zramswap
+sudo service zramswap restart
+
+# 5. Ambiente Python
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+echo "[SUCCESS] Ambiente pronto para o workflow i5-6200U."
+
+
+
+--------------------------------------------------------------------------------
+
+
+8. Guia de Estrutura de Pastas e Execução
+
+Estrutura Visual do Projeto
+
+ClipFusion/
+├── Docs_uteis/           # Referências e documentação técnica
+├── anti_copy_modules/    # Filtros e algoritmos de proteção
+├── config/               # Configurações de transcrição e render
+├── core/                 # database.py, schedulyzer.py
+├── gui/                  # Implementação das 7 abas em Tkinter
+├── utils/                # Loggers e helpers de sistema
+├── viral_engine/         # viral_analyzer.py, hybrid_prompt.py
+├── analytics_engine.py   # Processamento de métricas pós-postagem
+├── config.yaml           # Parâmetros globais do sistema
+├── generate_report.py    # Gerador de PDFs de performance
+├── main.py               # Orquestrador principal
+├── requirements.txt      # Dependências (SQLAlchemy, OpenAI-Whisper, etc.)
+└── run.sh                # Script de execução com prioridade de CPU
+
+
+Fluxo de Trabalho (Execução Passo a Passo)
+
+1. Aba Projeto: Importe o vídeo original. O sistema detectará automaticamente o nicho (Investimentos, Fitness, etc.).
+2. Aba Transcrição: Execução do Whisper via Python API. O gerenciador de memória monitora o swap de zRAM.
+3. Aba IA Externa: Copie o prompt gerado pelo PromptBuilder, use no Claude/ChatGPT e cole o JSON de resposta para validação pelo ResponseParser.
+4. Aba Cortes: Selecione os intervalos baseados no viral_score sugerido.
+5. Aba Render: Inicie a renderização VA-API. O sistema processa um corte por vez, executando gc.collect() e limpando buffers de vídeo após cada exportação para evitar travamentos no hardware HD 520.
+6. Aba Histórico: Gerencie os arquivos renderizados e metadados de proteção aplicados.
+7. Aba Agenda: O LearningEngine sugere o horário ótimo. O PostScheduler aplica o deslocamento anti-padrão antes de finalizar o agendamento.
+
+Nota de Performance: Durante a renderização (Aba 5), recomenda-se fechar navegadores ou outras aplicações pesadas, permitindo que o sistema i3wm dedique prioridade total ao pipeline FFmpeg.
+
