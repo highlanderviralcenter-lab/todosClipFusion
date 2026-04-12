@@ -6,6 +6,12 @@ import tempfile
 from pathlib import Path
 from typing import Dict
 
+codex/perform-complete-repository-review-wxjjvr
+from deep_translator import GoogleTranslator
+from gtts import gTTS
+
+=======
+main
 from protection_factory import build_plan
 
 PLATFORM_CONFIGS = {
@@ -45,6 +51,44 @@ def _apply_plan(input_path: str, output_path: str, level: str) -> None:
     subprocess.run(cmd, check=True)
 
 
+def _guess_lang(text: str) -> str:
+    t = text.lower()
+    if any(token in t for token in [" que ", " não ", " você ", " pra ", "ção", "ões", "ã", "é"]):
+        return "pt"
+    return "en"
+
+
+def _prepare_dub_audio(text: str, tmp_dir: str, dub_lang: str) -> str:
+    source_text = text.strip()
+    source_lang = _guess_lang(source_text)
+    target_lang = source_lang if dub_lang == "auto" else dub_lang
+    if target_lang not in {"pt", "en"}:
+        target_lang = "en"
+
+    final_text = source_text
+    if source_lang != target_lang:
+        final_text = GoogleTranslator(source="auto", target=target_lang).translate(source_text)
+
+    tts_path = str(Path(tmp_dir) / f"dub_{target_lang}.mp3")
+    gTTS(text=final_text, lang=target_lang).save(tts_path)
+    return tts_path
+
+
+def _replace_audio(video_path: str, audio_path: str, output_path: str) -> None:
+    cmd = [
+        "ffmpeg", "-y",
+        "-i", video_path,
+        "-i", audio_path,
+        "-map", "0:v:0",
+        "-map", "1:a:0",
+        "-c:v", "copy",
+        "-c:a", "aac",
+        "-shortest",
+        output_path,
+    ]
+    subprocess.run(cmd, check=True)
+
+
 def render_cut(
     video_path: str,
     start: float,
@@ -54,6 +98,8 @@ def render_cut(
     protection_level: str = "basic",
     subtitle_text: str = "",
     use_vaapi: bool = True,
+    auto_dub_en: bool = False,
+    dub_lang: str = "en",
 ) -> Dict[str, str]:
     """Render 2-pass real: pass 1 (VA-API) + pass 2 (libx264 com legenda)."""
     duration = max(0.1, float(end) - float(start))
@@ -118,6 +164,14 @@ def render_cut(
                 _apply_plan(str(final), str(protected), protection_level)
                 final.unlink(missing_ok=True)
                 shutil.move(str(protected), str(final))
+
+            if auto_dub_en and has_subs:
+                dub_audio = _prepare_dub_audio(subtitle_text, tmp, dub_lang=dub_lang)
+                suffix_lang = dub_lang if dub_lang in {"pt", "en"} else "auto"
+                dubbed = base / f"{base_name}{cfg['suffix']}_dub_{suffix_lang}.mp4"
+                _replace_audio(str(final), dub_audio, str(dubbed))
+                final.unlink(missing_ok=True)
+                shutil.move(str(dubbed), str(final))
 
             out[platform] = str(final)
 

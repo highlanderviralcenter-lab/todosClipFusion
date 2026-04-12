@@ -47,6 +47,19 @@ EOF
   fi
 }
 
+check_merge_markers() {
+  if command -v rg >/dev/null 2>&1; then
+    if rg -n "^<<<<<<<|^>>>>>>>" "$ROOT_DIR" >/tmp/hcf_conflicts.log 2>/dev/null; then
+      echo "[HCF] ERRO: marcadores de conflito detectados:"
+      cat /tmp/hcf_conflicts.log
+      echo "[HCF] Resolva os conflitos de merge antes de executar."
+      exit 1
+    fi
+  fi
+}
+
+check_merge_markers
+
 python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip >/dev/null

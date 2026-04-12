@@ -121,6 +121,17 @@ class HighcenterClipFusionGUI:
         for m in ["tiny", "base", "small"]:
             tk.Radiobutton(wf, text=m, variable=self.v_whisper, value=m, bg=BG2, fg=WHT, selectcolor=ACC, activebackground=BG2, font=FNT).pack(side="left", padx=8)
 
+        af = tk.Frame(f, bg=BG2)
+        af.pack(fill="x", padx=30, pady=2)
+        self.v_auto_sub = tk.BooleanVar(value=True)
+        self.v_dub_en = tk.BooleanVar(value=True)
+        tk.Checkbutton(af, text="Legenda automática", variable=self.v_auto_sub, bg=BG2, fg=WHT, selectcolor=ACC, activebackground=BG2, font=FNT).pack(side="left", padx=(0, 16))
+        tk.Checkbutton(af, text="Dub ENG auto", variable=self.v_dub_en, bg=BG2, fg=WHT, selectcolor=ACC, activebackground=BG2, font=FNT).pack(side="left")
+        self.v_dub_lang = tk.StringVar(value="en")
+        self._lbl(af, "Idioma dub:").pack(side="left", padx=(16, 4))
+        for label, value in [("EN", "en"), ("PT", "pt"), ("AUTO", "auto")]:
+            tk.Radiobutton(af, text=label, variable=self.v_dub_lang, value=value, bg=BG2, fg=WHT, selectcolor=ACC, activebackground=BG2, font=FNT).pack(side="left", padx=4)
+
         self._lbl(f, "Cole uma transcrição com uma frase por linha (opcional).", color=GRY).pack(anchor="w", padx=30, pady=(10, 4))
         self.box_transcript_input = scrolledtext.ScrolledText(f, height=8, bg=BG3, fg=WHT, font=MONO, relief="flat", insertbackground=WHT)
         self.box_transcript_input.pack(fill="both", padx=30, pady=(0, 10))
@@ -338,6 +349,7 @@ class HighcenterClipFusionGUI:
         self._log(f"Renderizando {len(approved)} cortes em {out_dir}")
         self._log(f"Anti-copyright: {self.v_ace.get()}")
         self._log(f"Encoder: {'VA-API 2-pass' if self.v_vaapi.get() else 'libx264 (CPU)'}")
+        self._log(f"Legenda automática: {'ON' if self.v_auto_sub.get() else 'OFF'} | Dub auto: {'ON' if self.v_dub_en.get() else 'OFF'} ({self.v_dub_lang.get().upper()})")
 
         def run_render():
             try:
@@ -350,6 +362,10 @@ class HighcenterClipFusionGUI:
                         out_dir,
                         base,
                         protection_level=self.v_ace.get(),
+                        subtitle_text=self._resolve_subtitle_text(c) if self.v_auto_sub.get() else "",
+                        use_vaapi=self.v_vaapi.get(),
+                        auto_dub_en=self.v_dub_en.get(),
+                        dub_lang=self.v_dub_lang.get(),
                         subtitle_text=c["text"],
                         use_vaapi=self.v_vaapi.get(),
                     )
@@ -378,6 +394,21 @@ class HighcenterClipFusionGUI:
         self.box_agenda.delete("1.0", "end")
         for dt in slots:
             self.box_agenda.insert("end", f"- {dt.strftime('%Y-%m-%d %H:%M')}\n")
+
+    def _resolve_subtitle_text(self, candidate: dict) -> str:
+        text = str(candidate.get("text", "")).strip()
+        if text:
+            return text
+        s = float(candidate.get("start", 0.0))
+        e = float(candidate.get("end", 0.0))
+        parts = []
+        for seg in self.segments:
+            if float(seg.get("end", 0.0)) < s or float(seg.get("start", 0.0)) > e:
+                continue
+            st = str(seg.get("text", "")).strip()
+            if st:
+                parts.append(st)
+        return " ".join(parts).strip()
 
     def _refresh_tree(self):
         for row in self.tree.get_children():
