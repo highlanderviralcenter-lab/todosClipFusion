@@ -366,6 +366,8 @@ class HighcenterClipFusionGUI:
                         use_vaapi=self.v_vaapi.get(),
                         auto_dub_en=self.v_dub_en.get(),
                         dub_lang=self.v_dub_lang.get(),
+                        subtitle_text=c["text"],
+                        use_vaapi=self.v_vaapi.get(),
                     )
                     for platform, path in paths.items():
                         self._log(f"✅ {platform}: {path}")
