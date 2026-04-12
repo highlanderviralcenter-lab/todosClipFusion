@@ -28,6 +28,12 @@ FNT = ("Segoe UI", 10)
 FNTB = ("Segoe UI", 10, "bold")
 FNTL = ("Segoe UI", 13, "bold")
 MONO = ("Consolas", 9)
+ACE_LEVELS = [
+    ("🟢 NENHUM", "none"),
+    ("🟡 BÁSICO", "basic"),
+    ("🟠 ANTI-IA", "anti_ia"),
+    ("🔴 MÁXIMO", "maximum"),
+]
 
 
 class HighcenterClipFusionGUI:
@@ -86,11 +92,34 @@ class HighcenterClipFusionGUI:
         self.v_name = tk.StringVar(value=f"Projeto {datetime.now().strftime('%d/%m %H:%M')}")
         tk.Entry(r1, textvariable=self.v_name, width=44, bg=BG3, fg=WHT, insertbackground=WHT, relief="flat", font=FNT).pack(side="left", padx=10)
 
+        self._lbl(f, "Contexto (opcional):", color=GRY).pack(anchor="w", padx=30, pady=(10, 4))
+        self.ctx_box = tk.Text(f, height=3, bg=BG3, fg=WHT, insertbackground=WHT, relief="flat", font=FNT, wrap="word")
+        self.ctx_box.pack(fill="x", padx=30)
+
         vr = tk.Frame(f, bg=BG2)
         vr.pack(fill="x", padx=30, pady=6)
         self._btn(vr, "📂 Selecionar vídeo", self._select_video, ACC).pack(side="left")
         self.lbl_video = self._lbl(vr, "Nenhum vídeo selecionado", color=GRY)
         self.lbl_video.pack(side="left", padx=14)
+
+        op = tk.Frame(f, bg=BG2)
+        op.pack(fill="x", padx=30, pady=(8, 2))
+        self.v_vaapi = tk.BooleanVar(value=True)
+        tk.Checkbutton(op, text="Usar VA-API (Intel HD 520) — recomendado", variable=self.v_vaapi, bg=BG2, fg=WHT, selectcolor=ACC, activebackground=BG2, font=FNT).pack(anchor="w")
+
+        acef = tk.Frame(f, bg=BG2)
+        acef.pack(fill="x", padx=30, pady=4)
+        self._lbl(acef, "Anti-Copyright:").pack(side="left")
+        self.v_ace = tk.StringVar(value="basic")
+        for lbl, val in ACE_LEVELS:
+            tk.Radiobutton(acef, text=lbl, variable=self.v_ace, value=val, bg=BG2, fg=WHT, selectcolor=ACC, activebackground=BG2, font=FNT).pack(side="left", padx=8)
+
+        wf = tk.Frame(f, bg=BG2)
+        wf.pack(fill="x", padx=30, pady=2)
+        self._lbl(wf, "Whisper:").pack(side="left")
+        self.v_whisper = tk.StringVar(value="tiny")
+        for m in ["tiny", "base", "small"]:
+            tk.Radiobutton(wf, text=m, variable=self.v_whisper, value=m, bg=BG2, fg=WHT, selectcolor=ACC, activebackground=BG2, font=FNT).pack(side="left", padx=8)
 
         self._lbl(f, "Cole uma transcrição com uma frase por linha (opcional).", color=GRY).pack(anchor="w", padx=30, pady=(10, 4))
         self.box_transcript_input = scrolledtext.ScrolledText(f, height=8, bg=BG3, fg=WHT, font=MONO, relief="flat", insertbackground=WHT)
@@ -307,6 +336,8 @@ class HighcenterClipFusionGUI:
         self.nb.select(4)
         self.box_log.delete("1.0", "end")
         self._log(f"Renderizando {len(approved)} cortes em {out_dir}")
+        self._log(f"Anti-copyright: {self.v_ace.get()}")
+        self._log(f"Encoder: {'VA-API 2-pass' if self.v_vaapi.get() else 'libx264 (CPU)'}")
 
         def run_render():
             try:
@@ -318,8 +349,9 @@ class HighcenterClipFusionGUI:
                         c["end"],
                         out_dir,
                         base,
-                        protection_level="basic",
+                        protection_level=self.v_ace.get(),
                         subtitle_text=c["text"],
+                        use_vaapi=self.v_vaapi.get(),
                     )
                     for platform, path in paths.items():
                         self._log(f"✅ {platform}: {path}")

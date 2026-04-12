@@ -53,11 +53,12 @@ def render_cut(
     base_name: str,
     protection_level: str = "basic",
     subtitle_text: str = "",
+    use_vaapi: bool = True,
 ) -> Dict[str, str]:
     """Render 2-pass real: pass 1 (VA-API) + pass 2 (libx264 com legenda)."""
     duration = max(0.1, float(end) - float(start))
     out = {}
-    vaapi_ok = _detect_vaapi()
+    vaapi_ok = _detect_vaapi() and use_vaapi
     tmp = tempfile.mkdtemp(prefix="hcf_")
 
     try:
