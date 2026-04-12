@@ -119,11 +119,7 @@ Analise agora:"""
 
 
 def parse_ai_response(text: str) -> list:
-<<<<<<< HEAD
-    text  = re.sub(r"```json\s*|```\s*", "", text.strip())
-=======
     text = re.sub(r"```json\s*|```\s*", "", text.strip())
->>>>>>> origin/main
     blob = None
     obj_match = re.search(r"\{[\s\S]*\}", text)
     arr_match = re.search(r"\[[\s\S]*\]", text)
@@ -153,8 +149,4 @@ def parse_ai_response(text: str) -> list:
                 "platforms": c.get("platforms", ["tiktok", "reels", "shorts"]),
                 "metadata": c.get("metadata", {}),
             })
-<<<<<<< HEAD
     return result
-=======
-    return result
->>>>>>> origin/main
