@@ -1,0 +1,1581 @@
+# Leitura completa automatizada do repositório
+
+Total de arquivos lidos: **705**
+Tamanho total: **21.48 MiB**
+Arquivos decodificáveis como texto: **705** | binários/sem decodificação: **0**
+Erros de leitura: **0**
+
+## Pastas de interesse (contagem de arquivos)
+- `docs 25-36-2026`: 12
+- `Docs_Melhorias`: 0
+- `Docs_uteis`: 0
+- `docsgit`: 38
+- `src`: 0
+- `ClipFusion_V.2/clipfusion`: 47
+- `ClipFusion_V.2/clipfusion_part2render`: 17
+- `scripts`: 0
+
+## Arquivos com padrões de versão/backup/cópia no nome
+- `.gitignore` (2x)
+  - .gitignore
+  - ClipFusion_V.2/.gitignore
+- `.gitkeep` (15x)
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/config/profiles/.gitkeep
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/output/prompts/.gitkeep
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/output/reports/.gitkeep
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/output/scripts/.gitkeep
+  - ClipFusion_V.2/src/config/profiles/.gitkeep
+  - ClipFusion_V.2/src/output (1)/prompts/.gitkeep
+  - ClipFusion_V.2/src/output (1)/reports/.gitkeep
+  - ClipFusion_V.2/src/output (1)/scripts/.gitkeep
+  - ... +7 arquivos
+- `.~lock.000debian_tunado_3.0_OFICIAL (1).docx#` (1x)
+  - ClipFusion_V.2/cliptusion-ultimate/.~lock.000debian_tunado_3.0_OFICIAL (1).docx#
+- `000debian_tunado_3.0_OFICIAL (1) (1).docx` (1x)
+  - ClipFusion_V.2/cliptusion-ultimate/000debian_tunado_3.0_OFICIAL (1) (1).docx
+- `000debian_tunado_3.0_OFICIAL (1).docx` (1x)
+  - ClipFusion_V.2/cliptusion-ultimate/000debian_tunado_3.0_OFICIAL (1).docx
+- `ANALISAR CODIGO FULL (1).txt` (1x)
+  - ClipFusion_V.2/cliptusion-ultimate/ANALISAR CODIGO FULL (1).txt
+- `Captura de tela de 2026-03-15 13-51-05.png` (2x)
+  - ClipFusion_V.2/clipfusion/Captura de tela de 2026-03-15 13-51-05.png
+  - ClipFusion_V.2/src/Captura de tela de 2026-03-15 13-51-05.png
+- `ClipFusion Viral Pro.txt` (3x)
+  - ClipFusion_V.2/Docs_Melhorias/ClipFusion Viral Pro.txt
+  - docsgit/ClipFusion Viral Pro.txt
+  - docsgit/Docs_Melhorias/ClipFusion Viral Pro.txt
+- `Especificação Técnica.txt` (3x)
+  - ClipFusion_V.2/Docs_Melhorias/Especificação Técnica.txt
+  - docsgit/Docs_Melhorias/Especificação Técnica.txt
+  - docsgit/Especificação Técnica.txt
+- `FullClipFusion install2.sh` (4x)
+  - ClipFusion_V.2/Projeto01/outputcd (1)/FullClipFusion install2.sh
+  - ClipFusion_V.2/Projeto01/outputcd/FullClipFusion install2.sh
+  - ClipFusion_V.2/clipfusion/Projeto01/outputcd/FullClipFusion install2.sh
+  - ClipFusion_V.2/src/Projeto01/outputcd/FullClipFusion install2.sh
+- `Guia Técnico de Implementação.txt` (3x)
+  - ClipFusion_V.2/Docs_Melhorias/Guia Técnico de Implementação.txt
+  - docs 25-36-2026/Guia Técnico de Implementação.txt
+  - docsgit/Docs_Melhorias/Guia Técnico de Implementação.txt
+- `IAAAAA (1).txt` (1x)
+  - ClipFusion_V.2/cliptusion-ultimate/IAAAAA (1).txt
+- `LEGACY (1).md` (1x)
+  - ClipFusion_V.2/LEGACY (1).md
+- `LEGACY (2).md` (1x)
+  - ClipFusion_V.2/LEGACY (2).md
+- `LEGACY (3).md` (1x)
+  - ClipFusion_V.2/LEGACY (3).md
+- `LEGACY.md` (2x)
+  - ClipFusion_V.2/LEGACY.md
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/LEGACY.md
+- `Manual Técnico Fábrica.txt` (2x)
+  - ClipFusion_V.2/Docs_Melhorias/Manual Técnico Fábrica.txt
+  - docsgit/Docs_Melhorias/Manual Técnico Fábrica.txt
+- `Manual Técnico de Integração.txt` (2x)
+  - ClipFusion_V.2/Docs_Melhorias/Manual Técnico de Integração.txt
+  - docsgit/Docs_Melhorias/Manual Técnico de Integração.txt
+- `Manual Técnico de Integração: Módulos Anti-Copyright ClipFusion Viral Pro.txt` (1x)
+  - docs 25-36-2026/Manual Técnico de Integração: Módulos Anti-Copyright ClipFusion Viral Pro.txt
+- `Manual Técnico e Guia.txt` (2x)
+  - ClipFusion_V.2/Docs_Melhorias/Manual Técnico e Guia.txt
+  - docsgit/Docs_Melhorias/Manual Técnico e Guia.txt
+- `Manual Técnico e Repositório.txt` (2x)
+  - ClipFusion_V.2/Docs_Melhorias/Manual Técnico e Repositório.txt
+  - docsgit/Docs_Melhorias/Manual Técnico e Repositório.txt
+- `Manual Técnico: Fábrica de Proteção Anti-Copyright (ClipFusion).txt` (1x)
+  - docs 25-36-2026/Manual Técnico: Fábrica de Proteção Anti-Copyright (ClipFusion).txt
+- `Manual de Engenharia Viral Consolidado: Sistema SignalCut Hybrid (ClipFusion V2).tt` (1x)
+  - docs 25-36-2026/Manual de Engenharia Viral Consolidado: Sistema SignalCut Hybrid (ClipFusion V2).tt
+- `Manual de Engenharia Viral Consolidado: Sistema SignalCut Hybrid (ClipFusion V2).txt` (1x)
+  - docs 25-36-2026/Manual de Engenharia Viral Consolidado: Sistema SignalCut Hybrid (ClipFusion V2).txt
+- `Novo documento.txt` (1x)
+  - docsgit/Novo documento.txt
+- `PlanoDeAcaoFullClipFusion install2.txt` (4x)
+  - ClipFusion_V.2/Projeto01/outputcd (1)/PlanoDeAcaoFullClipFusion install2.txt
+  - ClipFusion_V.2/Projeto01/outputcd/PlanoDeAcaoFullClipFusion install2.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/outputcd/PlanoDeAcaoFullClipFusion install2.txt
+  - ClipFusion_V.2/src/Projeto01/outputcd/PlanoDeAcaoFullClipFusion install2.txt
+- `Projeto proposto para comparação[.txt` (4x)
+  - ClipFusion_V.2/Projeto01/outputcd (1)/Projeto proposto para comparação[.txt
+  - ClipFusion_V.2/Projeto01/outputcd/Projeto proposto para comparação[.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/outputcd/Projeto proposto para comparação[.txt
+  - ClipFusion_V.2/src/Projeto01/outputcd/Projeto proposto para comparação[.txt
+- `README (1).md` (3x)
+  - ClipFusion_V.2/README (1).md
+  - ClipFusion_V.2/clipfusion_part2render/README (1).md
+  - ClipFusion_V.2/cliptusion-ultimate/README (1).md
+- `README (2).md` (1x)
+  - ClipFusion_V.2/README (2).md
+- `README (3).md` (1x)
+  - ClipFusion_V.2/README (3).md
+- `README (4).md` (1x)
+  - ClipFusion_V.2/README (4).md
+- `README (5).md` (1x)
+  - ClipFusion_V.2/README (5).md
+- `README (6).md` (1x)
+  - ClipFusion_V.2/README (6).md
+- `README.md` (5x)
+  - ClipFusion_V.2/README.md
+  - ClipFusion_V.2/clipfusion_part2render/README.md
+  - ClipFusion_V.2/cliptusion-ultimate/README.md
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/README.md
+  - README.md
+- `README_V3.md` (1x)
+  - ClipFusion_V.3/README_V3.md
+- `Relatório Técnico Ecossistema.txt` (2x)
+  - ClipFusion_V.2/Docs_Melhorias/Relatório Técnico Ecossistema.txt
+  - docsgit/Docs_Melhorias/Relatório Técnico Ecossistema.txt
+- `Solicitacaofinalclip (1).txt` (1x)
+  - ClipFusion_V.2/Solicitacaofinalclip (1).txt
+- `Versionamento ClipFusion_florence (1).txt` (1x)
+  - ClipFusion_V.2/Versionamento ClipFusion_florence (1).txt
+- `__init__ (1).py` (7x)
+  - ClipFusion_V.2/app/anti_copy_modules/__init__ (1).py
+  - ClipFusion_V.2/src/anti_copy_modules/__init__ (1).py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/__init__ (1).py
+  - ClipFusion_V.2/src/core/__init__ (1).py
+  - ClipFusion_V.2/src/gui/__init__ (1).py
+  - ClipFusion_V.2/src/utils/__init__ (1).py
+  - ClipFusion_V.2/src/viral_engine/__init__ (1).py
+- `__init__ (2).py` (6x)
+  - ClipFusion_V.2/app/anti_copy_modules/__init__ (2).py
+  - ClipFusion_V.2/src/anti_copy_modules/__init__ (2).py
+  - ClipFusion_V.2/src/core/__init__ (2).py
+  - ClipFusion_V.2/src/gui/__init__ (2).py
+  - ClipFusion_V.2/src/utils/__init__ (2).py
+  - ClipFusion_V.2/src/viral_engine/__init__ (2).py
+- `__init__ (3).py` (5x)
+  - ClipFusion_V.2/app/anti_copy_modules/__init__ (3).py
+  - ClipFusion_V.2/src/anti_copy_modules/__init__ (3).py
+  - ClipFusion_V.2/src/core/__init__ (3).py
+  - ClipFusion_V.2/src/gui/__init__ (3).py
+  - ClipFusion_V.2/src/viral_engine/__init__ (3).py
+- `__init__ (4).py` (5x)
+  - ClipFusion_V.2/app/anti_copy_modules/__init__ (4).py
+  - ClipFusion_V.2/src/anti_copy_modules/__init__ (4).py
+  - ClipFusion_V.2/src/core/__init__ (4).py
+  - ClipFusion_V.2/src/gui/__init__ (4).py
+  - ClipFusion_V.2/src/viral_engine/__init__ (4).py
+- `__init__ (5).py` (5x)
+  - ClipFusion_V.2/app/anti_copy_modules/__init__ (5).py
+  - ClipFusion_V.2/src/anti_copy_modules/__init__ (5).py
+  - ClipFusion_V.2/src/core/__init__ (5).py
+  - ClipFusion_V.2/src/gui/__init__ (5).py
+  - ClipFusion_V.2/src/viral_engine/__init__ (5).py
+- `__init__ (6).py` (4x)
+  - ClipFusion_V.2/app/anti_copy_modules/__init__ (6).py
+  - ClipFusion_V.2/src/anti_copy_modules/__init__ (6).py
+  - ClipFusion_V.2/src/core/__init__ (6).py
+  - ClipFusion_V.2/src/gui/__init__ (6).py
+- `__init__ (7).py` (1x)
+  - ClipFusion_V.2/src/core/__init__ (7).py
+- `__init__.py` (26x)
+  - ClipFusion_V.2/app/anti_copy_modules/__init__.py
+  - ClipFusion_V.2/app/core/__init__.py
+  - ClipFusion_V.2/app/gui/__init__.py
+  - ClipFusion_V.2/app/utils/__init__.py
+  - ClipFusion_V.2/app/viral_engine/__init__.py
+  - ClipFusion_V.2/clipfusion/anti_copy_modules/__init__.py
+  - ClipFusion_V.2/clipfusion/core/__init__.py
+  - ClipFusion_V.2/clipfusion/gui/__init__.py
+  - ... +18 arquivos
+- `ai_evasion (1).py` (3x)
+  - ClipFusion_V.2/app/anti_copy_modules/ai_evasion (1).py
+  - ClipFusion_V.2/src/anti_copy_modules/ai_evasion (1).py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/ai_evasion (1).py
+- `ai_evasion (2).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/ai_evasion (2).py
+  - ClipFusion_V.2/src/anti_copy_modules/ai_evasion (2).py
+- `ai_evasion (3).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/ai_evasion (3).py
+  - ClipFusion_V.2/src/anti_copy_modules/ai_evasion (3).py
+- `ai_evasion (4).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/ai_evasion (4).py
+  - ClipFusion_V.2/src/anti_copy_modules/ai_evasion (4).py
+- `ai_evasion.py` (4x)
+  - ClipFusion_V.2/app/anti_copy_modules/ai_evasion.py
+  - ClipFusion_V.2/src/anti_copy_modules/ai_evasion.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/ai_evasion.py
+  - ClipFusion_V.3/app_V3/anti_copy_modules/ai_evasion.py
+- `ai_response.json` (4x)
+  - ClipFusion_V.2/Projeto01/work (2)/ai_response.json
+  - ClipFusion_V.2/Projeto01/work/ai_response.json
+  - ClipFusion_V.2/clipfusion/Projeto01/work/ai_response.json
+  - ClipFusion_V.2/src/Projeto01/work/ai_response.json
+- `analysis_prompt.txt` (4x)
+  - ClipFusion_V.2/Projeto01/work (2)/analysis_prompt.txt
+  - ClipFusion_V.2/Projeto01/work/analysis_prompt.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/work/analysis_prompt.txt
+  - ClipFusion_V.2/src/Projeto01/work/analysis_prompt.txt
+- `analytics_engine (1).py` (1x)
+  - ClipFusion_V.2/analytics_engine (1).py
+- `anti_copy.png` (2x)
+  - ClipFusion_V.2/Docs_Melhorias/anti_copy.png
+  - docsgit/Docs_Melhorias/anti_copy.png
+- `apply_clipfusion_patch (1).py` (2x)
+  - ClipFusion_V.2/apply_clipfusion_patch (1).py
+  - ClipFusion_V.2/clipfusion_patch_bundle/apply_clipfusion_patch (1).py
+- `apply_clipfusion_patch.py` (2x)
+  - ClipFusion_V.2/apply_clipfusion_patch.py
+  - ClipFusion_V.2/clipfusion_patch_bundle/apply_clipfusion_patch.py
+- `approved_cuts.example (1).json` (1x)
+  - ClipFusion_V.2/clipfusion_part2render/approved_cuts.example (1).json
+- `archetypes (1).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/archetypes (1).py
+- `archetypes (2).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/archetypes (2).py
+- `archetypes (3).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/archetypes (3).py
+- `archetypes (4).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/archetypes (4).py
+- `archetypes.py` (4x)
+  - ClipFusion_V.2/app/viral_engine/archetypes.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/viral_engine/archetypes.py
+  - ClipFusion_V.2/src/viral_engine/archetypes.py
+  - ClipFusion_V.3/app_V3/viral_engine/archetypes.py
+- `ardware Lenovo 310 15ISK.txt` (1x)
+  - docsgit/ardware Lenovo 310 15ISK.txt
+- `artigo-debian-1irwm (1) (1).txt` (1x)
+  - ClipFusion_V.2/cliptusion-ultimate/artigo-debian-1irwm (1) (1).txt
+- `artigo-debian-1irwm (1).txt` (1x)
+  - ClipFusion_V.2/cliptusion-ultimate/artigo-debian-1irwm (1).txt
+- `audience_analyzer (1).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/audience_analyzer (1).py
+- `audience_analyzer (2).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/audience_analyzer (2).py
+- `audience_analyzer (3).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/audience_analyzer (3).py
+- `audience_analyzer (4).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/audience_analyzer (4).py
+- `audience_analyzer.py` (2x)
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/viral_engine/audience_analyzer.py
+  - ClipFusion_V.2/src/viral_engine/audience_analyzer.py
+- `audio_advanced (1).py` (3x)
+  - ClipFusion_V.2/app/anti_copy_modules/audio_advanced (1).py
+  - ClipFusion_V.2/src/anti_copy_modules/audio_advanced (1).py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/audio_advanced (1).py
+- `audio_advanced (2).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/audio_advanced (2).py
+  - ClipFusion_V.2/src/anti_copy_modules/audio_advanced (2).py
+- `audio_advanced (3).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/audio_advanced (3).py
+  - ClipFusion_V.2/src/anti_copy_modules/audio_advanced (3).py
+- `audio_advanced (4).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/audio_advanced (4).py
+  - ClipFusion_V.2/src/anti_copy_modules/audio_advanced (4).py
+- `audio_advanced.py` (4x)
+  - ClipFusion_V.2/app/anti_copy_modules/audio_advanced.py
+  - ClipFusion_V.2/src/anti_copy_modules/audio_advanced.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/audio_advanced.py
+  - ClipFusion_V.3/app_V3/anti_copy_modules/audio_advanced.py
+- `auditoria_debian_tunado_3.0(2).sh` (1x)
+  - ClipFusion_V.2/Docs_uteis/auditoria_debian_tunado_3.0(2).sh
+- `backup_user.py` (1x)
+  - backup_user.py
+- `bin bash patch final.txt` (6x)
+  - ClipFusion_V.2/Projeto01/outputcd (1)/bin bash patch final.txt
+  - ClipFusion_V.2/Projeto01/outputcd/bin bash patch final.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/outputcd/bin bash patch final.txt
+  - ClipFusion_V.2/src/Projeto01/outputcd/bin bash patch final.txt
+  - ClipFusion_V.2/src/bin bash patch final.txt
+  - docsgit/bin bash patch final.txt
+- `candidate_engine (1).py` (1x)
+  - ClipFusion_V.2/src/core/candidate_engine (1).py
+- `candidate_engine (2).py` (1x)
+  - ClipFusion_V.2/src/core/candidate_engine (2).py
+- `candidate_engine.py` (4x)
+  - ClipFusion_V.2/app/core/candidate_engine.py
+  - ClipFusion_V.2/clipfusion/core/candidate_engine.py
+  - ClipFusion_V.2/src/core/candidate_engine.py
+  - ClipFusion_V.3/app_V3/core/candidate_engine.py
+- `capture_errors (1).sh` (1x)
+  - ClipFusion_V.2/capture_errors (1).sh
+- `clipfusion-check (1).sh` (1x)
+  - ClipFusion_V.2/clipfusion-check (1).sh
+- `clipfusion-check-final (1).sh` (1x)
+  - ClipFusion_V.2/clipfusion-check-final (1).sh
+- `clipfusion-check-final.sh` (2x)
+  - ClipFusion_V.2/Docs_uteis/clipfusion-check-final.sh
+  - ClipFusion_V.2/clipfusion-check-final.sh
+- `clipfusion-check.sh` (2x)
+  - ClipFusion_V.2/Docs_uteis/clipfusion-check.sh
+  - ClipFusion_V.2/clipfusion-check.sh
+- `clipfusion_DEFINITIVO_COMO_TEM_QUE_SER (1).txt` (2x)
+  - ClipFusion_V.2/Docs_uteis/clipfusion_DEFINITIVO_COMO_TEM_QUE_SER (1).txt
+  - ClipFusion_V.2/cliptusion-ultimate/clipfusion_DEFINITIVO_COMO_TEM_QUE_SER (1).txt
+- `clipfusion_DEFINITIVO_COMO_TEM_QUE_SER.txt` (2x)
+  - ClipFusion_V.2/Docs_uteis/clipfusion_DEFINITIVO_COMO_TEM_QUE_SER.txt
+  - ClipFusion_V.2/cliptusion-ultimate/clipfusion_DEFINITIVO_COMO_TEM_QUE_SER.txt
+- `config (1).yaml` (1x)
+  - ClipFusion_V.2/config (1).yaml
+- `config (2).yaml` (1x)
+  - ClipFusion_V.2/config (2).yaml
+- `config (3).yaml` (1x)
+  - ClipFusion_V.2/config (3).yaml
+- `config (4).yaml` (1x)
+  - ClipFusion_V.2/config (4).yaml
+- `config.yaml` (2x)
+  - ClipFusion_V.2/config.yaml
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/config.yaml
+- `core (1).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/core (1).py
+  - ClipFusion_V.2/src/anti_copy_modules/core (1).py
+- `core (2).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/core (2).py
+  - ClipFusion_V.2/src/anti_copy_modules/core (2).py
+- `core (3).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/core (3).py
+  - ClipFusion_V.2/src/anti_copy_modules/core (3).py
+- `core (4).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/core (4).py
+  - ClipFusion_V.2/src/anti_copy_modules/core (4).py
+- `core (5).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/core (5).py
+  - ClipFusion_V.2/src/anti_copy_modules/core (5).py
+- `core (6).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/core (6).py
+  - ClipFusion_V.2/src/anti_copy_modules/core (6).py
+- `core.py` (5x)
+  - ClipFusion_V.2/app/anti_copy_modules/core.py
+  - ClipFusion_V.2/clipfusion/anti_copy_modules/core.py
+  - ClipFusion_V.2/src/anti_copy_modules/core.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/core.py
+  - ClipFusion_V.3/app_V3/anti_copy_modules/core.py
+- `crticacliofusion.txt` (4x)
+  - ClipFusion_V.2/Projeto01/outputcd (1)/crticacliofusion.txt
+  - ClipFusion_V.2/Projeto01/outputcd/crticacliofusion.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/outputcd/crticacliofusion.txt
+  - ClipFusion_V.2/src/Projeto01/outputcd/crticacliofusion.txt
+- `cut_engine (1).py` (1x)
+  - ClipFusion_V.2/src/core/cut_engine (1).py
+- `cut_engine (2).py` (1x)
+  - ClipFusion_V.2/src/core/cut_engine (2).py
+- `cut_engine (3).py` (1x)
+  - ClipFusion_V.2/src/core/cut_engine (3).py
+- `cut_engine (4).py` (1x)
+  - ClipFusion_V.2/src/core/cut_engine (4).py
+- `cut_engine.py` (4x)
+  - ClipFusion_V.2/app/core/cut_engine.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/core/cut_engine.py
+  - ClipFusion_V.2/src/core/cut_engine.py
+  - ClipFusion_V.3/app_V3/core/cut_engine.py
+- `cuts_planned.json` (4x)
+  - ClipFusion_V.2/Projeto01/work (2)/cuts_planned.json
+  - ClipFusion_V.2/Projeto01/work/cuts_planned.json
+  - ClipFusion_V.2/clipfusion/Projeto01/work/cuts_planned.json
+  - ClipFusion_V.2/src/Projeto01/work/cuts_planned.json
+- `db (1).py` (2x)
+  - ClipFusion_V.2/db (1).py
+  - ClipFusion_V.2/src/db (1).py
+- `db (2).py` (2x)
+  - ClipFusion_V.2/db (2).py
+  - ClipFusion_V.2/src/db (2).py
+- `db (3).py` (1x)
+  - ClipFusion_V.2/db (3).py
+- `db (4).py` (1x)
+  - ClipFusion_V.2/db (4).py
+- `db.py` (8x)
+  - ClipFusion_V.2/app/db.py
+  - ClipFusion_V.2/clipfusion/db.py
+  - ClipFusion_V.2/clipfusion_patch_bundle/clipfusion_patch (1)/db.py
+  - ClipFusion_V.2/clipfusion_patch_bundle/clipfusion_patch/db.py
+  - ClipFusion_V.2/db.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/db.py
+  - ClipFusion_V.2/src/core/db.py
+  - ClipFusion_V.2/src/db.py
+- `db_V3.py` (1x)
+  - ClipFusion_V.3/app_V3/db_V3.py
+- `decision_engine (1).py` (1x)
+  - ClipFusion_V.2/src/core/decision_engine (1).py
+- `decision_engine (2).py` (1x)
+  - ClipFusion_V.2/src/core/decision_engine (2).py
+- `decision_engine.py` (2x)
+  - ClipFusion_V.2/clipfusion/core/decision_engine.py
+  - ClipFusion_V.2/src/core/decision_engine.py
+- `diagnostic_V3.sh` (1x)
+  - ClipFusion_V.3/scripts_V3/diagnostic_V3.sh
+- `diagnostico_tunado.txt` (2x)
+  - ClipFusion_V.2/diagnostico_tunado.txt
+  - diagnostico_tunado.txt
+- `documentosduvida.txt` (4x)
+  - ClipFusion_V.2/Projeto01/outputcd (1)/documentosduvida.txt
+  - ClipFusion_V.2/Projeto01/outputcd/documentosduvida.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/outputcd/documentosduvida.txt
+  - ClipFusion_V.2/src/Projeto01/outputcd/documentosduvida.txt
+- `en (1).yaml` (1x)
+  - ClipFusion_V.2/src/locales/en (1).yaml
+- `en.yaml` (2x)
+  - ClipFusion_V.2/clipfusion/locales/en.yaml
+  - ClipFusion_V.2/src/locales/en.yaml
+- `fingerprint_evasion (1).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/fingerprint_evasion (1).py
+  - ClipFusion_V.2/src/anti_copy_modules/fingerprint_evasion (1).py
+- `fingerprint_evasion (2).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/fingerprint_evasion (2).py
+  - ClipFusion_V.2/src/anti_copy_modules/fingerprint_evasion (2).py
+- `fingerprint_evasion (3).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/fingerprint_evasion (3).py
+  - ClipFusion_V.2/src/anti_copy_modules/fingerprint_evasion (3).py
+- `fingerprint_evasion (4).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/fingerprint_evasion (4).py
+  - ClipFusion_V.2/src/anti_copy_modules/fingerprint_evasion (4).py
+- `fingerprint_evasion.py` (4x)
+  - ClipFusion_V.2/app/anti_copy_modules/fingerprint_evasion.py
+  - ClipFusion_V.2/src/anti_copy_modules/fingerprint_evasion.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/fingerprint_evasion.py
+  - ClipFusion_V.3/app_V3/anti_copy_modules/fingerprint_evasion.py
+- `generate_report (1).py` (1x)
+  - ClipFusion_V.2/generate_report (1).py
+- `geometric_transforms (1).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/geometric_transforms (1).py
+  - ClipFusion_V.2/src/anti_copy_modules/geometric_transforms (1).py
+- `geometric_transforms (2).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/geometric_transforms (2).py
+  - ClipFusion_V.2/src/anti_copy_modules/geometric_transforms (2).py
+- `geometric_transforms (3).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/geometric_transforms (3).py
+  - ClipFusion_V.2/src/anti_copy_modules/geometric_transforms (3).py
+- `geometric_transforms (4).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/geometric_transforms (4).py
+  - ClipFusion_V.2/src/anti_copy_modules/geometric_transforms (4).py
+- `geometric_transforms.py` (4x)
+  - ClipFusion_V.2/app/anti_copy_modules/geometric_transforms.py
+  - ClipFusion_V.2/src/anti_copy_modules/geometric_transforms.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/geometric_transforms.py
+  - ClipFusion_V.3/app_V3/anti_copy_modules/geometric_transforms.py
+- `hardware (1).py` (1x)
+  - ClipFusion_V.2/src/utils/hardware (1).py
+- `hardware (2).py` (1x)
+  - ClipFusion_V.2/src/utils/hardware (2).py
+- `hardware.py` (6x)
+  - ClipFusion_V.2/app/utils/hardware.py
+  - ClipFusion_V.2/clipfusion/utils/hardware.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/utils/hardware.py
+  - ClipFusion_V.2/src/utils (1)/hardware.py
+  - ClipFusion_V.2/src/utils/hardware.py
+  - ClipFusion_V.3/app_V3/utils/hardware.py
+- `hook_engine (1).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/hook_engine (1).py
+- `hook_engine (2).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/hook_engine (2).py
+- `hook_engine (3).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/hook_engine (3).py
+- `hook_engine (4).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/hook_engine (4).py
+- `hook_engine.py` (4x)
+  - ClipFusion_V.2/app/viral_engine/hook_engine.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/viral_engine/hook_engine.py
+  - ClipFusion_V.2/src/viral_engine/hook_engine.py
+  - ClipFusion_V.3/app_V3/viral_engine/hook_engine.py
+- `hybrid_parser (1).py` (1x)
+  - ClipFusion_V.2/src/core/hybrid_parser (1).py
+- `hybrid_parser (2).py` (1x)
+  - ClipFusion_V.2/src/core/hybrid_parser (2).py
+- `hybrid_parser.py` (4x)
+  - ClipFusion_V.2/app/core/hybrid_parser.py
+  - ClipFusion_V.2/clipfusion/core/hybrid_parser.py
+  - ClipFusion_V.2/src/core/hybrid_parser.py
+  - ClipFusion_V.3/app_V3/core/hybrid_parser.py
+- `hybrid_prompt (1).py` (1x)
+  - ClipFusion_V.2/src/core/hybrid_prompt (1).py
+- `hybrid_prompt (2).py` (1x)
+  - ClipFusion_V.2/src/core/hybrid_prompt (2).py
+- `hybrid_prompt.py` (4x)
+  - ClipFusion_V.2/app/core/hybrid_prompt.py
+  - ClipFusion_V.2/clipfusion/core/hybrid_prompt.py
+  - ClipFusion_V.2/src/core/hybrid_prompt.py
+  - ClipFusion_V.3/app_V3/core/hybrid_prompt.py
+- `ingest (1).py` (1x)
+  - ClipFusion_V.2/src/core/ingest (1).py
+- `ingest (2).py` (1x)
+  - ClipFusion_V.2/src/core/ingest (2).py
+- `ingest.py` (4x)
+  - ClipFusion_V.2/app/core/ingest.py
+  - ClipFusion_V.2/clipfusion/core/ingest.py
+  - ClipFusion_V.2/src/core/ingest.py
+  - ClipFusion_V.3/app_V3/core/ingest.py
+- `instalar_clipfusion_v2 (1).txt` (1x)
+  - ClipFusion_V.2/instalar_clipfusion_v2 (1).txt
+- `instalar_clipfusion_v2.txt` (1x)
+  - ClipFusion_V.2/instalar_clipfusion_v2.txt
+- `instalar_clipfusion_v2_completo (1).sh` (1x)
+  - ClipFusion_V.2/instalar_clipfusion_v2_completo (1).sh
+- `instalar_clipfusion_v2_completo.sh` (1x)
+  - ClipFusion_V.2/instalar_clipfusion_v2_completo.sh
+- `install (1).sh` (1x)
+  - ClipFusion_V.2/install (1).sh
+- `install (2).sh` (1x)
+  - ClipFusion_V.2/install (2).sh
+- `install (3).sh` (1x)
+  - ClipFusion_V.2/install (3).sh
+- `install.sh` (2x)
+  - ClipFusion_V.2/install.sh
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/install.sh
+- `install_debian_V3.sh` (1x)
+  - ClipFusion_V.3/scripts_V3/install_debian_V3.sh
+- `install_unix (1).sh` (1x)
+  - ClipFusion_V.2/clipfusion_part2render/install_unix (1).sh
+- `install_windows (1).bat` (1x)
+  - ClipFusion_V.2/clipfusion_part2render/install_windows (1).bat
+- `learning_engine (1).py` (1x)
+  - ClipFusion_V.2/src/core/learning_engine (1).py
+- `learning_engine (2).py` (1x)
+  - ClipFusion_V.2/src/core/learning_engine (2).py
+- `learning_engine.py` (2x)
+  - ClipFusion_V.2/clipfusion/core/learning_engine.py
+  - ClipFusion_V.2/src/core/learning_engine.py
+- `main (1).py` (2x)
+  - ClipFusion_V.2/main (1).py
+  - ClipFusion_V.2/src/main (1).py
+- `main (2).py` (2x)
+  - ClipFusion_V.2/main (2).py
+  - ClipFusion_V.2/src/main (2).py
+- `main (3).py` (1x)
+  - ClipFusion_V.2/main (3).py
+- `main (4).py` (1x)
+  - ClipFusion_V.2/main (4).py
+- `main.py` (5x)
+  - ClipFusion_V.2/app/main.py
+  - ClipFusion_V.2/clipfusion/main.py
+  - ClipFusion_V.2/main.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/main.py
+  - ClipFusion_V.2/src/main.py
+- `main_V3.py` (1x)
+  - ClipFusion_V.3/app_V3/main_V3.py
+- `main_gui (1).py` (1x)
+  - ClipFusion_V.2/src/gui/main_gui (1).py
+- `main_gui (2).py` (1x)
+  - ClipFusion_V.2/src/gui/main_gui (2).py
+- `main_gui (3).py` (1x)
+  - ClipFusion_V.2/src/gui/main_gui (3).py
+- `main_gui (4).py` (1x)
+  - ClipFusion_V.2/src/gui/main_gui (4).py
+- `main_gui (5).py` (1x)
+  - ClipFusion_V.2/src/gui/main_gui (5).py
+- `main_gui (6).py` (1x)
+  - ClipFusion_V.2/src/gui/main_gui (6).py
+- `main_gui.py` (5x)
+  - ClipFusion_V.2/app/gui/main_gui.py
+  - ClipFusion_V.2/clipfusion/gui/main_gui.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/gui/main_gui.py
+  - ClipFusion_V.2/src/gui/main_gui.py
+  - ClipFusion_V.3/app_V3/gui/main_gui.py
+- `manual_tecnico_V3.md` (1x)
+  - ClipFusion_V.3/docs_V3/manual_tecnico_V3.md
+- `me monta a versao limpa.txt` (1x)
+  - docsgit/me monta a versao limpa.txt
+- `network_evasion (1).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/network_evasion (1).py
+  - ClipFusion_V.2/src/anti_copy_modules/network_evasion (1).py
+- `network_evasion (2).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/network_evasion (2).py
+  - ClipFusion_V.2/src/anti_copy_modules/network_evasion (2).py
+- `network_evasion (3).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/network_evasion (3).py
+  - ClipFusion_V.2/src/anti_copy_modules/network_evasion (3).py
+- `network_evasion (4).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/network_evasion (4).py
+  - ClipFusion_V.2/src/anti_copy_modules/network_evasion (4).py
+- `network_evasion.py` (4x)
+  - ClipFusion_V.2/app/anti_copy_modules/network_evasion.py
+  - ClipFusion_V.2/src/anti_copy_modules/network_evasion.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/network_evasion.py
+  - ClipFusion_V.3/app_V3/anti_copy_modules/network_evasion.py
+- `os (1)` (1x)
+  - ClipFusion_V.2/os (1)
+- `padrao (1).txt` (1x)
+  - ClipFusion_V.2/Docs_uteis/padrao (1).txt
+- `patch_selecao_inteligencia_v1.json` (1x)
+  - ClipFusion_V.2/ops/manifests/patch_selecao_inteligencia_v1.json
+- `patches_log.md` (2x)
+  - ClipFusion_V.2/scripts/patches (1)/patches_log.md
+  - ClipFusion_V.2/scripts/patches/patches_log.md
+- `perfis_nicho (1).json` (1x)
+  - ClipFusion_V.2/src/config/perfis_nicho (1).json
+- `perfis_nicho (2).json` (1x)
+  - ClipFusion_V.2/src/config/perfis_nicho (2).json
+- `perfis_nicho.json` (2x)
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/config/perfis_nicho.json
+  - ClipFusion_V.2/src/config/perfis_nicho.json
+- `platform_engine (1).py` (1x)
+  - ClipFusion_V.2/src/core/platform_engine (1).py
+- `platform_engine.py` (4x)
+  - ClipFusion_V.2/app/core/platform_engine.py
+  - ClipFusion_V.2/clipfusion/core/platform_engine.py
+  - ClipFusion_V.2/src/core/platform_engine.py
+  - ClipFusion_V.3/app_V3/core/platform_engine.py
+- `platform_optimizer (1).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/platform_optimizer (1).py
+- `platform_optimizer (2).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/platform_optimizer (2).py
+- `platform_optimizer (3).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/platform_optimizer (3).py
+- `platform_optimizer (4).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/platform_optimizer (4).py
+- `platform_optimizer.py` (2x)
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/viral_engine/platform_optimizer.py
+  - ClipFusion_V.2/src/viral_engine/platform_optimizer.py
+- `platforms (1).yaml` (1x)
+  - ClipFusion_V.2/src/config/platforms (1).yaml
+- `platforms (2).yaml` (1x)
+  - ClipFusion_V.2/src/config/platforms (2).yaml
+- `platforms.yaml` (2x)
+  - ClipFusion_V.2/clipfusion/config/platforms.yaml
+  - ClipFusion_V.2/src/config/platforms.yaml
+- `post_pack (1).py` (1x)
+  - ClipFusion_V.2/src/core/post_pack (1).py
+- `post_pack (2).py` (1x)
+  - ClipFusion_V.2/src/core/post_pack (2).py
+- `post_pack.py` (2x)
+  - ClipFusion_V.2/clipfusion/core/post_pack.py
+  - ClipFusion_V.2/src/core/post_pack.py
+- `posting_schedule (1).py` (1x)
+  - ClipFusion_V.2/src/core/posting_schedule (1).py
+- `posting_schedule (2).py` (1x)
+  - ClipFusion_V.2/src/core/posting_schedule (2).py
+- `posting_schedule.py` (2x)
+  - ClipFusion_V.2/clipfusion/core/posting_schedule.py
+  - ClipFusion_V.2/src/core/posting_schedule.py
+- `project_state.json` (4x)
+  - ClipFusion_V.2/Projeto01/state (2)/project_state.json
+  - ClipFusion_V.2/Projeto01/state/project_state.json
+  - ClipFusion_V.2/clipfusion/Projeto01/state/project_state.json
+  - ClipFusion_V.2/src/Projeto01/state/project_state.json
+- `projeto_completo2_Com _algoritimos_necessarios (1).txt` (2x)
+  - ClipFusion_V.2/Docs_uteis/projeto_completo2_Com _algoritimos_necessarios (1).txt
+  - ClipFusion_V.2/cliptusion-ultimate/projeto_completo2_Com _algoritimos_necessarios (1).txt
+- `projeto_completo2_Com _algoritimos_necessarios.txt` (2x)
+  - ClipFusion_V.2/Docs_uteis/projeto_completo2_Com _algoritimos_necessarios.txt
+  - ClipFusion_V.2/cliptusion-ultimate/projeto_completo2_Com _algoritimos_necessarios.txt
+- `prompt_builder (1).py` (1x)
+  - ClipFusion_V.2/src/core/prompt_builder (1).py
+- `prompt_builder (2).py` (1x)
+  - ClipFusion_V.2/src/core/prompt_builder (2).py
+- `prompt_builder (3).py` (1x)
+  - ClipFusion_V.2/src/core/prompt_builder (3).py
+- `prompt_builder (4).py` (1x)
+  - ClipFusion_V.2/src/core/prompt_builder (4).py
+- `prompt_builder (5).py` (1x)
+  - ClipFusion_V.2/src/core/prompt_builder (5).py
+- `prompt_builder.py` (6x)
+  - ClipFusion_V.2/app/core/prompt_builder.py
+  - ClipFusion_V.2/clipfusion_patch_bundle/clipfusion_patch (1)/core/prompt_builder.py
+  - ClipFusion_V.2/clipfusion_patch_bundle/clipfusion_patch/core/prompt_builder.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/core/prompt_builder.py
+  - ClipFusion_V.2/src/core/prompt_builder.py
+  - ClipFusion_V.3/app_V3/core/prompt_builder.py
+- `promptranFullTeste1.txt` (4x)
+  - ClipFusion_V.2/Projeto01/outputcd (1)/promptranFullTeste1.txt
+  - ClipFusion_V.2/Projeto01/outputcd/promptranFullTeste1.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/outputcd/promptranFullTeste1.txt
+  - ClipFusion_V.2/src/Projeto01/outputcd/promptranFullTeste1.txt
+- `protection_factory (1).py` (1x)
+  - ClipFusion_V.2/src/core/protection_factory (1).py
+- `protection_factory (2).py` (1x)
+  - ClipFusion_V.2/src/core/protection_factory (2).py
+- `protection_factory.py` (4x)
+  - ClipFusion_V.2/app/core/protection_factory.py
+  - ClipFusion_V.2/clipfusion/core/protection_factory.py
+  - ClipFusion_V.2/src/core/protection_factory.py
+  - ClipFusion_V.3/app_V3/core/protection_factory.py
+- `pt (1).yaml` (1x)
+  - ClipFusion_V.2/src/locales/pt (1).yaml
+- `pt.yaml` (2x)
+  - ClipFusion_V.2/clipfusion/locales/pt.yaml
+  - ClipFusion_V.2/src/locales/pt.yaml
+- `render_2pass_V3.sh` (1x)
+  - ClipFusion_V.3/scripts_V3/render_2pass_V3.sh
+- `render_pipeline (1).py` (1x)
+  - ClipFusion_V.2/clipfusion_part2render/src/render_pipeline (1).py
+- `render_pipeline.py` (2x)
+  - ClipFusion_V.2/clipfusion_part2render/src (2)/render_pipeline.py
+  - ClipFusion_V.2/clipfusion_part2render/src/render_pipeline.py
+- `requirements (1).txt` (2x)
+  - ClipFusion_V.2/clipfusion_part2render/requirements (1).txt
+  - ClipFusion_V.2/requirements (1).txt
+- `requirements (2).txt` (1x)
+  - ClipFusion_V.2/requirements (2).txt
+- `requirements (3).txt` (1x)
+  - ClipFusion_V.2/requirements (3).txt
+- `requirements (4).txt` (1x)
+  - ClipFusion_V.2/requirements (4).txt
+- `requirements (5).txt` (1x)
+  - ClipFusion_V.2/requirements (5).txt
+- `requirements (6).txt` (1x)
+  - ClipFusion_V.2/requirements (6).txt
+- `requirements.txt` (6x)
+  - ClipFusion_V.2/app/requirements.txt
+  - ClipFusion_V.2/clipfusion/requirements.txt
+  - ClipFusion_V.2/clipfusion_part2render/requirements.txt
+  - ClipFusion_V.2/requirements.txt
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/requirements.txt
+  - ClipFusion_V.2/src/requirements.txt
+- `requirements_V3.txt` (1x)
+  - ClipFusion_V.3/app_V3/requirements_V3.txt
+- `respostaIAtranFullTeste1.txt` (4x)
+  - ClipFusion_V.2/Projeto01/outputcd (1)/respostaIAtranFullTeste1.txt
+  - ClipFusion_V.2/Projeto01/outputcd/respostaIAtranFullTeste1.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/outputcd/respostaIAtranFullTeste1.txt
+  - ClipFusion_V.2/src/Projeto01/outputcd/respostaIAtranFullTeste1.txt
+- `run (1).sh` (1x)
+  - ClipFusion_V.2/run (1).sh
+- `run (2).sh` (1x)
+  - ClipFusion_V.2/run (2).sh
+- `run (3).sh` (1x)
+  - ClipFusion_V.2/run (3).sh
+- `run (4).sh` (1x)
+  - ClipFusion_V.2/run (4).sh
+- `run (5).sh` (1x)
+  - ClipFusion_V.2/run (5).sh
+- `run (6).sh` (1x)
+  - ClipFusion_V.2/run (6).sh
+- `run.sh` (5x)
+  - ClipFusion_V.2/app/run.sh
+  - ClipFusion_V.2/clipfusion/run.sh
+  - ClipFusion_V.2/run.sh
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/run.sh
+  - ClipFusion_V.2/src/run.sh
+- `run_V3.sh` (1x)
+  - ClipFusion_V.3/app_V3/run_V3.sh
+- `run_renderer (1).bat` (1x)
+  - ClipFusion_V.2/clipfusion_part2render/run_renderer (1).bat
+- `run_renderer (1).sh` (1x)
+  - ClipFusion_V.2/clipfusion_part2render/run_renderer (1).sh
+- `scoring (1).yaml` (1x)
+  - ClipFusion_V.2/src/config/scoring (1).yaml
+- `scoring (2).yaml` (1x)
+  - ClipFusion_V.2/src/config/scoring (2).yaml
+- `scoring.yaml` (2x)
+  - ClipFusion_V.2/clipfusion/config/scoring.yaml
+  - ClipFusion_V.2/src/config/scoring.yaml
+- `scoring_engine (1).py` (1x)
+  - ClipFusion_V.2/src/core/scoring_engine (1).py
+- `scoring_engine (2).py` (1x)
+  - ClipFusion_V.2/src/core/scoring_engine (2).py
+- `scoring_engine.py` (4x)
+  - ClipFusion_V.2/app/core/scoring_engine.py
+  - ClipFusion_V.2/clipfusion/core/scoring_engine.py
+  - ClipFusion_V.2/src/core/scoring_engine.py
+  - ClipFusion_V.3/app_V3/core/scoring_engine.py
+- `secondary_group (1).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/secondary_group (1).py
+- `secondary_group (2).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/secondary_group (2).py
+- `secondary_group (3).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/secondary_group (3).py
+- `secondary_group (4).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/secondary_group (4).py
+- `secondary_group.py` (2x)
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/viral_engine/secondary_group.py
+  - ClipFusion_V.2/src/viral_engine/secondary_group.py
+- `segment (1).py` (1x)
+  - ClipFusion_V.2/src/core/segment (1).py
+- `segment (2).py` (1x)
+  - ClipFusion_V.2/src/core/segment (2).py
+- `segment.py` (4x)
+  - ClipFusion_V.2/app/core/segment.py
+  - ClipFusion_V.2/clipfusion/core/segment.py
+  - ClipFusion_V.2/src/core/segment.py
+  - ClipFusion_V.3/app_V3/core/segment.py
+- `settings (1).yaml` (1x)
+  - ClipFusion_V.2/src/config/settings (1).yaml
+- `settings (2).yaml` (1x)
+  - ClipFusion_V.2/src/config/settings (2).yaml
+- `settings.yaml` (2x)
+  - ClipFusion_V.2/clipfusion/config/settings.yaml
+  - ClipFusion_V.2/src/config/settings.yaml
+- `temporal_obfuscation (1).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/temporal_obfuscation (1).py
+  - ClipFusion_V.2/src/anti_copy_modules/temporal_obfuscation (1).py
+- `temporal_obfuscation (2).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/temporal_obfuscation (2).py
+  - ClipFusion_V.2/src/anti_copy_modules/temporal_obfuscation (2).py
+- `temporal_obfuscation (3).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/temporal_obfuscation (3).py
+  - ClipFusion_V.2/src/anti_copy_modules/temporal_obfuscation (3).py
+- `temporal_obfuscation (4).py` (2x)
+  - ClipFusion_V.2/app/anti_copy_modules/temporal_obfuscation (4).py
+  - ClipFusion_V.2/src/anti_copy_modules/temporal_obfuscation (4).py
+- `temporal_obfuscation.py` (4x)
+  - ClipFusion_V.2/app/anti_copy_modules/temporal_obfuscation.py
+  - ClipFusion_V.2/src/anti_copy_modules/temporal_obfuscation.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/temporal_obfuscation.py
+  - ClipFusion_V.3/app_V3/anti_copy_modules/temporal_obfuscation.py
+- `tranFullTeste1.txt` (4x)
+  - ClipFusion_V.2/Projeto01/outputcd (1)/tranFullTeste1.txt
+  - ClipFusion_V.2/Projeto01/outputcd/tranFullTeste1.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/outputcd/tranFullTeste1.txt
+  - ClipFusion_V.2/src/Projeto01/outputcd/tranFullTeste1.txt
+- `transcribe (1).py` (1x)
+  - ClipFusion_V.2/src/core/transcribe (1).py
+- `transcribe (2).py` (1x)
+  - ClipFusion_V.2/src/core/transcribe (2).py
+- `transcribe.py` (4x)
+  - ClipFusion_V.2/app/core/transcribe.py
+  - ClipFusion_V.2/clipfusion/core/transcribe.py
+  - ClipFusion_V.2/src/core/transcribe.py
+  - ClipFusion_V.3/app_V3/core/transcribe.py
+- `transcribe_seguro (1).py` (1x)
+  - ClipFusion_V.2/src/core/transcribe_seguro (1).py
+- `transcriber (1).py` (1x)
+  - ClipFusion_V.2/src/core/transcriber (1).py
+- `transcriber (2).py` (1x)
+  - ClipFusion_V.2/src/core/transcriber (2).py
+- `transcriber (3).py` (1x)
+  - ClipFusion_V.2/src/core/transcriber (3).py
+- `transcriber (4).py` (1x)
+  - ClipFusion_V.2/src/core/transcriber (4).py
+- `transcriber (5).py` (1x)
+  - ClipFusion_V.2/src/core/transcriber (5).py
+- `transcriber.py` (6x)
+  - ClipFusion_V.2/app/core/transcriber.py
+  - ClipFusion_V.2/clipfusion_patch_bundle/clipfusion_patch (1)/core/transcriber.py
+  - ClipFusion_V.2/clipfusion_patch_bundle/clipfusion_patch/core/transcriber.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/core/transcriber.py
+  - ClipFusion_V.2/src/core/transcriber.py
+  - ClipFusion_V.3/app_V3/core/transcriber.py
+- `transcription.txt` (4x)
+  - ClipFusion_V.2/Projeto01/work (2)/transcription.txt
+  - ClipFusion_V.2/Projeto01/work/transcription.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/work/transcription.txt
+  - ClipFusion_V.2/src/Projeto01/work/transcription.txt
+- `transcription_quality (1).py` (1x)
+  - ClipFusion_V.2/src/core/transcription_quality (1).py
+- `transcription_quality (2).py` (1x)
+  - ClipFusion_V.2/src/core/transcription_quality (2).py
+- `transcription_quality.py` (4x)
+  - ClipFusion_V.2/app/core/transcription_quality.py
+  - ClipFusion_V.2/clipfusion/core/transcription_quality.py
+  - ClipFusion_V.2/src/core/transcription_quality.py
+  - ClipFusion_V.3/app_V3/core/transcription_quality.py
+- `transcription_segments.json` (4x)
+  - ClipFusion_V.2/Projeto01/work (2)/transcription_segments.json
+  - ClipFusion_V.2/Projeto01/work/transcription_segments.json
+  - ClipFusion_V.2/clipfusion/Projeto01/work/transcription_segments.json
+  - ClipFusion_V.2/src/Projeto01/work/transcription_segments.json
+- `udo bash install_clipultimate (1).sh` (1x)
+  - ClipFusion_V.2/udo bash install_clipultimate (1).sh
+- `validador_V2 (1).sh` (1x)
+  - ClipFusion_V.2/validador_V2 (1).sh
+- `validador_V2.sh` (1x)
+  - ClipFusion_V.2/validador_V2.sh
+- `viral_analyzer (1).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/viral_analyzer (1).py
+- `viral_analyzer (2).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/viral_analyzer (2).py
+- `viral_analyzer (3).py` (1x)
+  - ClipFusion_V.2/src/viral_engine/viral_analyzer (3).py
+- `viral_analyzer.py` (4x)
+  - ClipFusion_V.2/app/viral_engine/viral_analyzer.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/viral_engine/viral_analyzer.py
+  - ClipFusion_V.2/src/viral_engine/viral_analyzer.py
+  - ClipFusion_V.3/app_V3/viral_engine/viral_analyzer.py
+- `~$0debian_tunado_3.0_OFICIAL (1) (1).docx` (2x)
+  - ClipFusion_V.2/Docs_uteis/~$0debian_tunado_3.0_OFICIAL (1) (1).docx
+  - ClipFusion_V.2/cliptusion-ultimate/~$0debian_tunado_3.0_OFICIAL (1) (1).docx
+- `~$0debian_tunado_3.0_OFICIAL (1).docx` (2x)
+  - ClipFusion_V.2/Docs_uteis/~$0debian_tunado_3.0_OFICIAL (1).docx
+  - ClipFusion_V.2/cliptusion-ultimate/~$0debian_tunado_3.0_OFICIAL (1).docx
+
+## Duplicatas exatas por hash (mesmo conteúdo)
+- Grupo (42):
+  - ClipFusion_V.2/app/anti_copy_modules/__init__ (4).py
+  - ClipFusion_V.2/app/anti_copy_modules/__init__ (6).py
+  - ClipFusion_V.2/app/anti_copy_modules/__init__.py
+  - ClipFusion_V.2/app/core/__init__.py
+  - ClipFusion_V.2/app/gui/__init__.py
+  - ClipFusion_V.2/app/utils/__init__.py
+  - ClipFusion_V.2/clipfusion/anti_copy_modules/__init__.py
+  - ClipFusion_V.2/clipfusion/core/__init__.py
+  - ClipFusion_V.2/clipfusion/gui/__init__.py
+  - ClipFusion_V.2/clipfusion/utils/__init__.py
+  - ... +32 arquivos
+- Grupo (8):
+  - ClipFusion_V.2/Projeto01/outputcd (1)/FullClipFusion install2.sh
+  - ClipFusion_V.2/Projeto01/outputcd (1)/PlanoDeAcaoFullClipFusion install2.txt
+  - ClipFusion_V.2/Projeto01/outputcd/FullClipFusion install2.sh
+  - ClipFusion_V.2/Projeto01/outputcd/PlanoDeAcaoFullClipFusion install2.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/outputcd/FullClipFusion install2.sh
+  - ClipFusion_V.2/clipfusion/Projeto01/outputcd/PlanoDeAcaoFullClipFusion install2.txt
+  - ClipFusion_V.2/src/Projeto01/outputcd/FullClipFusion install2.sh
+  - ClipFusion_V.2/src/Projeto01/outputcd/PlanoDeAcaoFullClipFusion install2.txt
+- Grupo (8):
+  - ClipFusion_V.2/app/viral_engine/archetypes.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/viral_engine/archetypes.py
+  - ClipFusion_V.2/src/viral_engine/archetypes (1).py
+  - ClipFusion_V.2/src/viral_engine/archetypes (2).py
+  - ClipFusion_V.2/src/viral_engine/archetypes (3).py
+  - ClipFusion_V.2/src/viral_engine/archetypes (4).py
+  - ClipFusion_V.2/src/viral_engine/archetypes.py
+  - ClipFusion_V.3/app_V3/viral_engine/archetypes.py
+- Grupo (8):
+  - ClipFusion_V.2/app/viral_engine/hook_engine.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/viral_engine/hook_engine.py
+  - ClipFusion_V.2/src/viral_engine/hook_engine (1).py
+  - ClipFusion_V.2/src/viral_engine/hook_engine (2).py
+  - ClipFusion_V.2/src/viral_engine/hook_engine (3).py
+  - ClipFusion_V.2/src/viral_engine/hook_engine (4).py
+  - ClipFusion_V.2/src/viral_engine/hook_engine.py
+  - ClipFusion_V.3/app_V3/viral_engine/hook_engine.py
+- Grupo (7):
+  - ClipFusion_V.2/app/anti_copy_modules/ai_evasion (1).py
+  - ClipFusion_V.2/app/anti_copy_modules/ai_evasion (4).py
+  - ClipFusion_V.2/app/anti_copy_modules/ai_evasion.py
+  - ClipFusion_V.2/src/anti_copy_modules/ai_evasion (1).py
+  - ClipFusion_V.2/src/anti_copy_modules/ai_evasion (4).py
+  - ClipFusion_V.2/src/anti_copy_modules/ai_evasion.py
+  - ClipFusion_V.3/app_V3/anti_copy_modules/ai_evasion.py
+- Grupo (7):
+  - ClipFusion_V.2/app/anti_copy_modules/audio_advanced (1).py
+  - ClipFusion_V.2/app/anti_copy_modules/audio_advanced (4).py
+  - ClipFusion_V.2/app/anti_copy_modules/audio_advanced.py
+  - ClipFusion_V.2/src/anti_copy_modules/audio_advanced (1).py
+  - ClipFusion_V.2/src/anti_copy_modules/audio_advanced (4).py
+  - ClipFusion_V.2/src/anti_copy_modules/audio_advanced.py
+  - ClipFusion_V.3/app_V3/anti_copy_modules/audio_advanced.py
+- Grupo (7):
+  - ClipFusion_V.2/app/anti_copy_modules/fingerprint_evasion (1).py
+  - ClipFusion_V.2/app/anti_copy_modules/fingerprint_evasion (4).py
+  - ClipFusion_V.2/app/anti_copy_modules/fingerprint_evasion.py
+  - ClipFusion_V.2/src/anti_copy_modules/fingerprint_evasion (1).py
+  - ClipFusion_V.2/src/anti_copy_modules/fingerprint_evasion (4).py
+  - ClipFusion_V.2/src/anti_copy_modules/fingerprint_evasion.py
+  - ClipFusion_V.3/app_V3/anti_copy_modules/fingerprint_evasion.py
+- Grupo (7):
+  - ClipFusion_V.2/app/anti_copy_modules/geometric_transforms (1).py
+  - ClipFusion_V.2/app/anti_copy_modules/geometric_transforms (4).py
+  - ClipFusion_V.2/app/anti_copy_modules/geometric_transforms.py
+  - ClipFusion_V.2/src/anti_copy_modules/geometric_transforms (1).py
+  - ClipFusion_V.2/src/anti_copy_modules/geometric_transforms (4).py
+  - ClipFusion_V.2/src/anti_copy_modules/geometric_transforms.py
+  - ClipFusion_V.3/app_V3/anti_copy_modules/geometric_transforms.py
+- Grupo (7):
+  - ClipFusion_V.2/app/anti_copy_modules/network_evasion (1).py
+  - ClipFusion_V.2/app/anti_copy_modules/network_evasion (4).py
+  - ClipFusion_V.2/app/anti_copy_modules/network_evasion.py
+  - ClipFusion_V.2/src/anti_copy_modules/network_evasion (1).py
+  - ClipFusion_V.2/src/anti_copy_modules/network_evasion (4).py
+  - ClipFusion_V.2/src/anti_copy_modules/network_evasion.py
+  - ClipFusion_V.3/app_V3/anti_copy_modules/network_evasion.py
+- Grupo (7):
+  - ClipFusion_V.2/app/anti_copy_modules/temporal_obfuscation (1).py
+  - ClipFusion_V.2/app/anti_copy_modules/temporal_obfuscation (4).py
+  - ClipFusion_V.2/app/anti_copy_modules/temporal_obfuscation.py
+  - ClipFusion_V.2/src/anti_copy_modules/temporal_obfuscation (1).py
+  - ClipFusion_V.2/src/anti_copy_modules/temporal_obfuscation (4).py
+  - ClipFusion_V.2/src/anti_copy_modules/temporal_obfuscation.py
+  - ClipFusion_V.3/app_V3/anti_copy_modules/temporal_obfuscation.py
+- Grupo (7):
+  - ClipFusion_V.2/app/viral_engine/viral_analyzer.py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/viral_engine/viral_analyzer.py
+  - ClipFusion_V.2/src/viral_engine/viral_analyzer (1).py
+  - ClipFusion_V.2/src/viral_engine/viral_analyzer (2).py
+  - ClipFusion_V.2/src/viral_engine/viral_analyzer (3).py
+  - ClipFusion_V.2/src/viral_engine/viral_analyzer.py
+  - ClipFusion_V.3/app_V3/viral_engine/viral_analyzer.py
+- Grupo (6):
+  - ClipFusion_V.2/Projeto01/outputcd (1)/bin bash patch final.txt
+  - ClipFusion_V.2/Projeto01/outputcd/bin bash patch final.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/outputcd/bin bash patch final.txt
+  - ClipFusion_V.2/src/Projeto01/outputcd/bin bash patch final.txt
+  - ClipFusion_V.2/src/bin bash patch final.txt
+  - docsgit/bin bash patch final.txt
+- Grupo (6):
+  - ClipFusion_V.2/app/anti_copy_modules/__init__ (1).py
+  - ClipFusion_V.2/app/anti_copy_modules/__init__ (2).py
+  - ClipFusion_V.2/app/anti_copy_modules/__init__ (5).py
+  - ClipFusion_V.2/src/anti_copy_modules/__init__ (1).py
+  - ClipFusion_V.2/src/anti_copy_modules/__init__ (2).py
+  - ClipFusion_V.2/src/anti_copy_modules/__init__ (5).py
+- Grupo (6):
+  - ClipFusion_V.2/app/anti_copy_modules/ai_evasion (2).py
+  - ClipFusion_V.2/app/anti_copy_modules/ai_evasion (3).py
+  - ClipFusion_V.2/src/anti_copy_modules/ai_evasion (2).py
+  - ClipFusion_V.2/src/anti_copy_modules/ai_evasion (3).py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/ai_evasion (1).py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/ai_evasion.py
+- Grupo (6):
+  - ClipFusion_V.2/app/anti_copy_modules/audio_advanced (2).py
+  - ClipFusion_V.2/app/anti_copy_modules/audio_advanced (3).py
+  - ClipFusion_V.2/src/anti_copy_modules/audio_advanced (2).py
+  - ClipFusion_V.2/src/anti_copy_modules/audio_advanced (3).py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/audio_advanced (1).py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/audio_advanced.py
+- Grupo (6):
+  - ClipFusion_V.2/app/anti_copy_modules/core (1).py
+  - ClipFusion_V.2/app/anti_copy_modules/core (2).py
+  - ClipFusion_V.2/app/anti_copy_modules/core (5).py
+  - ClipFusion_V.2/src/anti_copy_modules/core (1).py
+  - ClipFusion_V.2/src/anti_copy_modules/core (2).py
+  - ClipFusion_V.2/src/anti_copy_modules/core (5).py
+- Grupo (6):
+  - ClipFusion_V.2/app/core/hybrid_parser.py
+  - ClipFusion_V.2/clipfusion/core/hybrid_parser.py
+  - ClipFusion_V.2/src/core/hybrid_parser (1).py
+  - ClipFusion_V.2/src/core/hybrid_parser (2).py
+  - ClipFusion_V.2/src/core/hybrid_parser.py
+  - ClipFusion_V.3/app_V3/core/hybrid_parser.py
+- Grupo (6):
+  - ClipFusion_V.2/app/core/ingest.py
+  - ClipFusion_V.2/clipfusion/core/ingest.py
+  - ClipFusion_V.2/src/core/ingest (1).py
+  - ClipFusion_V.2/src/core/ingest (2).py
+  - ClipFusion_V.2/src/core/ingest.py
+  - ClipFusion_V.3/app_V3/core/ingest.py
+- Grupo (6):
+  - ClipFusion_V.2/app/core/segment.py
+  - ClipFusion_V.2/clipfusion/core/segment.py
+  - ClipFusion_V.2/src/core/segment (1).py
+  - ClipFusion_V.2/src/core/segment (2).py
+  - ClipFusion_V.2/src/core/segment.py
+  - ClipFusion_V.3/app_V3/core/segment.py
+- Grupo (6):
+  - ClipFusion_V.2/app/core/transcription_quality.py
+  - ClipFusion_V.2/clipfusion/core/transcription_quality.py
+  - ClipFusion_V.2/src/core/transcription_quality (1).py
+  - ClipFusion_V.2/src/core/transcription_quality (2).py
+  - ClipFusion_V.2/src/core/transcription_quality.py
+  - ClipFusion_V.3/app_V3/core/transcription_quality.py
+- Grupo (6):
+  - ClipFusion_V.2/app/utils/hardware.py
+  - ClipFusion_V.2/clipfusion/utils/hardware.py
+  - ClipFusion_V.2/src/utils (1)/hardware.py
+  - ClipFusion_V.2/src/utils/hardware (1).py
+  - ClipFusion_V.2/src/utils/hardware.py
+  - ClipFusion_V.3/app_V3/utils/hardware.py
+- Grupo (6):
+  - ClipFusion_V.2/requirements (1).txt
+  - ClipFusion_V.2/requirements (2).txt
+  - ClipFusion_V.2/requirements (3).txt
+  - ClipFusion_V.2/requirements (4).txt
+  - ClipFusion_V.2/requirements (5).txt
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/requirements.txt
+- Grupo (6):
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/core/prompt_builder.py
+  - ClipFusion_V.2/src/core/prompt_builder (1).py
+  - ClipFusion_V.2/src/core/prompt_builder (2).py
+  - ClipFusion_V.2/src/core/prompt_builder (4).py
+  - ClipFusion_V.2/src/core/prompt_builder (5).py
+  - ClipFusion_V.2/src/core/prompt_builder.py
+- Grupo (6):
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/viral_engine/audience_analyzer.py
+  - ClipFusion_V.2/src/viral_engine/audience_analyzer (1).py
+  - ClipFusion_V.2/src/viral_engine/audience_analyzer (2).py
+  - ClipFusion_V.2/src/viral_engine/audience_analyzer (3).py
+  - ClipFusion_V.2/src/viral_engine/audience_analyzer (4).py
+  - ClipFusion_V.2/src/viral_engine/audience_analyzer.py
+- Grupo (6):
+  - ClipFusion_V.2/src/gui/main_gui (1).py
+  - ClipFusion_V.2/src/gui/main_gui (6).py
+  - ClipFusion_V.2/src/gui/main_gui.py
+  - ClipFusion_V.2/src/gui/main_gui.py.bak_20260315_145010
+  - ClipFusion_V.2/src/gui/main_gui.py.bak_20260315_152133
+  - ClipFusion_V.2/src/gui/main_gui.py.bak_20260315_152416
+- Grupo (5):
+  - ClipFusion_V.2/LEGACY (1).md
+  - ClipFusion_V.2/LEGACY (2).md
+  - ClipFusion_V.2/LEGACY (3).md
+  - ClipFusion_V.2/LEGACY.md
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/LEGACY.md
+- Grupo (5):
+  - ClipFusion_V.2/README (1).md
+  - ClipFusion_V.2/README (2).md
+  - ClipFusion_V.2/README (3).md
+  - ClipFusion_V.2/README (4).md
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/README.md
+- Grupo (5):
+  - ClipFusion_V.2/app/anti_copy_modules/core (3).py
+  - ClipFusion_V.2/app/anti_copy_modules/core (4).py
+  - ClipFusion_V.2/src/anti_copy_modules/core (3).py
+  - ClipFusion_V.2/src/anti_copy_modules/core (4).py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/core.py
+- Grupo (5):
+  - ClipFusion_V.2/app/anti_copy_modules/core (6).py
+  - ClipFusion_V.2/app/anti_copy_modules/core.py
+  - ClipFusion_V.2/src/anti_copy_modules/core (6).py
+  - ClipFusion_V.2/src/anti_copy_modules/core.py
+  - ClipFusion_V.3/app_V3/anti_copy_modules/core.py
+- Grupo (5):
+  - ClipFusion_V.2/app/anti_copy_modules/fingerprint_evasion (2).py
+  - ClipFusion_V.2/app/anti_copy_modules/fingerprint_evasion (3).py
+  - ClipFusion_V.2/src/anti_copy_modules/fingerprint_evasion (2).py
+  - ClipFusion_V.2/src/anti_copy_modules/fingerprint_evasion (3).py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/fingerprint_evasion.py
+- Grupo (5):
+  - ClipFusion_V.2/app/anti_copy_modules/geometric_transforms (2).py
+  - ClipFusion_V.2/app/anti_copy_modules/geometric_transforms (3).py
+  - ClipFusion_V.2/src/anti_copy_modules/geometric_transforms (2).py
+  - ClipFusion_V.2/src/anti_copy_modules/geometric_transforms (3).py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/geometric_transforms.py
+- Grupo (5):
+  - ClipFusion_V.2/app/anti_copy_modules/network_evasion (2).py
+  - ClipFusion_V.2/app/anti_copy_modules/network_evasion (3).py
+  - ClipFusion_V.2/src/anti_copy_modules/network_evasion (2).py
+  - ClipFusion_V.2/src/anti_copy_modules/network_evasion (3).py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/network_evasion.py
+- Grupo (5):
+  - ClipFusion_V.2/app/anti_copy_modules/temporal_obfuscation (2).py
+  - ClipFusion_V.2/app/anti_copy_modules/temporal_obfuscation (3).py
+  - ClipFusion_V.2/src/anti_copy_modules/temporal_obfuscation (2).py
+  - ClipFusion_V.2/src/anti_copy_modules/temporal_obfuscation (3).py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/temporal_obfuscation.py
+- Grupo (5):
+  - ClipFusion_V.2/app/core/transcriber.py
+  - ClipFusion_V.2/src/core/transcriber (1).py
+  - ClipFusion_V.2/src/core/transcriber (5).py
+  - ClipFusion_V.2/src/core/transcriber.py
+  - ClipFusion_V.3/app_V3/core/transcriber.py
+- Grupo (5):
+  - ClipFusion_V.2/install (1).sh
+  - ClipFusion_V.2/install (2).sh
+  - ClipFusion_V.2/install (3).sh
+  - ClipFusion_V.2/install.sh
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/install.sh
+- Grupo (5):
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/core/__init__.py
+  - ClipFusion_V.2/src/core/__init__ (2).py
+  - ClipFusion_V.2/src/core/__init__ (3).py
+  - ClipFusion_V.2/src/core/__init__ (4).py
+  - ClipFusion_V.2/src/core/__init__ (6).py
+- Grupo (5):
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/viral_engine/__init__.py
+  - ClipFusion_V.2/src/viral_engine/__init__ (2).py
+  - ClipFusion_V.2/src/viral_engine/__init__ (3).py
+  - ClipFusion_V.2/src/viral_engine/__init__ (5).py
+  - ClipFusion_V.2/src/viral_engine/__init__.py
+- Grupo (4):
+  - ClipFusion_V.2/Docs_uteis/clipfusion_DEFINITIVO_COMO_TEM_QUE_SER (1).txt
+  - ClipFusion_V.2/Docs_uteis/clipfusion_DEFINITIVO_COMO_TEM_QUE_SER.txt
+  - ClipFusion_V.2/cliptusion-ultimate/clipfusion_DEFINITIVO_COMO_TEM_QUE_SER (1).txt
+  - ClipFusion_V.2/cliptusion-ultimate/clipfusion_DEFINITIVO_COMO_TEM_QUE_SER.txt
+- Grupo (4):
+  - ClipFusion_V.2/Docs_uteis/projeto_completo2_Com _algoritimos_necessarios (1).txt
+  - ClipFusion_V.2/Docs_uteis/projeto_completo2_Com _algoritimos_necessarios.txt
+  - ClipFusion_V.2/cliptusion-ultimate/projeto_completo2_Com _algoritimos_necessarios (1).txt
+  - ClipFusion_V.2/cliptusion-ultimate/projeto_completo2_Com _algoritimos_necessarios.txt
+- Grupo (4):
+  - ClipFusion_V.2/Docs_uteis/~$0debian_tunado_3.0_OFICIAL (1) (1).docx
+  - ClipFusion_V.2/Docs_uteis/~$0debian_tunado_3.0_OFICIAL (1).docx
+  - ClipFusion_V.2/cliptusion-ultimate/~$0debian_tunado_3.0_OFICIAL (1) (1).docx
+  - ClipFusion_V.2/cliptusion-ultimate/~$0debian_tunado_3.0_OFICIAL (1).docx
+- Grupo (4):
+  - ClipFusion_V.2/Projeto01/outputcd (1)/Projeto proposto para comparação[.txt
+  - ClipFusion_V.2/Projeto01/outputcd/Projeto proposto para comparação[.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/outputcd/Projeto proposto para comparação[.txt
+  - ClipFusion_V.2/src/Projeto01/outputcd/Projeto proposto para comparação[.txt
+- Grupo (4):
+  - ClipFusion_V.2/Projeto01/outputcd (1)/crticacliofusion.txt
+  - ClipFusion_V.2/Projeto01/outputcd/crticacliofusion.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/outputcd/crticacliofusion.txt
+  - ClipFusion_V.2/src/Projeto01/outputcd/crticacliofusion.txt
+- Grupo (4):
+  - ClipFusion_V.2/Projeto01/outputcd (1)/documentosduvida.txt
+  - ClipFusion_V.2/Projeto01/outputcd/documentosduvida.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/outputcd/documentosduvida.txt
+  - ClipFusion_V.2/src/Projeto01/outputcd/documentosduvida.txt
+- Grupo (4):
+  - ClipFusion_V.2/Projeto01/outputcd (1)/promptranFullTeste1.txt
+  - ClipFusion_V.2/Projeto01/outputcd/promptranFullTeste1.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/outputcd/promptranFullTeste1.txt
+  - ClipFusion_V.2/src/Projeto01/outputcd/promptranFullTeste1.txt
+- Grupo (4):
+  - ClipFusion_V.2/Projeto01/outputcd (1)/respostaIAtranFullTeste1.txt
+  - ClipFusion_V.2/Projeto01/outputcd/respostaIAtranFullTeste1.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/outputcd/respostaIAtranFullTeste1.txt
+  - ClipFusion_V.2/src/Projeto01/outputcd/respostaIAtranFullTeste1.txt
+- Grupo (4):
+  - ClipFusion_V.2/Projeto01/outputcd (1)/tranFullTeste1.txt
+  - ClipFusion_V.2/Projeto01/outputcd/tranFullTeste1.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/outputcd/tranFullTeste1.txt
+  - ClipFusion_V.2/src/Projeto01/outputcd/tranFullTeste1.txt
+- Grupo (4):
+  - ClipFusion_V.2/Projeto01/state (2)/project_state.json
+  - ClipFusion_V.2/Projeto01/state/project_state.json
+  - ClipFusion_V.2/clipfusion/Projeto01/state/project_state.json
+  - ClipFusion_V.2/src/Projeto01/state/project_state.json
+- Grupo (4):
+  - ClipFusion_V.2/Projeto01/work (2)/ai_response.json
+  - ClipFusion_V.2/Projeto01/work/ai_response.json
+  - ClipFusion_V.2/clipfusion/Projeto01/work/ai_response.json
+  - ClipFusion_V.2/src/Projeto01/work/ai_response.json
+- Grupo (4):
+  - ClipFusion_V.2/Projeto01/work (2)/analysis_prompt.txt
+  - ClipFusion_V.2/Projeto01/work/analysis_prompt.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/work/analysis_prompt.txt
+  - ClipFusion_V.2/src/Projeto01/work/analysis_prompt.txt
+- Grupo (4):
+  - ClipFusion_V.2/Projeto01/work (2)/cuts_planned.json
+  - ClipFusion_V.2/Projeto01/work/cuts_planned.json
+  - ClipFusion_V.2/clipfusion/Projeto01/work/cuts_planned.json
+  - ClipFusion_V.2/src/Projeto01/work/cuts_planned.json
+- Grupo (4):
+  - ClipFusion_V.2/Projeto01/work (2)/transcription.txt
+  - ClipFusion_V.2/Projeto01/work/transcription.txt
+  - ClipFusion_V.2/clipfusion/Projeto01/work/transcription.txt
+  - ClipFusion_V.2/src/Projeto01/work/transcription.txt
+- Grupo (4):
+  - ClipFusion_V.2/Projeto01/work (2)/transcription_segments.json
+  - ClipFusion_V.2/Projeto01/work/transcription_segments.json
+  - ClipFusion_V.2/clipfusion/Projeto01/work/transcription_segments.json
+  - ClipFusion_V.2/src/Projeto01/work/transcription_segments.json
+- Grupo (4):
+  - ClipFusion_V.2/app/anti_copy_modules/__init__ (3).py
+  - ClipFusion_V.2/src/anti_copy_modules/__init__ (3).py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/__init__ (1).py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/anti_copy_modules/__init__.py
+- Grupo (4):
+  - ClipFusion_V.2/app/core/cut_engine.py
+  - ClipFusion_V.2/src/core/cut_engine (2).py
+  - ClipFusion_V.2/src/core/cut_engine.py
+  - ClipFusion_V.3/app_V3/core/cut_engine.py
+- Grupo (4):
+  - ClipFusion_V.2/app/core/hybrid_prompt.py
+  - ClipFusion_V.2/src/core/hybrid_prompt (2).py
+  - ClipFusion_V.2/src/core/hybrid_prompt.py
+  - ClipFusion_V.3/app_V3/core/hybrid_prompt.py
+- Grupo (4):
+  - ClipFusion_V.2/apply_clipfusion_patch (1).py
+  - ClipFusion_V.2/apply_clipfusion_patch.py
+  - ClipFusion_V.2/clipfusion_patch_bundle/apply_clipfusion_patch (1).py
+  - ClipFusion_V.2/clipfusion_patch_bundle/apply_clipfusion_patch.py
+- Grupo (4):
+  - ClipFusion_V.2/clipfusion/config/platforms.yaml
+  - ClipFusion_V.2/src/config/platforms (1).yaml
+  - ClipFusion_V.2/src/config/platforms (2).yaml
+  - ClipFusion_V.2/src/config/platforms.yaml
+- Grupo (4):
+  - ClipFusion_V.2/clipfusion/config/scoring.yaml
+  - ClipFusion_V.2/src/config/scoring (1).yaml
+  - ClipFusion_V.2/src/config/scoring (2).yaml
+  - ClipFusion_V.2/src/config/scoring.yaml
+- Grupo (4):
+  - ClipFusion_V.2/clipfusion/config/settings.yaml
+  - ClipFusion_V.2/src/config/settings (1).yaml
+  - ClipFusion_V.2/src/config/settings (2).yaml
+  - ClipFusion_V.2/src/config/settings.yaml
+- Grupo (4):
+  - ClipFusion_V.2/clipfusion/core/candidate_engine.py
+  - ClipFusion_V.2/src/core/candidate_engine (1).py
+  - ClipFusion_V.2/src/core/candidate_engine (2).py
+  - ClipFusion_V.2/src/core/candidate_engine.py
+- Grupo (4):
+  - ClipFusion_V.2/clipfusion/core/learning_engine.py
+  - ClipFusion_V.2/src/core/learning_engine (1).py
+  - ClipFusion_V.2/src/core/learning_engine (2).py
+  - ClipFusion_V.2/src/core/learning_engine.py
+- Grupo (4):
+  - ClipFusion_V.2/clipfusion/core/post_pack.py
+  - ClipFusion_V.2/src/core/post_pack (1).py
+  - ClipFusion_V.2/src/core/post_pack (2).py
+  - ClipFusion_V.2/src/core/post_pack.py
+- Grupo (4):
+  - ClipFusion_V.2/clipfusion/core/posting_schedule.py
+  - ClipFusion_V.2/src/core/posting_schedule (1).py
+  - ClipFusion_V.2/src/core/posting_schedule (2).py
+  - ClipFusion_V.2/src/core/posting_schedule.py
+- Grupo (4):
+  - ClipFusion_V.2/clipfusion/core/protection_factory.py
+  - ClipFusion_V.2/src/core/protection_factory (1).py
+  - ClipFusion_V.2/src/core/protection_factory (2).py
+  - ClipFusion_V.2/src/core/protection_factory.py
+- Grupo (4):
+  - ClipFusion_V.2/clipfusion/main.py
+  - ClipFusion_V.2/src/main (1).py
+  - ClipFusion_V.2/src/main (2).py
+  - ClipFusion_V.2/src/main.py
+- Grupo (4):
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/config/perfis_nicho.json
+  - ClipFusion_V.2/src/config/perfis_nicho (1).json
+  - ClipFusion_V.2/src/config/perfis_nicho (2).json
+  - ClipFusion_V.2/src/config/perfis_nicho.json
+- Grupo (4):
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/gui/__init__.py
+  - ClipFusion_V.2/src/gui/__init__ (2).py
+  - ClipFusion_V.2/src/gui/__init__ (3).py
+  - ClipFusion_V.2/src/gui/__init__ (5).py
+- Grupo (4):
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/output/prompts/.gitkeep
+  - ClipFusion_V.2/src/output (1)/prompts/.gitkeep
+  - ClipFusion_V.2/src/output/prompts (1)/.gitkeep
+  - ClipFusion_V.2/src/output/prompts/.gitkeep
+- Grupo (4):
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/output/reports/.gitkeep
+  - ClipFusion_V.2/src/output (1)/reports/.gitkeep
+  - ClipFusion_V.2/src/output/reports (1)/.gitkeep
+  - ClipFusion_V.2/src/output/reports/.gitkeep
+- Grupo (4):
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/output/scripts/.gitkeep
+  - ClipFusion_V.2/src/output (1)/scripts/.gitkeep
+  - ClipFusion_V.2/src/output/scripts (1)/.gitkeep
+  - ClipFusion_V.2/src/output/scripts/.gitkeep
+- Grupo (3):
+  - ClipFusion_V.2/Docs_uteis/clipfusion-check-final.sh
+  - ClipFusion_V.2/clipfusion-check-final (1).sh
+  - ClipFusion_V.2/clipfusion-check-final.sh
+- Grupo (3):
+  - ClipFusion_V.2/Docs_uteis/clipfusion-check.sh
+  - ClipFusion_V.2/clipfusion-check (1).sh
+  - ClipFusion_V.2/clipfusion-check.sh
+- Grupo (3):
+  - ClipFusion_V.2/app/core/platform_engine.py
+  - ClipFusion_V.2/src/core/platform_engine.py
+  - ClipFusion_V.3/app_V3/core/platform_engine.py
+- Grupo (3):
+  - ClipFusion_V.2/app/core/transcribe.py
+  - ClipFusion_V.2/src/core/transcribe.py
+  - ClipFusion_V.3/app_V3/core/transcribe.py
+- Grupo (3):
+  - ClipFusion_V.2/clipfusion/locales/en.yaml
+  - ClipFusion_V.2/src/locales/en (1).yaml
+  - ClipFusion_V.2/src/locales/en.yaml
+- Grupo (3):
+  - ClipFusion_V.2/clipfusion/locales/pt.yaml
+  - ClipFusion_V.2/src/locales/pt (1).yaml
+  - ClipFusion_V.2/src/locales/pt.yaml
+- Grupo (3):
+  - ClipFusion_V.2/clipfusion_part2render/src (2)/render_pipeline.py
+  - ClipFusion_V.2/clipfusion_part2render/src/render_pipeline (1).py
+  - ClipFusion_V.2/clipfusion_part2render/src/render_pipeline.py
+- Grupo (3):
+  - ClipFusion_V.2/clipfusion_patch_bundle/clipfusion_patch (1)/core/prompt_builder.py
+  - ClipFusion_V.2/clipfusion_patch_bundle/clipfusion_patch/core/prompt_builder.py
+  - ClipFusion_V.2/src/core/prompt_builder (3).py
+- Grupo (3):
+  - ClipFusion_V.2/clipfusion_patch_bundle/clipfusion_patch (1)/core/transcriber.py
+  - ClipFusion_V.2/clipfusion_patch_bundle/clipfusion_patch/core/transcriber.py
+  - ClipFusion_V.2/src/core/transcriber (3).py
+- Grupo (3):
+  - ClipFusion_V.2/clipfusion_patch_bundle/clipfusion_patch (1)/db.py
+  - ClipFusion_V.2/clipfusion_patch_bundle/clipfusion_patch/db.py
+  - ClipFusion_V.2/db (2).py
+- Grupo (3):
+  - ClipFusion_V.2/config (2).yaml
+  - ClipFusion_V.2/config (4).yaml
+  - ClipFusion_V.2/config.yaml
+- Grupo (3):
+  - ClipFusion_V.2/db (1).py
+  - ClipFusion_V.2/db (3).py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/db.py
+- Grupo (3):
+  - ClipFusion_V.2/db (4).py
+  - ClipFusion_V.2/db.py
+  - ClipFusion_V.2/src/core/db.py
+- Grupo (3):
+  - ClipFusion_V.2/main (1).py
+  - ClipFusion_V.2/main (3).py
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/main.py
+- Grupo (3):
+  - ClipFusion_V.2/main (2).py
+  - ClipFusion_V.2/main (4).py
+  - ClipFusion_V.2/main.py
+- Grupo (3):
+  - ClipFusion_V.2/run (1).sh
+  - ClipFusion_V.2/run (3).sh
+  - ClipFusion_V.2/run (5).sh
+- Grupo (3):
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/core/transcriber.py
+  - ClipFusion_V.2/src/core/transcriber (2).py
+  - ClipFusion_V.2/src/core/transcriber (4).py
+- Grupo (3):
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/viral_engine/platform_optimizer.py
+  - ClipFusion_V.2/src/viral_engine/platform_optimizer (2).py
+  - ClipFusion_V.2/src/viral_engine/platform_optimizer (3).py
+- Grupo (3):
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/viral_engine/secondary_group.py
+  - ClipFusion_V.2/src/viral_engine/secondary_group (2).py
+  - ClipFusion_V.2/src/viral_engine/secondary_group (3).py
+- Grupo (3):
+  - ClipFusion_V.2/src/core/decision_engine.py.bak_20260315_145010
+  - ClipFusion_V.2/src/core/decision_engine.py.bak_20260315_152133
+  - ClipFusion_V.2/src/core/decision_engine.py.bak_20260315_152416
+- Grupo (3):
+  - ClipFusion_V.2/src/core/transcribe (2).py
+  - ClipFusion_V.2/src/core/transcribe_seguro (1).py
+  - ClipFusion_V.2/src/core/transcribe_seguro.py
+- Grupo (3):
+  - ClipFusion_V.2/src/db (2).py
+  - ClipFusion_V.2/src/db.py
+  - ClipFusion_V.2/src/db.py.bak_20260315_144938
+- Grupo (3):
+  - ClipFusion_V.2/src/db.py.bak_20260315_145010
+  - ClipFusion_V.2/src/db.py.bak_20260315_152133
+  - ClipFusion_V.2/src/db.py.bak_20260315_152416
+- Grupo (3):
+  - ClipFusion_V.2/src/viral_engine/platform_optimizer (1).py
+  - ClipFusion_V.2/src/viral_engine/platform_optimizer (4).py
+  - ClipFusion_V.2/src/viral_engine/platform_optimizer.py
+- Grupo (3):
+  - ClipFusion_V.2/src/viral_engine/secondary_group (1).py
+  - ClipFusion_V.2/src/viral_engine/secondary_group (4).py
+  - ClipFusion_V.2/src/viral_engine/secondary_group.py
+- Grupo (2):
+  - ClipFusion_V.2/Docs_Melhorias/ClipFusion Viral Pro.txt
+  - docsgit/Docs_Melhorias/ClipFusion Viral Pro.txt
+- Grupo (2):
+  - ClipFusion_V.2/Docs_Melhorias/Especificação Técnica.txt
+  - docsgit/Docs_Melhorias/Especificação Técnica.txt
+- Grupo (2):
+  - ClipFusion_V.2/Docs_Melhorias/Guia Técnico de Implementação.txt
+  - docsgit/Docs_Melhorias/Guia Técnico de Implementação.txt
+- Grupo (2):
+  - ClipFusion_V.2/Docs_Melhorias/Manual Técnico Fábrica.txt
+  - docsgit/Docs_Melhorias/Manual Técnico Fábrica.txt
+- Grupo (2):
+  - ClipFusion_V.2/Docs_Melhorias/Manual Técnico de Integração.txt
+  - docsgit/Docs_Melhorias/Manual Técnico de Integração.txt
+- Grupo (2):
+  - ClipFusion_V.2/Docs_Melhorias/Manual Técnico e Guia.txt
+  - docsgit/Docs_Melhorias/Manual Técnico e Guia.txt
+- Grupo (2):
+  - ClipFusion_V.2/Docs_Melhorias/Manual Técnico e Repositório.txt
+  - docsgit/Docs_Melhorias/Manual Técnico e Repositório.txt
+- Grupo (2):
+  - ClipFusion_V.2/Docs_Melhorias/Relatório Técnico Ecossistema.txt
+  - docsgit/Docs_Melhorias/Relatório Técnico Ecossistema.txt
+- Grupo (2):
+  - ClipFusion_V.2/Docs_Melhorias/anti_copy.png
+  - docsgit/Docs_Melhorias/anti_copy.png
+- Grupo (2):
+  - ClipFusion_V.2/Docs_uteis/padrao (1).txt
+  - ClipFusion_V.2/Docs_uteis/padrao.txt
+- Grupo (2):
+  - ClipFusion_V.2/README (5).md
+  - ClipFusion_V.2/README (6).md
+- Grupo (2):
+  - ClipFusion_V.2/Solicitacaofinalclip (1).txt
+  - ClipFusion_V.2/Solicitacaofinalclip.txt
+- Grupo (2):
+  - ClipFusion_V.2/Versionamento ClipFusion_florence (1).txt
+  - ClipFusion_V.2/Versionamento ClipFusion_florence.txt
+- Grupo (2):
+  - ClipFusion_V.2/analytics_engine (1).py
+  - ClipFusion_V.2/analytics_engine.py
+- Grupo (2):
+  - ClipFusion_V.2/app/core/candidate_engine.py
+  - ClipFusion_V.3/app_V3/core/candidate_engine.py
+- Grupo (2):
+  - ClipFusion_V.2/app/core/protection_factory.py
+  - ClipFusion_V.3/app_V3/core/protection_factory.py
+- Grupo (2):
+  - ClipFusion_V.2/app/core/scoring_engine.py
+  - ClipFusion_V.3/app_V3/core/scoring_engine.py
+- Grupo (2):
+  - ClipFusion_V.2/app/db.py
+  - ClipFusion_V.3/app_V3/db_V3.py
+- Grupo (2):
+  - ClipFusion_V.2/app/requirements.txt
+  - ClipFusion_V.3/app_V3/requirements_V3.txt
+- Grupo (2):
+  - ClipFusion_V.2/app/viral_engine/__init__.py
+  - ClipFusion_V.3/app_V3/viral_engine/__init__.py
+- Grupo (2):
+  - ClipFusion_V.2/capture_errors (1).sh
+  - ClipFusion_V.2/capture_errors.sh
+- Grupo (2):
+  - ClipFusion_V.2/clipfusion/Captura de tela de 2026-03-15 13-51-05.png
+  - ClipFusion_V.2/src/Captura de tela de 2026-03-15 13-51-05.png
+- Grupo (2):
+  - ClipFusion_V.2/clipfusion/core/hybrid_prompt.py
+  - ClipFusion_V.2/src/core/hybrid_prompt (1).py
+- Grupo (2):
+  - ClipFusion_V.2/clipfusion/core/platform_engine.py
+  - ClipFusion_V.2/src/core/platform_engine (1).py
+- Grupo (2):
+  - ClipFusion_V.2/clipfusion/core/scoring_engine.py
+  - ClipFusion_V.2/src/core/scoring_engine (1).py
+- Grupo (2):
+  - ClipFusion_V.2/clipfusion/core/transcribe.py
+  - ClipFusion_V.2/src/core/transcribe (1).py
+- Grupo (2):
+  - ClipFusion_V.2/clipfusion/gui/main_gui.py
+  - ClipFusion_V.2/src/gui/main_gui.py.bak_20260315_144938
+- Grupo (2):
+  - ClipFusion_V.2/clipfusion/requirements.txt
+  - ClipFusion_V.2/src/requirements.txt
+- Grupo (2):
+  - ClipFusion_V.2/clipfusion/run.sh
+  - ClipFusion_V.2/src/run.sh
+- Grupo (2):
+  - ClipFusion_V.2/clipfusion_part2render/approved_cuts.example (1).json
+  - ClipFusion_V.2/clipfusion_part2render/approved_cuts.example.json
+- Grupo (2):
+  - ClipFusion_V.2/clipfusion_part2render/install_unix (1).sh
+  - ClipFusion_V.2/clipfusion_part2render/install_unix.sh
+- Grupo (2):
+  - ClipFusion_V.2/clipfusion_part2render/install_windows (1).bat
+  - ClipFusion_V.2/clipfusion_part2render/install_windows.bat
+- Grupo (2):
+  - ClipFusion_V.2/clipfusion_part2render/requirements (1).txt
+  - ClipFusion_V.2/clipfusion_part2render/requirements.txt
+- Grupo (2):
+  - ClipFusion_V.2/clipfusion_part2render/run_renderer (1).bat
+  - ClipFusion_V.2/clipfusion_part2render/run_renderer.bat
+- Grupo (2):
+  - ClipFusion_V.2/clipfusion_part2render/run_renderer (1).sh
+  - ClipFusion_V.2/clipfusion_part2render/run_renderer.sh
+- Grupo (2):
+  - ClipFusion_V.2/cliptusion-ultimate/000debian_tunado_3.0_OFICIAL (1) (1).docx
+  - ClipFusion_V.2/cliptusion-ultimate/000debian_tunado_3.0_OFICIAL (1).docx
+- Grupo (2):
+  - ClipFusion_V.2/cliptusion-ultimate/ANALISAR CODIGO FULL (1).txt
+  - ClipFusion_V.2/cliptusion-ultimate/ANALISAR CODIGO FULL.txt
+- Grupo (2):
+  - ClipFusion_V.2/cliptusion-ultimate/IAAAAA (1).txt
+  - ClipFusion_V.2/cliptusion-ultimate/IAAAAA.txt
+- Grupo (2):
+  - ClipFusion_V.2/cliptusion-ultimate/README (1).md
+  - ClipFusion_V.2/cliptusion-ultimate/README.md
+- Grupo (2):
+  - ClipFusion_V.2/cliptusion-ultimate/artigo-debian-1irwm (1) (1).txt
+  - ClipFusion_V.2/cliptusion-ultimate/artigo-debian-1irwm (1).txt
+- Grupo (2):
+  - ClipFusion_V.2/config (1).yaml
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/config.yaml
+- Grupo (2):
+  - ClipFusion_V.2/docs/manual_tecnico.md
+  - ClipFusion_V.3/docs_V3/manual_tecnico_V3.md
+- Grupo (2):
+  - ClipFusion_V.2/generate_report (1).py
+  - ClipFusion_V.2/generate_report.py
+- Grupo (2):
+  - ClipFusion_V.2/instalador para analise.txt
+  - ClipFusion_V.2/instalar_clipfusion_v2_completo.sh
+- Grupo (2):
+  - ClipFusion_V.2/instalar_clipfusion_v2 (1).txt
+  - ClipFusion_V.2/instalar_clipfusion_v2.txt
+- Grupo (2):
+  - ClipFusion_V.2/requirements (6).txt
+  - ClipFusion_V.2/requirements.txt
+- Grupo (2):
+  - ClipFusion_V.2/scripts/render_2pass.sh
+  - ClipFusion_V.3/scripts_V3/render_2pass_V3.sh
+- Grupo (2):
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/config/profiles/.gitkeep
+  - ClipFusion_V.2/src/config/profiles/.gitkeep
+- Grupo (2):
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/core/cut_engine.py
+  - ClipFusion_V.2/src/core/cut_engine (1).py
+- Grupo (2):
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/gui/main_gui.py
+  - ClipFusion_V.2/src/gui/main_gui (3).py
+- Grupo (2):
+  - ClipFusion_V.2/src/clipfusion_backup_before_flatten/utils/__init__.py
+  - ClipFusion_V.2/src/utils/__init__ (2).py
+- Grupo (2):
+  - ClipFusion_V.2/src/core/decision_engine (2).py
+  - ClipFusion_V.2/src/core/decision_engine.py
+- Grupo (2):
+  - ClipFusion_V.2/src/core/scoring_engine (2).py
+  - ClipFusion_V.2/src/core/scoring_engine.py
+- Grupo (2):
+  - ClipFusion_V.2/validador_V2 (1).sh
+  - ClipFusion_V.2/validador_V2.sh
+- Grupo (2):
+  - docs 25-36-2026/Guia Técnico de Implementação.txt
+  - docs 25-36-2026/Manual Técnico e Guia de Integração: ClipFusion Viral Pro.txt
+- Grupo (2):
+  - docs 25-36-2026/Manual de Engenharia Viral Consolidado: Sistema SignalCut Hybrid (ClipFusion V2).tt
+  - docs 25-36-2026/Manual de Engenharia Viral Consolidado: Sistema SignalCut Hybrid (ClipFusion V2).txt
+
+## Erros de leitura
+- Nenhum
