@@ -55,4 +55,4 @@ pip install -r requirements.txt >/dev/null
 configure_zram
 ensure_i915_guc_hint
 
-exec python main.py "$@"
+exec python main_gui.py "$@"

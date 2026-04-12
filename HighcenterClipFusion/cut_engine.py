@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import os
 import shutil
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict
 
 from protection_factory import build_plan
 
@@ -24,6 +23,16 @@ def _detect_vaapi() -> bool:
         return False
 
 
+def _ms(s: float) -> str:
+    h, rem = divmod(s, 3600)
+    m, sec = divmod(rem, 60)
+    return f"{int(h):02d}:{int(m):02d}:{int(sec):02d},{int((s % 1) * 1000):03d}"
+
+
+def _build_srt(text: str, duration: float) -> str:
+    return f"1\n{_ms(0.0)} --> {_ms(duration)}\n{text.strip()}\n"
+
+
 def _apply_plan(input_path: str, output_path: str, level: str) -> None:
     plan = build_plan(level)
     cmd = ["ffmpeg", "-y", "-i", input_path]
@@ -36,13 +45,30 @@ def _apply_plan(input_path: str, output_path: str, level: str) -> None:
     subprocess.run(cmd, check=True)
 
 
-def render_cut(video_path: str, start: float, end: float, out_dir: str, base_name: str, protection_level: str = "basic") -> Dict[str, str]:
+def render_cut(
+    video_path: str,
+    start: float,
+    end: float,
+    out_dir: str,
+    base_name: str,
+    protection_level: str = "basic",
+    subtitle_text: str = "",
+) -> Dict[str, str]:
+    """Render 2-pass real: pass 1 (VA-API) + pass 2 (libx264 com legenda)."""
     duration = max(0.1, float(end) - float(start))
     out = {}
     vaapi_ok = _detect_vaapi()
     tmp = tempfile.mkdtemp(prefix="hcf_")
 
     try:
+        srt_path = Path(tmp) / "sub.srt"
+        has_subs = bool(subtitle_text.strip())
+        if has_subs:
+            srt_path.write_text(_build_srt(subtitle_text, duration), encoding="utf-8")
+            srt_esc = str(srt_path).replace("\\", "/").replace(":", "\\:")
+        else:
+            srt_esc = ""
+
         for platform, cfg in PLATFORM_CONFIGS.items():
             base = Path(out_dir) / platform
             base.mkdir(parents=True, exist_ok=True)
@@ -60,16 +86,27 @@ def render_cut(video_path: str, start: float, end: float, out_dir: str, base_nam
                 ]
                 subprocess.run(pass1, check=True)
 
-                pass2 = [
-                    "ffmpeg", "-y", "-i", str(raw),
-                    "-c:v", "libx264", "-preset", cfg["preset"], "-crf", str(cfg["crf"]),
-                    "-c:a", "copy", "-pix_fmt", "yuv420p", str(final),
-                ]
+                if has_subs:
+                    vf = f"subtitles='{srt_esc}':force_style='FontName=Arial,FontSize=22,Outline=2,Shadow=1,Alignment=2,MarginV=60'"
+                    pass2 = [
+                        "ffmpeg", "-y", "-i", str(raw),
+                        "-vf", vf,
+                        "-c:v", "libx264", "-preset", cfg["preset"], "-crf", str(cfg["crf"]),
+                        "-c:a", "copy", "-pix_fmt", "yuv420p", str(final),
+                    ]
+                else:
+                    pass2 = [
+                        "ffmpeg", "-y", "-i", str(raw),
+                        "-c:v", "libx264", "-preset", cfg["preset"], "-crf", str(cfg["crf"]),
+                        "-c:a", "copy", "-pix_fmt", "yuv420p", str(final),
+                    ]
                 subprocess.run(pass2, check=True)
             else:
+                scale = f"scale={cfg['w']}:{cfg['h']}:force_original_aspect_ratio=decrease,pad={cfg['w']}:{cfg['h']}:(ow-iw)/2:(oh-ih)/2:black"
+                vf = f"{scale},subtitles='{srt_esc}'" if has_subs else scale
                 cpu = [
                     "ffmpeg", "-y", "-ss", str(start), "-i", video_path, "-t", str(duration),
-                    "-vf", f"scale={cfg['w']}:{cfg['h']}:force_original_aspect_ratio=decrease,pad={cfg['w']}:{cfg['h']}:(ow-iw)/2:(oh-ih)/2:black",
+                    "-vf", vf,
                     "-c:v", "libx264", "-preset", cfg["preset"], "-crf", str(cfg["crf"]),
                     "-c:a", "aac", "-b:a", cfg["abr"], "-pix_fmt", "yuv420p", str(final),
                 ]
