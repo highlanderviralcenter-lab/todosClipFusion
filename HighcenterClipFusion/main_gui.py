@@ -355,19 +355,21 @@ class HighcenterClipFusionGUI:
             try:
                 for c in approved:
                     base = f"cut_{c['id']}"
+                    subtitle_payload = self._resolve_subtitle_text(c) if self.v_auto_sub.get() else ""
+                    render_kwargs = {
+                        "protection_level": self.v_ace.get(),
+                        "subtitle_text": subtitle_payload,
+                        "use_vaapi": self.v_vaapi.get(),
+                        "auto_dub_en": self.v_dub_en.get(),
+                        "dub_lang": self.v_dub_lang.get(),
+                    }
                     paths = render_cut(
                         self.video_path,
                         c["start"],
                         c["end"],
                         out_dir,
                         base,
-                        protection_level=self.v_ace.get(),
-                        subtitle_text=self._resolve_subtitle_text(c) if self.v_auto_sub.get() else "",
-                        use_vaapi=self.v_vaapi.get(),
-                        auto_dub_en=self.v_dub_en.get(),
-                        dub_lang=self.v_dub_lang.get(),
-                        subtitle_text=c["text"],
-                        use_vaapi=self.v_vaapi.get(),
+                        **render_kwargs,
                     )
                     for platform, path in paths.items():
                         self._log(f"✅ {platform}: {path}")

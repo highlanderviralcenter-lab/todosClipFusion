@@ -6,12 +6,9 @@ import tempfile
 from pathlib import Path
 from typing import Dict
 
-codex/perform-complete-repository-review-wxjjvr
 from deep_translator import GoogleTranslator
 from gtts import gTTS
 
-=======
-main
 from protection_factory import build_plan
 
 PLATFORM_CONFIGS = {
