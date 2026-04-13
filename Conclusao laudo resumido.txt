@@ -1,0 +1,54 @@
+1. ESTRUTURA DO PACOTE E MINHA METODOLOGIA DE ANÁLISE
+
+Iniciei o meu estudo analisando a estrutura de baixo nível dos pacotes MPEG-TS que compõem os meus arquivos recuperados. Identifiquei que cada pacote inicia com o sync byte 0x47 (71 em decimal). No formato M2TS que utilizo, o tamanho padrão é de 192 bytes, pois inclui 4 bytes de timecode específicos para Blu-ray, além dos 188 bytes do padrão MPEG-TS.
+
+No meu exame hexadecimal, foquei no cabeçalho de 4 bytes que contém:
+
+O Sync byte (0x47).
+
+O PID (Packet Identifier), que identifica o meu fluxo de dados (vídeo/áudio).
+
+O Contador de continuidade (4 bits), que deve ser incremental e sequencial para cada PID.
+
+2. O CICLO DE GOP E O PROBLEMA QUE DETECTEI NA RECUPERAÇÃO
+
+Comprovo que um vídeo digital (H.264/MPEG-2) é uma sequência de frames organizada em GOP (Group of Pictures). No meu caso, identifiquei que a desativação da conta ocorreu por uma falha na interpretação desse ciclo.
+
+Durante a minha tentativa de recuperar vídeos antigos (como os do meu filho), utilizei ferramentas como o PhotoRec. Verifiquei que:
+
+Fragmentação: Meus dados de vídeo estavam fragmentados em clusters não contíguos no disco.
+
+Ciclo Incompleto: Identifiquei sequências de pacotes onde o GOP não estava completo. Sem o I-frame inicial do ciclo, o decodificador (ffmpeg) não consegue processar o vídeo corretamente.
+
+Pacotes Órfãos (Respingos apelido que eu criei): Encontrei pacotes TS parcialmente sobrescritos, que continham apenas "restos" de 1 segundo de vídeos antigos.
+
+3. MECANISMO EXATO DA MESCLAGEM ACIDENTAL NO MEU CASO
+
+Através da minha perícia, demonstro como o erro de fato foi gerado:
+
+Localizei uma sequência de pacotes TS de um vídeo legítimo (apresentação escolar).
+
+Identifiquei que, no meio dessa sequência física no disco, um cluster havia sido sobrescrito por um fragmento de 1 segundo de um vídeo íntimo privado.
+
+O software de recuperação, ao encontrar o byte 0x47, juntou cegamente esses dados de vídeos diferentes em um único arquivo "híbrido".
+
+O algoritmo do Google, ao tentar decodificar, interpretou erroneamente esse "ruído" de 1 segundo como uma violação das políticas.
+
+
+4. PROVAS TÉCNICAS DOS MEUS TESTES DE LABORATÓRIO
+
+Para provar a mesclagem, executei os seguintes testes e obtive estes resultados:
+
+Análise de PID: Usei ferramentas (tshark) para separar os pacotes e identifiquei a existência de PIDs diferentes no mesmo arquivo, o que prova a mistura de dois fluxos distintos.
+
+Contador de Continuidade: Verifiquei saltos abruptos no contador de 4 bits no momento da transição, o que sinaliza tecnicamente uma mesclagem acidental e não um vídeo editado.
+
+Timestamps (PTS/DTS): Identifiquei uma mudança súbita nos marcadores de tempo de apresentação, provando a descontinuidade temporal do arquivo.
+
+Exame Hexadecimal: No meu editor hexadecimal, localizei o momento exato onde os timecodes do M2TS (os primeiros 4 bytes de cada pacote) mudam bruscamente, confirmando que o arquivo é um "Frankenstein" binário.
+
+5. CONCLUSÃO DA MINHA INVESTIGAÇÃO
+
+Concluo que a desativação da minha conta é fruto de um erro algorítmico que não considerou a natureza dos artefatos de recuperação de dados. O material que causou a punição não é um conteúdo audiovisual íntegro, mas sim um fragmento órfão de 1 segundo resultante de uma falha de sobrescrita no formato M2TS.
+
+Requeiro, com base nestas evidências técnicas de baixo nível que levantei, a revisão humana e a imediata restauração dos meus 700GB de dados.
