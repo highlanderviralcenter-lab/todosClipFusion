@@ -54,4 +54,4 @@ cd "$ROOT_DIR/HighcenterClipFusion"
 python3 -m py_compile *.py
 
 echo "[CLICK_FIX] OK. Correções aplicadas e sintaxe validada."
-echo "[CLICK_FIX] Para executar: cd $ROOT_DIR/HighcenterClipFusion && ./run.sh"
+echo "[CLICK_FIX] Para executar com 1 clique/comando: $ROOT_DIR/run.sh"
