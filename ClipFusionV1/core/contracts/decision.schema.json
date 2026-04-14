@@ -1,0 +1,1 @@
+{"type":"object","required":["decision","final_score"],"properties":{"decision":{"type":"string"},"final_score":{"type":"number"}}}

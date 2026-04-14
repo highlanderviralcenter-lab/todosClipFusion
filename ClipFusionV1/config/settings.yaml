@@ -1,0 +1,4 @@
+project_name: ClipFusionV1
+platform: youtube_shorts
+default_protection: basic
+asr_model: small
