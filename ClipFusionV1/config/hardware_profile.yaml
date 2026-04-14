@@ -1,0 +1,5 @@
+cpu: i5-6200U
+ram_gb: 8
+gpu: Intel HD 520
+os: Debian
+wm: i3wm

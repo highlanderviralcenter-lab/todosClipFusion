@@ -1,0 +1,1 @@
+{"type":"object","required":["video_path","start","end","output_dir"],"properties":{"video_path":{"type":"string"},"start":{"type":"number"},"end":{"type":"number"},"output_dir":{"type":"string"}}}
